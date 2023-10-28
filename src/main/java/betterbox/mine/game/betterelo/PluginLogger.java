@@ -9,7 +9,7 @@ import java.util.Date;
 
 public class PluginLogger {
 
-    private File logFile;
+    private final File logFile;
 
     // Enumeracja dla poziomów logowania
     public enum LogLevel {

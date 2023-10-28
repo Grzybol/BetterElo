@@ -24,7 +24,7 @@ public class GuiManager implements Listener {
         this.pluginLogger = pluginLogger;
         this.mainClass = mainClass;
     }
-    public void openSubGui(Player player, String rewardType) {
+    public void openSubGui(Player player) {
         Inventory subInv = Bukkit.createInventory(null, 9, "Select Top");
         createItem(subInv, Material.DIAMOND_SWORD, 1, "top1", "Top 1");
         createItem(subInv, Material.GOLDEN_SWORD, 3, "top2", "Top 2");
@@ -61,13 +61,13 @@ public class GuiManager implements Listener {
         String rewardType = currentItem.getItemMeta().getDisplayName();
         pluginLogger.log("GuiManager: onInventoryClick: rewardType: "+rewardType+" periodType: "+periodType);
         if (title.equals("Set Rewards")) {
-                event.setCancelled(true);
-                periodType = currentItem.getItemMeta().getDisplayName();
-                openSubGui(player, rewardType);
+            event.setCancelled(true);
+            periodType = currentItem.getItemMeta().getDisplayName();
+            openSubGui(player);
         } else if (title.equals("Select Top")) {
             event.setCancelled(true);
             rewardType = currentItem.getItemMeta().getDisplayName();
-            pluginLogger.log("GuiManager: onInventoryClick: rewardType: "+rewardType+" periodType: "+periodType);
+            pluginLogger.log("GuiManager: onInventoryClick: rewardType: " + rewardType + " periodType: " + periodType);
             fileRewardManager.setRewardType(periodType, rewardType);
             List<ItemStack> currentRewards = fileRewardManager.loadRewards();
             Inventory inv = Bukkit.createInventory(null, 36, "Add Items");
@@ -79,69 +79,44 @@ public class GuiManager implements Listener {
         } else if (title.equals("Add Items")) {
             if (List.of("Save", "Reset", "Reedem").contains(rewardType)) {
                 event.setCancelled(true);
-                // Kod do obsługi przycisków funkcji
                 Inventory inv = event.getInventory();
-                if ("Save".equals(rewardType)) {
-                    List<ItemStack> nonAirItems = Arrays.stream(inv.getContents())
-                            .filter(item -> item != null && item.getType() != Material.AIR)
-                            .filter(item -> !List.of("Save", "Reset", "Reedem").contains(item.getItemMeta().getDisplayName()))
-                            .collect(Collectors.toList());
-                    if (nonAirItems.isEmpty()) {
-                        player.sendMessage("Brak przedmiotów do zapisania!");
-                        return;
-                    }
-                    Inventory tempInventory = Bukkit.createInventory(null, 9, "Temporary Inventory");
-                    nonAirItems.forEach(tempInventory::addItem);
-                    fileRewardManager.saveRewards(tempInventory);
-                    player.sendMessage("Przedmioty zostały zapisane!");
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Save: rewardType: "+rewardType);
-                    player.closeInventory();
-                } else if ("Reset".equals(rewardType)) {
+
+                switch (periodType) {
+                    case "daily":
+                    case "weekly":
+                    case "monthly":
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager: onInventoryClick: Reset: " + periodType + " starting dataManager.updateLastScheduledTime");
+                        mainClass.updateLastScheduledTime(periodType);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager: onInventoryClick: Reset: " + periodType + " dataManager.updateLastScheduledTime done, clearing points map");
 
                         switch (periodType) {
                             case "daily":
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: "+periodType+" starting dataManager.updateLastScheduledTime");
-                                mainClass.updateLastScheduledTime(periodType);
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: "+periodType+" dataManager.updateLastScheduledTime done, clearing points map");
                                 dataManager.dailyPlayerPoints.clear();
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: clearing done "+periodType+" starting dataManager.saveDataToFileWeekly");
                                 dataManager.saveDataToFileDaily();
-                                player.sendMessage("Zresetowano nagrode : " + periodType);
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: done");
                                 break;
                             case "weekly":
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: "+periodType+" starting dataManager.updateLastScheduledTime");
-                                mainClass.updateLastScheduledTime(periodType);
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: "+periodType+" dataManager.updateLastScheduledTime done, clearing points map");
                                 dataManager.weeklyPlayerPoints.clear();
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset:Reset: clearing done "+periodType+"  starting dataManager.saveDataToFileWeekly");
                                 dataManager.saveDataToFileWeekly();
-                                player.sendMessage("Zresetowano nagrode : " + periodType);
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: done");
                                 break;
                             case "monthly":
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: "+periodType+" starting dataManager.updateLastScheduledTime");
-                                mainClass.updateLastScheduledTime(periodType);
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: "+periodType+" dataManager.updateLastScheduledTime done, clearing points map");
                                 dataManager.monthlyPayerPoints.clear();
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset:Reset: clearing done "+periodType+"  starting dataManager.saveDataToFileWeekly");
                                 dataManager.saveDataToFileMonthly();
-                                player.sendMessage("Zresetowano nagrode : " + periodType);
-                                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"GuiManager: onInventoryClick: Reset: done");
-
                                 break;
-                            default:
-                                pluginLogger.log(PluginLogger.LogLevel.WARNING,"GuiManager: onInventoryClick: Reset: Wrong reward type:"+periodType);
-                                player.sendMessage("Nieznany typ nagrody: " + periodType);
-                                return;
                         }
-                        player.sendMessage(fileRewardManager.getRewardType() + " last scheduled time has been reset!");
+
+                        player.sendMessage("Zresetowano nagrode : " + periodType);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager: onInventoryClick: Reset: done");
+                        break;
+                    default:
+                        pluginLogger.log(PluginLogger.LogLevel.WARNING, "GuiManager: onInventoryClick: Reset: Wrong reward type:" + periodType);
+                        player.sendMessage("Nieznany typ nagrody: " + periodType);
+                        return;
                 }
-                else if ("Reedem".equals(rewardType)) {
-                    mainClass.rewardTopPlayers(periodType);
-                    pluginLogger.log("GuiManager: onInventoryClick: Reedem: periodType: "+periodType);
-                    player.sendMessage("Nagrody zostały przyznane!");
-                }
+                player.sendMessage(fileRewardManager.getRewardType() + " last scheduled time has been reset!");
+            } else if ("Reedem".equals(rewardType)) {
+                mainClass.rewardTopPlayers(periodType);
+                pluginLogger.log("GuiManager: onInventoryClick: Reedem: periodType: " + periodType);
+                player.sendMessage("Nagrody zostały przyznane!");
             } // Jeśli nie jest to przycisk funkcji, pozwól graczowi przesuwać przedmioty
         }
     }

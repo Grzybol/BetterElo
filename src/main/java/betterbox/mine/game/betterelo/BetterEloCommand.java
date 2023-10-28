@@ -23,9 +23,7 @@ public class BetterEloCommand implements CommandExecutor {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private final GuiManager guiManager; // Dodajemy referencję do GuiManager
-    private BetterElo betterElo;
-    public String state;
-
+    private final BetterElo betterElo;
 
     public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo) {
         this.dataManager = dataManager;
@@ -138,6 +136,7 @@ public class BetterEloCommand implements CommandExecutor {
                     rewardsConfig.save(rewardsFile);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterEloCommand: claim: Error while saving rewards configuration: "+ e);
                 }
             }
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]"+ChatColor.DARK_RED +" No rewards assigned.");

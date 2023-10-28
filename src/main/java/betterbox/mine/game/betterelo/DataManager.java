@@ -71,6 +71,7 @@ public class DataManager {
                 file.createNewFile();
                 pluginLogger.log("DataManager: initializeDatabaseFile: " + fileName);
             } catch (IOException e) {
+                pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: initializeFile: error: "+e);
                 e.printStackTrace();
             }
         }
@@ -107,7 +108,8 @@ public class DataManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
+
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(dailyDatabaseFile))) {
             String line;
@@ -133,7 +135,7 @@ public class DataManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(monthlyDatabaseFile))) {
             String line;
@@ -146,7 +148,7 @@ public class DataManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
         }
 
         // Używamy nowego loggera do zapisywania wiadomości debugujących
@@ -161,7 +163,7 @@ public class DataManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileDaily: error: "+e);
         }
         // Używamy nowego loggera do zapisywania wiadomości debugujących
         pluginLogger.log("DtaManager: saveDataToFileDaily");
@@ -175,7 +177,7 @@ public class DataManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileWeekly: error: "+e);
         }
         // Używamy nowego loggera do zapisywania wiadomości debugujących
         pluginLogger.log("DtaManager: saveDataToFileWeekly");
@@ -189,7 +191,7 @@ public class DataManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileMonthly: error: "+e);
         }
         // Używamy nowego loggera do zapisywania wiadomości debugujących
         pluginLogger.log("DataManager: saveDataToFileMonthly");
@@ -203,7 +205,7 @@ public class DataManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFile: error: "+e);
         }
 
         // Używamy nowego loggera do zapisywania wiadomości debugujących
