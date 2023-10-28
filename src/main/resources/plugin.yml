@@ -1,0 +1,60 @@
+name: BetterElo
+version: ${project.version}
+main: betterbox.mine.game.betterelo.BetterElo
+api-version: 1.18
+description: Plugin do zarządzania rankingiem graczy.
+author: grzybol
+commands:
+  be:
+    description: Komenda do ogólnego zarządzania rankingiem graczy.
+    usage: /be
+    aliases:
+      - betterelo
+  be-info:
+    description: Informacje o pluginie.
+    usage: /be info
+  be-help:
+    description: Command list
+    usage: /be help
+  be-player:
+    description: Informacje o miejscu w rankingu i punktach gracza.
+    usage: /be <nazwa_gracza>
+  be-top:
+    description: Nick gracza i jego punkty z pozycji n w rankingu.
+    usage: /be top <n>
+  be-top10:
+    description: Wyświetla top 10 graczy i ich punkty.
+    usage: /be top10
+  be-setrewards:
+    description: Otwiera interfejs GUI do ustawiania nagród.
+    usage: /be setrewards
+    permission: betterelo.setrewards
+  be-daily:
+    description: Włącza lub wyłącza codzienne nagrody.
+    usage: /be daily
+  be-weekly:
+    description: Włącza lub wyłącza tygodniowe nagrody.
+    usage: /be weekly
+  be-monthly:
+    description: Włącza lub wyłącza miesięczne nagrody.
+    usage: /be monthly
+  be-timeleft:
+    description: pokazuje reszte czasu do rozdania nagród.
+    usage: /be timeleft
+  be-claim:
+    description: Komenda do odbierania nagród offline.
+    usage: /be claim
+permissions:
+  betterelo.setrewards:
+    description: Daje dostęp do komendy /be setrewards.
+    default: op
+  betterelo.daily:
+    description: Daje dostęp do komendy /be daily.
+    default: op
+  betterelo.weekly:
+    description: Daje dostęp do komendy /be weekly.
+    default: op
+  betterelo.monthly:
+    description: Daje dostęp do komendy /be monthly.
+    default: op
+
