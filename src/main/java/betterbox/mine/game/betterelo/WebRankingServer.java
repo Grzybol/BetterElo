@@ -6,10 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.util.stream.Collectors;
-import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class WebRankingServer {
 

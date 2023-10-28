@@ -13,7 +13,7 @@ public class PluginLogger {
 
     // Enumeracja dla poziomów logowania
     public enum LogLevel {
-        INFO, WARNING, ERROR, DEBUG;
+        INFO, WARNING, ERROR, DEBUG
     }
 
     public PluginLogger(String folderPath) {
