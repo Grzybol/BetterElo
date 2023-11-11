@@ -36,7 +36,7 @@ public class DataManager {
         if (ranking_type.equals("daily")) dailyPlayerPoints.put(playerUUID, points);
         if (ranking_type.equals("weekly")) weeklyPlayerPoints.put(playerUUID, points);
         if (ranking_type.equals("monthly")) monthlyPayerPoints.put(playerUUID, points);
-        pluginLogger.log("DataManager: setPoints: zapisywanie do bazy..");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: setPoints: zapisywanie do bazy..");
         saveDataToFile(); // Zapisz zmienione dane do pliku
         saveDataToFileDaily(); // Zapisz zmienione dane do pliku
         saveDataToFileWeekly(); // Zapisz zmienione dane do pliku
