@@ -122,7 +122,7 @@ public class DataManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(weeklyDatabaseFile))) {
             String line;
@@ -152,7 +152,7 @@ public class DataManager {
         }
 
         // Używamy nowego loggera do zapisywania wiadomości debugujących
-        pluginLogger.log("DataManager: loadDataFromFile: wczytano z bazy..");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: loadDataFromFile: Data loaded");
     }
     public void saveDataToFileDaily() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(dailyDatabaseFile))) {
