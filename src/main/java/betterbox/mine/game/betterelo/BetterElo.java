@@ -27,6 +27,7 @@ public final class BetterElo extends JavaPlugin {
     @Override
     public void onEnable() {
         // Inicjalizacja PluginLoggera
+        System.out.println("[BetterElo] Starting");
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
         pluginLogger = new PluginLogger(getDataFolder().getAbsolutePath(), defaultLogLevels);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
@@ -92,6 +93,10 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: starting ChatNotifier every 30min");
         // Tworzenie nowego zadania i ustalanie interwału (30 minut = 30 * 60 * 20 ticks)
         new ChatNotifier(this).runTaskTimer(this, 0, 36000);
+        System.out.println("[BetterElo] Running");
+        System.out.println("[BetterElo] Author "+this.getDescription().getAuthors());
+        System.out.println("[BetterElo] Version  "+this.getDescription().getVersion());
+        System.out.println("[BetterElo] "+this.getDescription().getDescription());
 
     }
     @Override
@@ -151,26 +156,25 @@ public final class BetterElo extends JavaPlugin {
         }
     }
     private void createDefaultRewardFile(File rewardFile, String rewardType) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: createDefaultRewardFile: called");
         try {
             rewardFile.createNewFile();
             FileConfiguration rewardConfig = YamlConfiguration.loadConfiguration(rewardFile);
-            // Utwórz domyślne nagrody
             rewardConfig.set("material", "DIAMOND");
             rewardConfig.set("amount", 1);
             rewardConfig.save(rewardFile);
-            System.out.println("Created default reward file for: " + rewardType);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: createDefaultRewardFile: default reward file created");
         } catch (IOException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo: createDefaultRewardFile: "+e);
         }
     }
     private void loadReward(File rewardFile, String rewardType) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: loadReward: called");
         FileConfiguration rewardConfig = YamlConfiguration.loadConfiguration(rewardFile);
         String materialName = rewardConfig.getString("material", "DIAMOND");
         Material material = Material.getMaterial(materialName);
         int amount = rewardConfig.getInt("amount", 1);
-        // Zapisz nagrody w mapie lub innym miejscu, aby je później użyć
-        // Na przykład: rewardsMap.put(rewardType, new ItemStack(material, amount));
-        System.out.println("Loaded reward for " + rewardType + ": " + material + " x" + amount);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: loadReward: loaded");
     }
     public void updateLastScheduledTime(String period) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: updateLastScheduledTime: period: "+period+" setting current system time as last scheduled time");
@@ -306,22 +310,33 @@ public final class BetterElo extends JavaPlugin {
         }
     }
     private void saveOfflineReward(String playerName, List<ItemStack> rewardItems) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: Checking if there are any saved rewards for player: "+ playerName);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: Checking if there are any saved rewards for player: " + playerName);
         File rewardsFile = new File(this.getDataFolder(), "offlineRewards.yml");
         FileConfiguration rewardsConfig = YamlConfiguration.loadConfiguration(rewardsFile);
-        List<ItemStack> existingRewards = (List<ItemStack>) rewardsConfig.getList(playerName);
-        if (existingRewards == null) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: No saved rewards for player: "+ playerName);
-            existingRewards = new ArrayList<>();
+
+        List<?> rawList = rewardsConfig.getList(playerName); // Pobierz surową listę
+        List<ItemStack> existingRewards = new ArrayList<>();
+
+        if (rawList != null) {
+            for (Object obj : rawList) {
+                if (obj instanceof ItemStack) { // Sprawdź, czy obiekt jest ItemStack
+                    existingRewards.add((ItemStack) obj);
+                }
+            }
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: No saved rewards for player: " + playerName);
         }
+
         existingRewards.addAll(rewardItems);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: Rewards added for player: "+ playerName);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: Rewards added for player: " + playerName);
+
         rewardsConfig.set(playerName, existingRewards);
         try {
             rewardsConfig.save(rewardsFile);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: rewardsFile saved for player: "+playerName);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: saveOfflineReward: rewardsFile saved for player: " + playerName);
         } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo: saveOfflineReward: Exception while saving rewards: "+e);
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo: saveOfflineReward: Exception while saving rewards: " + e);
         }
     }
+
 }
