@@ -30,7 +30,8 @@ public final class BetterElo extends JavaPlugin {
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
         pluginLogger = new PluginLogger(getDataFolder().getAbsolutePath(), defaultLogLevels);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
-        pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by Grzybol");
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"https://github.com/Grzybol/BetterElo");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Loading config.yml");
         ExtendedConfigManager configManager = new ExtendedConfigManager(this, pluginLogger);
