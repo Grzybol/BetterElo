@@ -29,7 +29,7 @@ public class ExtendedConfigManager {
         if (logLevels == null || logLevels.isEmpty()) {
             // Jeśli konfiguracja nie określa poziomów logowania, użyj domyślnych ustawień
             enabledLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
-
+            updateConfig("log_level:\n  - INFO\n  - WARNING\n  - ERROR");
         } else {
             enabledLogLevels = new HashSet<>();
             for (String level : logLevels) {
@@ -46,7 +46,8 @@ public class ExtendedConfigManager {
         pluginLogger.setEnabledLogLevels(enabledLogLevels);
     }
 
-    public void updateConfig() {
+    public void updateConfig(String configuration) {
+
         File configFile = new File(plugin.getDataFolder(), "config.yml");
 
         if (!configFile.exists()) {
@@ -59,8 +60,8 @@ public class ExtendedConfigManager {
 
             // Dodaj nowe zmienne konfiguracyjne
             lines.add("###################################");
-            String defaultLogConfig = "log_level:\n  - INFO\n  - WARNING\n  - ERROR";
-            lines.add(defaultLogConfig);
+            ;
+            lines.add(configuration);
             // Tutaj możemy dodać nowe zmienne konfiguracyjne
             // ...
 
