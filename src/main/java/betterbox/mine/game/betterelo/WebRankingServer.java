@@ -29,7 +29,7 @@ public class WebRankingServer {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "WebRankingServer: startServer: server started successfully.");
         } catch (IOException e) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "WebRankingServer: startServer: failed to start server: " + e.getMessage());
-            e.printStackTrace();
+
         }
     }
 

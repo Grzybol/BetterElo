@@ -24,12 +24,12 @@ public class Placeholders extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return "grzybol";
+        return betterElo.getDescription().getAuthors().toString();
     }
 
     @Override
     public @NotNull String getVersion() {
-        return "1.0";
+        return betterElo.getDescription().getVersion();
     }
 
     @Override
