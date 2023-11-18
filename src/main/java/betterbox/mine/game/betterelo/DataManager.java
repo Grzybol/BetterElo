@@ -43,14 +43,18 @@ public class DataManager {
         saveDataToFileMonthly(); // Zapisz zmienione dane do pliku
     }
     public double getPoints(String playerUUID, String ranking_type) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPoints called with parameters: playerUUID "+playerUUID+" ranking_type "+ranking_type);
         Map<String, Double> pointsMap = allPlayerPoints.get(ranking_type);
         if (pointsMap == null) {
-            return 0;  // Nieznany typ rankingu
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: pointsMap is null! Returning 1000 points");
+            return 1000;  // Nieznany typ rankingu
         }
         if (!pointsMap.containsKey(playerUUID)) {
             //pluginLogger.log("DataManager: getPoints: default" + capitalize(ranking_type) + " 1000");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: pointsMap does not contain "+playerUUID+", Returning 1000 points");
             return 1000;  // Gracz nie jest w rankingu
         }
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: returning "+pointsMap.get(playerUUID)+" for player "+playerUUID);
         //pluginLogger.log("DataManager: getPoints: " + ranking_type + ": " + pointsMap.get(playerUUID));
         return pointsMap.get(playerUUID);
     }
@@ -68,8 +72,9 @@ public class DataManager {
     private void initializeFile(File file, String fileName) {
         if (!file.exists()) {
             try {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: initializeFile file created.");
                 file.createNewFile();
-                pluginLogger.log("DataManager: initializeDatabaseFile: " + fileName);
+
             } catch (IOException e) {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: initializeFile: error: "+e);
                 e.printStackTrace();
@@ -77,6 +82,7 @@ public class DataManager {
         }
     }
     public int getPlayerRank(String playerUUID) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPlayerRank called with parameters "+playerUUID);
         if (!playerPoints.containsKey(playerUUID)) {
             return -1; // Gracz nie jest w rankingu
 
@@ -93,6 +99,7 @@ public class DataManager {
         return rank; // Gracz nie jest w rankingu
     }
     public void loadDataFromFile() {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: loadDataFromFile called");
         playerPoints.clear();
         dailyPlayerPoints.clear();
         weeklyPlayerPoints.clear();
@@ -155,6 +162,7 @@ public class DataManager {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: loadDataFromFile: Data loaded");
     }
     public void saveDataToFileDaily() {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileDaily called");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(dailyDatabaseFile))) {
             for (Map.Entry<String, Double> entry : dailyPlayerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
@@ -166,9 +174,10 @@ public class DataManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileDaily: error: "+e);
         }
         // Używamy nowego loggera do zapisywania wiadomości debugujących
-        pluginLogger.log("DtaManager: saveDataToFileDaily");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileDaily saved");
     }
     public void saveDataToFileWeekly() {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileWeekly called");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(weeklyDatabaseFile))) {
             for (Map.Entry<String, Double> entry : weeklyPlayerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
@@ -180,9 +189,10 @@ public class DataManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileWeekly: error: "+e);
         }
         // Używamy nowego loggera do zapisywania wiadomości debugujących
-        pluginLogger.log("DtaManager: saveDataToFileWeekly");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileWeekly saved");
     }
     public void saveDataToFileMonthly() {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileMonthly called");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(monthlyDatabaseFile))) {
             for (Map.Entry<String, Double> entry : monthlyPayerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
@@ -194,9 +204,10 @@ public class DataManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileMonthly: error: "+e);
         }
         // Używamy nowego loggera do zapisywania wiadomości debugujących
-        pluginLogger.log("DataManager: saveDataToFileMonthly");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileMonthly saved");
     }
     public void saveDataToFile() {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFile called");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(databaseFile))) {
             for (Map.Entry<String, Double> entry : playerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
@@ -209,9 +220,10 @@ public class DataManager {
         }
 
         // Używamy nowego loggera do zapisywania wiadomości debugujących
-        pluginLogger.log("Dane zapisane do pliku database.txt.");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFile saved");
     }
     public double getExtremeElo(String ranking_type, boolean isMax) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getExtremeElo called with parameters "+ranking_type+" isMax "+isMax);
         Map<String, Double> playerPointsMap = null;
         switch (ranking_type) {
             case "main":
@@ -233,11 +245,11 @@ public class DataManager {
             return 1000;
         }
         if (playerPointsMap.isEmpty()) {
-            pluginLogger.log("DataManager: getExtremeElo: default" + capitalize(ranking_type) + " 1000");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getExtremeElo: default" + capitalize(ranking_type) + " 1000");
             return 1000;
         } else {
             double extremeValue = isMax ? Collections.max(playerPointsMap.values()) : Collections.min(playerPointsMap.values());
-            pluginLogger.log("DataManager: getExtremeElo: " + capitalize(ranking_type) + ": " + extremeValue);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getExtremeElo: " + capitalize(ranking_type) + ": " + extremeValue);
             return extremeValue;
         }
     }
@@ -249,17 +261,21 @@ public class DataManager {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
     public double getMaxElo(String ranking_type) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getMaxElo called "+ranking_type);
         return getExtremeElo(ranking_type, true);
     }
     public double getMinElo(String ranking_type) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getMinElo called "+ranking_type);
         return getExtremeElo(ranking_type, false);
     }
     public double getPointsAtPosition(int position, Map<String, Double> points) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPointsAtPosition called "+position);
         Map<String, Double> sortedPlayers = sortPlayersByPoints(points);
 
         int rank = 1;
         for (Map.Entry<String, Double> entry : sortedPlayers.entrySet()) {
             if (rank == position) {
+
                 return entry.getValue(); // Znaleziono gracza na danej pozycji w rankingu
             }
             rank++;
@@ -268,6 +284,7 @@ public class DataManager {
         return 0; // Brak gracza na danej pozycji w rankingu
     }
     public String getPlayerAtPosition(int position, Map<String, Double> points) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPlayerAtPosition called "+position);
         Map<String, Double> sortedPlayers = sortPlayersByPoints(points);
 
         int rank = 1;
@@ -281,6 +298,7 @@ public class DataManager {
         return null; // Brak gracza na danej pozycji w rankingu
     }
     public String getPlayerName(String playerUUID) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPlayerName called "+playerUUID);
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(playerUUID));
         return offlinePlayer != null ? offlinePlayer.getName() : null;
     }
@@ -301,6 +319,7 @@ public class DataManager {
         return Bukkit.getOfflinePlayer(playerUUID);
     }
     public boolean playerExists(String playerUUID,String reward_type) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: playerExists called "+playerUUID+" "+reward_type);
         loadDataFromFile(); // Wczytaj dane z pliku przed sprawdzeniem
         switch (reward_type){
             case "main":
@@ -323,6 +342,7 @@ public class DataManager {
 
     }
     private Map<String, Double> sortPlayersByPoints(Map<String, Double> points) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: sortPlayersByPoints called ");
         Map<String, Double> sortedPlayers = new LinkedHashMap<>();
 
         points.entrySet()

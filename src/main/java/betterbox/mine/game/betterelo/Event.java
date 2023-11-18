@@ -59,6 +59,7 @@ public class Event implements Listener {
     }
 
     private double handleKillEvent(String rankingType, Player victim, Player killer) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
         double pointsEarned = 0;
         if (killer != null && !killer.equals(victim)) {
             // Gracz zabił innego gracza
@@ -68,12 +69,15 @@ public class Event implements Listener {
             double minElo = dataManager.getMinElo(rankingType);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: KillEvent: rankingType: "+rankingType+" loaded variables: maxElo:" + maxElo + " minElo: "+minElo+" victimElo:" + victimElo + " victim name: "+victim.getName()+" killerElo:" + killerElo+" killer name: "+killer.getName());
             double basePoints = 100;
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints+" killerElo "+killerElo+" victimElo "+victimElo+" maxElo "+maxElo+" minElo "+minElo);
             pointsEarned = calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
             pluginLogger.log(PluginLogger.LogLevel.INFO,"Event: KillEvent: pointsEarned: " + pointsEarned+"rankingType: "+rankingType);
 
 
             // Dodaj punkty graczowi, który zabił
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling addPoints with parameters: " + killer.getUniqueId().toString()+" "+pointsEarned+" "+rankingType);
             addPoints(killer.getUniqueId().toString(), pointsEarned, rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling subtractPoints with parameters: " + victim.getUniqueId().toString()+" "+pointsEarned+" "+rankingType);
             subtractPoints(victim.getUniqueId().toString(), pointsEarned, rankingType);
         }
         return pointsEarned;
@@ -81,16 +85,25 @@ public class Event implements Listener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        Player victim = event.getEntity();
-        Player killer = victim.getKiller();
+        try
+        {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event);
+            Player victim = event.getEntity();
+            Player killer = victim.getKiller();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: main " + victim+" "+killer);
+            double pointsEarned = handleKillEvent("main", victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim+" "+killer);
+            handleKillEvent("daily", victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim+" "+killer);
+            handleKillEvent("weekly", victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim+" "+killer);
+            handleKillEvent("monthly", victim, killer);
 
-        double pointsEarned = handleKillEvent("main", victim, killer);
-
-        handleKillEvent("daily", victim, killer);
-        handleKillEvent("weekly", victim, killer);
-        handleKillEvent("monthly", victim, killer);
-
-        notifyPlayersAboutPoints(killer, victim, pointsEarned);
+            notifyPlayersAboutPoints(killer, victim, pointsEarned);
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event: onPlayerDeath exception  " + e+" "+e.getMessage());
+        }
     }
 
     private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned) {
@@ -106,6 +119,7 @@ public class Event implements Listener {
 
 
     private double calculatePointsEarned(double base, double elo1, double elo2, double maxElo, double minElo) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned called with parameters : base "+base+" elo1 "+elo1+" elo2 "+elo2+" maxElo "+maxElo+" minElo "+minElo);
         double eloDifference = elo1 - elo2;
         double normalizedDifference = eloDifference / (maxElo - minElo + 1);
         double points = base * (1 - normalizedDifference);
