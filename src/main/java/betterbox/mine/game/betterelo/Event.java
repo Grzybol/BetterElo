@@ -4,10 +4,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class Event implements Listener {
     private final DataManager dataManager;
@@ -82,31 +86,121 @@ public class Event implements Listener {
         }
         return pointsEarned;
     }
+    // Mapa do śledzenia ostatnich uderzeń
+    private final Map<UUID, Long> lastHitTime = new HashMap<>();
+
+    // Metoda do aktualizacji czasu ostatniego uderzenia
+    public void updateLastHitTime(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: updateLastHitTime called");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: updateLastHitTime saving "+player.getUniqueId()+" "+System.currentTimeMillis());
+        lastHitTime.put(player.getUniqueId(), System.currentTimeMillis());
+    }
+
+    // Sprawdź, czy śmierć nastąpiła w wyniku walki
+    private boolean deathDueToCombat(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: deathDueToCombat called");
+        Long lastHit = lastHitTime.get(player.getUniqueId());
+        return lastHit != null && (System.currentTimeMillis() - lastHit <= 10000); // 10 sekund
+    }
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onEntityDamageByEntity called");
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+
+            Player damager = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
+
+            // Aktualizacja czasu ostatniego uderzenia
+            updateLastHitTime(damager);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
+            updateLastHitTime(victim);
+        }
+    }
+    // Metoda do znalezienia ostatniego napastnika
+    private Player getLastAttacker(Player victim) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker called with parameters: " + victim);
+        try {
+            Player lastAttacker = null;
+            long lastAttackTime = 0;
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker: checking online players");
+            // Iterowanie przez wszystkich graczy i znajdowanie tego, który ostatnio uderzył ofiarę
+            for (Player player : plugin.getServer().getOnlinePlayers()) {
+                UUID playerId = player.getUniqueId();
+                // Sprawdzamy, czy gracz uderzył ofiarę
+                if (lastHitTime.containsKey(playerId)) {
+                    long playerLastHitTime = lastHitTime.get(playerId);
+                    // Sprawdzamy, czy to ostatnie uderzenie było wobec ofiary i czy było najświeższe
+                    if (playerLastHitTime > lastAttackTime && !player.equals(victim)) {
+                        lastAttacker = player;
+                        lastAttackTime = playerLastHitTime;
+                    }
+                }
+            }
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker: lastAttacker " + lastAttacker);
+
+
+            return lastAttacker;
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event: getLastAttacker exception: " + e.getMessage());
+            return null;
+        }
+    }
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         try
         {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event);
             Player victim = event.getEntity();
             Player killer = victim.getKiller();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: main " + victim+" "+killer);
-            double pointsEarned = handleKillEvent("main", victim, killer);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim+" "+killer);
-            handleKillEvent("daily", victim, killer);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim+" "+killer);
-            handleKillEvent("weekly", victim, killer);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim+" "+killer);
-            handleKillEvent("monthly", victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling deathDueToCombat(victim)");
+            if (killer == null && deathDueToCombat(victim)) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath killer is null");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: deathDueToCombat(victim): " + deathDueToCombat(victim) + " victim: " + victim);
+                // Znajdź ostatniego gracza, który uderzył ofiarę
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling getLastAttacker(victim)");
+                Player lastAttacker = getLastAttacker(victim);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: lastAttacker "+lastAttacker);
 
-            notifyPlayersAboutPoints(killer, victim, pointsEarned);
+                if (lastAttacker != null) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: calling handleKillEvent"+lastAttacker);
+                    // Oblicz punkty zdobyte/wtracone w wyniku "wirtualnej" walki
+                    double pointsEarned = handleKillEvent("main", victim, lastAttacker);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim+" "+lastAttacker);
+                    handleKillEvent("daily", victim, lastAttacker);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim+" "+lastAttacker);
+                    handleKillEvent("weekly", victim, lastAttacker);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim+" "+lastAttacker);
+                    handleKillEvent("monthly", victim, lastAttacker);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling notifyPlayersAboutPoints(lastAttacker, victim, pointsEarned)");
+                    // Powiadom graczy o zmianie punktów
+                    notifyPlayersAboutPoints(lastAttacker, victim, pointsEarned);
+                    return;
+                }
+
+                return;
+            }
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: main " + victim + " " + killer);
+                double pointsEarned = handleKillEvent("main", victim, killer);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + killer);
+                handleKillEvent("daily", victim, killer);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + killer);
+                handleKillEvent("weekly", victim, killer);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
+                handleKillEvent("monthly", victim, killer);
+
+                assert killer != null;
+                notifyPlayersAboutPoints(killer, victim, pointsEarned);
+
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event: onPlayerDeath exception  " + e+" "+e.getMessage());
         }
     }
 
     private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
 
         // Notify the killer
