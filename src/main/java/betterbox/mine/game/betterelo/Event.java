@@ -1,5 +1,7 @@
 package betterbox.mine.game.betterelo;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -9,6 +11,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.text.DecimalFormat;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -203,11 +206,20 @@ public class Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
 
+        Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
+        Duration stay = Duration.ofMillis(900);    // czas wyświetlania
+        Duration fadeOut = Duration.ofMillis(300); // czas znikania
+        Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
+        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
+        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Victim: "+victim);
         // Notify the killer
-        killer.sendActionBar(ChatColor.GREEN + "You have earned " + df.format(pointsEarned) + " points!");
-
+        Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
+        killer.showTitle(killerTitle);
+        Component victimTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "-"+df.format(pointsEarned)+" Elo");
+        Component victimSubtitleComponent = Component.text(ChatColor.GOLD +"Killer: "+killer);
         // Notify the victim
-        victim.sendActionBar(ChatColor.RED + "You have lost " + df.format(pointsEarned) + " points!");
+        Title victimTitle = Title.title(victimTitleComponent,victimSubtitleComponent,times);
+        killer.showTitle(victimTitle);
     }
 
 
