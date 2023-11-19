@@ -215,11 +215,8 @@ public class Event implements Listener {
         // Notify the killer
         Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
         killer.showTitle(killerTitle);
-        Component victimTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "-"+df.format(pointsEarned)+" Elo");
-        Component victimSubtitleComponent = Component.text(ChatColor.GOLD +"Killer: "+killer);
-        // Notify the victim
-        Title victimTitle = Title.title(victimTitleComponent,victimSubtitleComponent,times);
-        killer.showTitle(victimTitle);
+
+        victim.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.RED +  "You have lost "+ChatColor.DARK_RED + "" + ChatColor.BOLD +df.format(pointsEarned)+" Elo");
     }
 
 
