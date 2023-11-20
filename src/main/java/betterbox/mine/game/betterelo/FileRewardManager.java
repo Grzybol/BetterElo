@@ -23,17 +23,17 @@ public class FileRewardManager {
     public FileRewardManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
         this.pluginLogger = pluginLogger; // Inicjalizujemy PluginLogger
-        pluginLogger.log("FileRewardManager: Inicjalizacja");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: Inicjalizacja");
     }
 
     public void setRewardType(String rewardType,String subType) {
-        pluginLogger.log("FileRewardManager: getRewardType: rewardType: "+rewardType+" subType: "+subType);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getRewardType: rewardType: "+rewardType+" subType: "+subType);
         this.rewardType = rewardType + "_" + subType;
 
     }
 
     public String getRewardType() {
-        pluginLogger.log("FileRewardManager: getRewardType: rewardType:"+rewardType);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getRewardType: rewardType:"+rewardType);
         return rewardType;
     }
 
@@ -55,7 +55,7 @@ public class FileRewardManager {
     public List<ItemStack> getReward(String rewardType) {
         // Załaduj konfigurację z pliku dla danego typu nagrody
         File rewardFile = new File(plugin.getDataFolder(), rewardType + ".yml");
-        pluginLogger.log("FileRewardManager: getReward: rewardType:" + rewardType);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getReward: rewardType:" + rewardType);
         FileConfiguration rewardConfig = YamlConfiguration.loadConfiguration(rewardFile);
         // Pobierz dane o nagrodzie z pliku konfiguracyjnego
         List<ItemStack> rewards = new ArrayList<>();
@@ -71,8 +71,8 @@ public class FileRewardManager {
             String materialName = rewardConfig.getString("material", "DIAMOND");
             Material material = Material.getMaterial(materialName);
             int amount = rewardConfig.getInt("amount", 1);
-            pluginLogger.log("FileRewardManager: getReward: materialName:" + materialName);
-            pluginLogger.log("FileRewardManager: getReward: material:" + material);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getReward: materialName:" + materialName);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getReward: material:" + material);
             ItemStack defaultItem = new ItemStack(material, amount);
             ItemMeta meta = defaultItem.getItemMeta();
             List<String> lore = rewardConfig.getStringList("lore");
@@ -82,7 +82,7 @@ public class FileRewardManager {
             }
             rewards.add(defaultItem);
         }
-        pluginLogger.log("FileRewardManager: getReward: items:" + rewards);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getReward: items:" + rewards);
         return rewards;
     }
 }
