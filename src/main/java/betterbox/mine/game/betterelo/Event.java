@@ -36,28 +36,29 @@ public class Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,String.format("Event: onPlayerJoin: gracz %s wszedl na serwer", playerName));
 
         if (!dataManager.playerExists(playerUUID,"main")) {
-            pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event: onPlayerJoin: Player "+playerName+" does not exists in main database.");
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"Player "+player.getName()+" doesn't exist in main database. Setting 1000 points");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: Player "+playerName+" does not exists in main database.");
             dataManager.setPoints(playerUUID, 1000, "main");
 
         } else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: "+playerName+" Already in main database.");
         }
         if (!dataManager.playerExists(playerUUID,"daily")) {
-            pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event: onPlayerJoin: Player "+playerName+" does not exists in daily database.");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: Player "+playerName+" does not exists in daily database.");
             dataManager.setPoints(playerUUID, 1000, "daily");
 
         } else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: "+playerName+" Already in daily database.");
         }
         if (!dataManager.playerExists(playerUUID,"weekly")) {
-            pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event: onPlayerJoin: Player "+playerName+" does not exists in weekly database.");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: Player "+playerName+" does not exists in weekly database.");
             dataManager.setPoints(playerUUID, 1000, "weekly");
 
         } else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: "+playerName+" Already in weekly database.");
         }
         if (!dataManager.playerExists(playerUUID,"monthly")) {
-            pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event: onPlayerJoin: Player "+playerName+" does not exists in monthly database.");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: Player "+playerName+" does not exists in monthly database.");
             dataManager.setPoints(playerUUID, 1000, "monthly");
 
         } else {

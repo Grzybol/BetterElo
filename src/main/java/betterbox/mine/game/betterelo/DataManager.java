@@ -46,12 +46,12 @@ public class DataManager {
         //pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPoints called with parameters: playerUUID "+playerUUID+" ranking_type "+ranking_type);
         Map<String, Double> pointsMap = allPlayerPoints.get(ranking_type);
         if (pointsMap == null) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: pointsMap is null! Returning 1000 points");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: pointsMap is null! Returning 1000 points");
             return 1000;  // Nieznany typ rankingu
         }
         if (!pointsMap.containsKey(playerUUID)) {
             //pluginLogger.log("DataManager: getPoints: default" + capitalize(ranking_type) + " 1000");
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: pointsMap does not contain "+playerUUID+", Returning 1000 points");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: pointsMap does not contain "+playerUUID+", Returning 1000 points");
             return 1000;  // Gracz nie jest w rankingu
         }
         //pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: returning "+pointsMap.get(playerUUID)+" for player "+playerUUID);
