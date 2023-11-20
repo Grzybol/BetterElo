@@ -52,30 +52,6 @@ public class FileRewardManager {
         }
         return rewards;
     }
-    public void saveRewards(Inventory inv) {
-        File rewardsFile = new File(plugin.getDataFolder(), rewardType + ".yml");
-        if (!rewardsFile.exists()) {
-            try {
-                rewardsFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        FileConfiguration config = YamlConfiguration.loadConfiguration(rewardsFile);
-        for (int i = 0; i < inv.getSize(); i++) {
-            ItemStack item = inv.getItem(i);
-            if (item != null) {
-                config.set("items." + i, item);
-            } else {
-                config.set("items." + i, new ItemStack(Material.AIR));
-            }
-        }
-        try {
-            config.save(rewardsFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     public List<ItemStack> getReward(String rewardType) {
         // Załaduj konfigurację z pliku dla danego typu nagrody
         File rewardFile = new File(plugin.getDataFolder(), rewardType + ".yml");

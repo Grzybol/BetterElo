@@ -60,7 +60,6 @@ public class ExtendedConfigManager {
 
             // Dodaj nowe zmienne konfiguracyjne
             lines.add("###################################");
-            ;
             lines.add(configuration);
             // Tutaj możemy dodać nowe zmienne konfiguracyjne
             // ...

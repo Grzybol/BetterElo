@@ -23,7 +23,7 @@ public class PluginLogger {
         this.enabledLogLevels = enabledLogLevels;
 
         // Tworzenie folderu dla logów, jeśli nie istnieje
-        File logFolder = new File(folderPath);
+        File logFolder = new File(folderPath,"logs");
         if (!logFolder.exists()) {
             logFolder.mkdirs();
         }
@@ -70,18 +70,5 @@ public class PluginLogger {
         this.enabledLogLevels = enabledLogLevels;
     }
 
-    // Metoda do dodawania pojedynczego poziomu logowania
-    public void addLogLevel(LogLevel level) {
-        if (enabledLogLevels == null) {
-            enabledLogLevels = EnumSet.noneOf(LogLevel.class);
-        }
-        enabledLogLevels.add(level);
-    }
 
-    // Metoda do usuwania pojedynczego poziomu logowania
-    public void removeLogLevel(LogLevel level) {
-        if (enabledLogLevels != null) {
-            enabledLogLevels.remove(level);
-        }
-    }
 }
