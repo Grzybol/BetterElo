@@ -92,10 +92,14 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: starting ChatNotifier every 30min");
         // Tworzenie nowego zadania i ustalanie interwału (30 minut = 30 * 60 * 20 ticks)
         new ChatNotifier(this).runTaskTimer(this, 0, 36000);
-        System.out.println("[BetterElo] Running");
-        System.out.println("[BetterElo] Author "+this.getDescription().getAuthors());
-        System.out.println("[BetterElo] Version  "+this.getDescription().getVersion());
-        System.out.println("[BetterElo] "+this.getDescription().getDescription());
+        // Uzyskaj dostęp do loggera pluginu
+        java.util.logging.Logger logger = this.getLogger();
+
+        // Użyj loggera do rejestrowania wiadomości
+        logger.info("[BetterElo] Running");
+        logger.info("[BetterElo] Author " + this.getDescription().getAuthors());
+        logger.info("[BetterElo] Version  " + this.getDescription().getVersion());
+        logger.info("[BetterElo] " + this.getDescription().getDescription());
 
     }
     @Override
