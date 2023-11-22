@@ -212,7 +212,7 @@ public class Event implements Listener {
         Duration fadeOut = Duration.ofMillis(300); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
         Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
-        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Victim: "+victim);
+        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Victim: "+victim.getName());
         // Notify the killer
         Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
         killer.showTitle(killerTitle);
