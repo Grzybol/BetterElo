@@ -58,4 +58,10 @@ permissions:
   betterelo.monthly:
     description: Daje dostęp do komendy /be monthly.
     default: op
+  betterelo.reload:
+    description: reloads config.
+    default: op
+  betterelo.ban:
+    description: Deletes player.
+    default: op
 

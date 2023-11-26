@@ -1,27 +1,31 @@
 package betterbox.mine.game.betterelo;
 
+import org.bukkit.plugin.java.JavaPlugin;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.Set;
+import java.util.logging.*;
 
 public class PluginLogger {
 
     private final File logFile;
+    private JavaPlugin plugin;
     private Set<LogLevel> enabledLogLevels; // Zbiór aktywnych poziomów logowania
 
     // Enumeracja dla poziomów logowania
     public enum LogLevel {
-        INFO, WARNING, ERROR, DEBUG
+        INFO, WARNING, ERROR, DEBUG, DEBUG_LVL2
     }
 
-    public PluginLogger(String folderPath, Set<LogLevel> enabledLogLevels) {
+    public PluginLogger(String folderPath, Set<LogLevel> enabledLogLevels, JavaPlugin plugin) {
         this.enabledLogLevels = enabledLogLevels;
-
+        this.plugin = plugin;
         // Tworzenie folderu dla logów, jeśli nie istnieje
         File logFolder = new File(folderPath,"logs");
         if (!logFolder.exists()) {
@@ -40,7 +44,7 @@ public class PluginLogger {
                 logFile.createNewFile();
             }
         } catch (IOException e) {
-            e.printStackTrace(); // Tu można użyć loggera serwera do zalogowania błędu
+            plugin.getLogger().severe("PluginLogger: Could not create log file! "+e.getMessage());
         }
     }
 
@@ -60,14 +64,16 @@ public class PluginLogger {
                 writer.write(logMessage);
                 writer.newLine();
             } catch (IOException e) {
-                e.printStackTrace(); // Tu można użyć loggera serwera do zalogowania błędu
+                plugin.getLogger().severe("PluginLogger: log: Could not write to log file!"+e.getMessage());
             }
         }
     }
 
     // Metoda do ustawiania aktywnych poziomów logowania
-    public void setEnabledLogLevels(Set<LogLevel> enabledLogLevels) {
-        this.enabledLogLevels = enabledLogLevels;
+    public void setEnabledLogLevels(Set<LogLevel> configEnabledLogLevels) {
+        this.enabledLogLevels = configEnabledLogLevels;
+        log("Enabled Log levels "+ Arrays.toString(enabledLogLevels.toArray()));
+
     }
 
 

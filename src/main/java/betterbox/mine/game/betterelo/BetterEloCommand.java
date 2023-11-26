@@ -15,6 +15,8 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 
 public class BetterEloCommand implements CommandExecutor {
@@ -24,14 +26,20 @@ public class BetterEloCommand implements CommandExecutor {
     private final PluginLogger pluginLogger;
     private final GuiManager guiManager; // Dodajemy referencję do GuiManager
     private final BetterElo betterElo;
+    private final ExtendedConfigManager configManager;
+    private final Event event;
+    private final PlayerKillDatabase PKDB;
 
-    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo) {
+    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager,Event event, PlayerKillDatabase PKDB) {
         this.dataManager = dataManager;
         this.plugin = plugin;
 
         this.guiManager = guiManager; // Inicjalizujemy referencję do GuiManager
         this.pluginLogger = pluginLogger;
         this.betterElo = betterElo; // Inicjalizujemy referencję do BetterElo
+        this.configManager = configManager;
+        this.event = event;
+        this.PKDB = PKDB;
 
 
     }
@@ -175,6 +183,9 @@ public class BetterEloCommand implements CommandExecutor {
                         player = (Player) sender;
                         guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
                         break;
+                    case "reload":
+                        return handleReloadCommand(sender);
+
                     default:
                         // /be <player_name> - Information about a specific player's rank and points
                         playerName = args[0];
@@ -219,9 +230,83 @@ public class BetterEloCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Please enter a valid ranking position number.");
                     }
                 }
+                if(args[0].equalsIgnoreCase("ban")){
+                    handleBanCommand(sender,args[1]);
+                }
                 break;
         }
         return true;
+    }
+    private boolean handleReloadCommand(CommandSender sender){
+        if(sender.hasPermission("betterelo.reload")){
+            configManager.ReloadConfig();
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " BetterRanks config reloaded!");
+            return true;
+        }else {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: sender " + sender + " dont have permission to use /br tl");
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"You don't have permission to use this command!");
+            return false;
+        }
+    }
+    private boolean handleBanCommand(CommandSender sender, String banName) {
+        if (sender.hasPermission("betterelo.reload")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("Komenda dostępna tylko dla graczy.");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " dont have permission to use /br tl");
+                return false;
+            }
+
+            Player player = (Player) sender;
+
+            // Pobierz listę interakcji dla gracza, którego chcesz zbanować
+            Map<String, List<PlayerKillDatabase.PlayerInteraction>> interactionsMap = PKDB.getPlayerInteractions(banName);
+
+            if (interactionsMap.isEmpty()) {
+                sender.sendMessage("Brak interakcji do zbanowania dla gracza " + banName);
+                return false;
+            }
+
+            double totalPoints = 0;
+
+            for (List<PlayerKillDatabase.PlayerInteraction> playerInteractions : interactionsMap.values()) {
+                for (PlayerKillDatabase.PlayerInteraction interaction : playerInteractions) {
+                    totalPoints += interaction.getTotalPoints();
+                }
+            }
+
+            if (totalPoints > 0) {
+                // Gracz zasługuje na karę (odejmowanie punktów)
+                for (String rankingType : interactionsMap.keySet()) {
+                    event.subtractPoints(player.getUniqueId().toString(), totalPoints, rankingType);
+                }
+                sender.sendMessage("Gracz " + banName + " stracił " + totalPoints + " punktów.");
+            } else {
+                // Gracz nie zasługuje na karę (dodawanie punktów)
+                for (String rankingType : interactionsMap.keySet()) {
+                    event.addPoints(player.getUniqueId().toString(), Math.abs(totalPoints), rankingType);
+                }
+                sender.sendMessage("Gracz " + banName + " otrzymał " + Math.abs(totalPoints) + " punktów nagrody.");
+            }
+
+            // Usuń rekordy gracza z wszystkich tabel
+            PKDB.deletePlayerRecords(banName);
+            return true;
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " dont have permission to use /br tl");
+            return false;
+        }
+    }
+
+    public String getOfflinePlayerUUID(String playerName) {
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
+
+        if (offlinePlayer.hasPlayedBefore()) {
+            String UUID = String.valueOf(offlinePlayer.getUniqueId());
+            return UUID;
+        } else {
+            // Gracz o podanej nazwie jeszcze nie grał
+            return null;
+        }
     }
 
     private String formatTime(long millis) {
