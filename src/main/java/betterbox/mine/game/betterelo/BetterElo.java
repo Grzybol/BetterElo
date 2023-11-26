@@ -38,9 +38,9 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"https://github.com/Grzybol/BetterElo");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Loading config.yml");
-        ExtendedConfigManager configManager = new ExtendedConfigManager(this, pluginLogger);
+        configManager = new ExtendedConfigManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano loggera.");
-        PlayerKillDatabase PKDB = new PlayerKillDatabase(pluginLogger);
+        PKDB = new PlayerKillDatabase(pluginLogger);
         // Przekazujemy pluginLogger do innych klas
         dataManager = new DataManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano DataManager.");
@@ -69,7 +69,8 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"BetterElo: onEnable: Warning: PlaceholderAPI not found, placeholders will NOT be available.");
         }
         // Rejestracja komendy
-
+        betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
+        CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
         event = new Event(dataManager, pluginLogger,this,betterRanksCheaters);
         getServer().getPluginManager().registerEvents(event, this);
@@ -106,7 +107,10 @@ public final class BetterElo extends JavaPlugin {
         logger.info("[BetterElo] Author " + this.getDescription().getAuthors());
         logger.info("[BetterElo] Version  " + this.getDescription().getVersion());
         logger.info("[BetterElo] " + this.getDescription().getDescription());
-        CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this,betterRanksCheaters, getServer().getScheduler(), pluginLogger);
+        // Inicjalizacja BetterRanksCheaters
+
+
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling cheaterCheckScheduler.startScheduler()");
         cheaterCheckScheduler.startScheduler();
 
     }

@@ -231,6 +231,7 @@ public class BetterEloCommand implements CommandExecutor {
                     }
                 }
                 if(args[0].equalsIgnoreCase("ban")){
+
                     handleBanCommand(sender,args[1]);
                 }
                 break;
@@ -249,53 +250,52 @@ public class BetterEloCommand implements CommandExecutor {
         }
     }
     private boolean handleBanCommand(CommandSender sender, String banName) {
-        if (sender.hasPermission("betterelo.reload")) {
+        if (sender.hasPermission("betterelo.ban")) {
             if (!(sender instanceof Player)) {
+                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Banning player " + banName);
                 sender.sendMessage("Komenda dostępna tylko dla graczy.");
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " dont have permission to use /br tl");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " don't have permission to use /br tl");
                 return false;
             }
 
             Player player = (Player) sender;
 
             // Pobierz listę interakcji dla gracza, którego chcesz zbanować
-            Map<String, List<PlayerKillDatabase.PlayerInteraction>> interactionsMap = PKDB.getPlayerInteractions(banName);
+            Map<String, Double> interactionsMap = PKDB.getPlayerInteractions(banName);
 
             if (interactionsMap.isEmpty()) {
                 sender.sendMessage("Brak interakcji do zbanowania dla gracza " + banName);
                 return false;
             }
 
-            double totalPoints = 0;
+            for (Map.Entry<String, Double> entry : interactionsMap.entrySet()) {
+                String rankingType = entry.getKey();
+                double totalPoints = entry.getValue();
 
-            for (List<PlayerKillDatabase.PlayerInteraction> playerInteractions : interactionsMap.values()) {
-                for (PlayerKillDatabase.PlayerInteraction interaction : playerInteractions) {
-                    totalPoints += interaction.getTotalPoints();
+                if (totalPoints > 0) {
+                    // Gracz zasługuje na karę (odejmowanie punktów)
+                    event.subtractPoints(banName, totalPoints, rankingType);
+                    sender.sendMessage("Gracz " + banName + " stracił " + totalPoints + " punktów w trybie " + rankingType);
+                } else if (totalPoints < 0) {
+                    // Gracz nie zasługuje na karę (dodawanie punktów)
+                    event.addPoints(banName, Math.abs(totalPoints), rankingType);
+                    sender.sendMessage("Gracz " + banName + " otrzymał " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
+                } else {
+                    sender.sendMessage("Gracz " + banName + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                 }
-            }
-
-            if (totalPoints > 0) {
-                // Gracz zasługuje na karę (odejmowanie punktów)
-                for (String rankingType : interactionsMap.keySet()) {
-                    event.subtractPoints(player.getUniqueId().toString(), totalPoints, rankingType);
-                }
-                sender.sendMessage("Gracz " + banName + " stracił " + totalPoints + " punktów.");
-            } else {
-                // Gracz nie zasługuje na karę (dodawanie punktów)
-                for (String rankingType : interactionsMap.keySet()) {
-                    event.addPoints(player.getUniqueId().toString(), Math.abs(totalPoints), rankingType);
-                }
-                sender.sendMessage("Gracz " + banName + " otrzymał " + Math.abs(totalPoints) + " punktów nagrody.");
             }
 
             // Usuń rekordy gracza z wszystkich tabel
             PKDB.deletePlayerRecords(banName);
             return true;
         } else {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " dont have permission to use /br tl");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " don't have permission to use /br tl");
             return false;
         }
     }
+
+
+
 
     public String getOfflinePlayerUUID(String playerName) {
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);

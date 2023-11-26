@@ -30,7 +30,7 @@ public class PlayerKillDatabase {
         }
     }
     public void saveKillData(String rankingType, String victimName, String killerName, double pointsEarned) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: saveKillData called with parameters: " + rankingType+" "+victimName+" "+killerName);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: saveKillData called with parameters: " + rankingType+" "+victimName+" "+killerName+" "+pointsEarned);
         try {
             Connection connection = DriverManager.getConnection(DATABASE_URL);
 
@@ -40,13 +40,14 @@ public class PlayerKillDatabase {
             preparedStatement.setString(1, killerName);
             preparedStatement.setString(2, victimName);
             preparedStatement.setDouble(3, pointsEarned);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: saveKillData: insertSQL "+insertSQL);
 
             preparedStatement.executeUpdate();
 
             preparedStatement.close();
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"PlayerKillDatabase: createDatabaseIfNeeded: "+e.getMessage());
         }
     }
     public void deletePlayerRecords(String playerName) {
@@ -79,43 +80,40 @@ public class PlayerKillDatabase {
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
-    public Map<String, List<PlayerInteraction>> getPlayerInteractions(String playerName) {
-        Map<String, List<PlayerInteraction>> interactionsMap = new HashMap<>();
+    public Map<String, Double> getPlayerInteractions(String playerName) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions called with parameters: " + playerName);
+        Map<String, Double> interactionsMap = new HashMap<>();
 
         // Tabele do przeszukania
         String[] tables = {"daily", "weekly", "monthly", "main"};
 
         for (String table : tables) {
-            List<PlayerInteraction> playerInteractions = new ArrayList<>();
-
             try {
                 Connection connection = DriverManager.getConnection(DATABASE_URL);
 
                 // Zapytanie SQL do zliczania sumy zabójstw gracza X na graczu Y
-                String queryKillsXonY = "SELECT victimname, SUM(pointearned) AS total_points " +
+                String queryKillsXonY = "SELECT SUM(pointearned) AS total_points,victimname " +
                         "FROM " + table + " " +
-                        "WHERE killername = ? AND victimname = ?";
+                        "WHERE killername = ?";
 
                 PreparedStatement preparedStatementKillsXonY = connection.prepareStatement(queryKillsXonY);
                 preparedStatementKillsXonY.setString(1, playerName);
-                preparedStatementKillsXonY.setString(2, playerName);
 
                 ResultSet resultSetKillsXonY = preparedStatementKillsXonY.executeQuery();
 
                 while (resultSetKillsXonY.next()) {
-                    String victimName = resultSetKillsXonY.getString("victimname");
                     double totalPoints = resultSetKillsXonY.getDouble("total_points");
-
-                    playerInteractions.add(new PlayerInteraction(victimName, totalPoints));
+                    interactionsMap.put(table, totalPoints);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Points: " + totalPoints);
                 }
 
                 resultSetKillsXonY.close();
                 preparedStatementKillsXonY.close();
 
                 // Zapytanie SQL do zliczania sumy zabójstw gracza Y na graczu X
-                String queryKillsYonX = "SELECT killername, SUM(pointearned) AS total_points " +
+                String queryKillsYonX = "SELECT SUM(pointearned) AS total_points,killername " +
                         "FROM " + table + " " +
-                        "WHERE killername = ? AND victimname = ?";
+                        "WHERE victimname = ?";
 
                 PreparedStatement preparedStatementKillsYonX = connection.prepareStatement(queryKillsYonX);
                 preparedStatementKillsYonX.setString(1, playerName);
@@ -124,24 +122,30 @@ public class PlayerKillDatabase {
                 ResultSet resultSetKillsYonX = preparedStatementKillsYonX.executeQuery();
 
                 while (resultSetKillsYonX.next()) {
-                    String killerName = resultSetKillsYonX.getString("killername");
                     double totalPoints = resultSetKillsYonX.getDouble("total_points");
-
-                    playerInteractions.add(new PlayerInteraction(killerName, totalPoints));
+                    interactionsMap.put(table, interactionsMap.getOrDefault(table, 0.0) + totalPoints);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Points (updated): " + interactionsMap.get(table));
                 }
 
                 resultSetKillsYonX.close();
                 preparedStatementKillsYonX.close();
                 connection.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "PlayerKillDatabase: getPlayerInteractions: " + e.getMessage());
             }
+        }
 
-            interactionsMap.put(table, playerInteractions);
+        // Wypisz obecne wyniki/punkty dla każdej tabeli
+        for (Map.Entry<String, Double> entry : interactionsMap.entrySet()) {
+            String tableName = entry.getKey();
+            double totalPoints = entry.getValue();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + tableName + ", Total Points: " + totalPoints);
         }
 
         return interactionsMap;
     }
+
+
     public void clearTable(String tableName) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: clearTable: called with parameters "+tableName);
         try {
