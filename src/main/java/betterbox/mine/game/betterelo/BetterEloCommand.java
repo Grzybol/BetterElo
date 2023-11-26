@@ -279,12 +279,12 @@ public class BetterEloCommand implements CommandExecutor {
 
                     if (totalPoints > 0) {
                         // Gracz zasługuje na karę (odejmowanie punktów)
-                        event.subtractPoints(otherPlayer, totalPoints, rankingType);
-                        sender.sendMessage("Gracz " + otherPlayer + " stracił " + totalPoints + " punktów w trybie " + rankingType);
+                        event.addPoints(getOfflinePlayerUUID(otherPlayer), totalPoints, rankingType);
+                        sender.sendMessage("Gracz " + otherPlayer + " otrzymał " + totalPoints + " punktów w trybie " + rankingType);
                     } else if (totalPoints < 0) {
                         // Gracz nie zasługuje na karę (dodawanie punktów)
-                        event.addPoints(otherPlayer, Math.abs(totalPoints), rankingType);
-                        sender.sendMessage("Gracz " + otherPlayer + " otrzymał " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
+                        event.subtractPoints(getOfflinePlayerUUID(otherPlayer), Math.abs(totalPoints), rankingType);
+                        sender.sendMessage("Gracz " + otherPlayer + " stracił " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
                     } else {
                         sender.sendMessage("Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                     }
@@ -292,7 +292,16 @@ public class BetterEloCommand implements CommandExecutor {
             }
 
             // Usuń rekordy gracza z wszystkich tabel
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: PKDB.deletePlayerRecords(banName)");
             PKDB.deletePlayerRecords(banName);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: setting 100 points for "+banName+" in main");
+            dataManager.setPoints(getOfflinePlayerUUID(banName),1000d,"main");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: setting 100 points for "+banName+" in daily");
+            dataManager.setPoints(getOfflinePlayerUUID(banName),1000d,"daily");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: setting 100 points for "+banName+" in weekly");
+            dataManager.setPoints(getOfflinePlayerUUID(banName),1000d,"weekly");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: setting 100 points for "+banName+" in monthly");
+            dataManager.setPoints(getOfflinePlayerUUID(banName),1000d,"monthly");
             return true;
         } else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " don't have permission to use /br tl");

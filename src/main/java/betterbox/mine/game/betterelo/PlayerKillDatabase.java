@@ -127,7 +127,7 @@ public class PlayerKillDatabase {
                     double totalPoints = resultSetKillsYonX.getDouble("total_points");
 
                     victimsInteractions.put(killername, victimsInteractions.getOrDefault(killername, 0.0) - totalPoints);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Killer: " + killername + ", Points (updated): " + victimsInteractions.get(killername));
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Killer: " + killername + ", Points (updated): " + victimsInteractions.get(killername));
                 }
 
                 interactionsMap.put(table, victimsInteractions);
@@ -151,7 +151,7 @@ public class PlayerKillDatabase {
                 String victimname = entry1.getKey();
                 Double totalPoints = entry1.getValue();
 
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + tableName + ", Victim: " + victimname + ", Total Points: " + totalPoints);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + tableName + ", Victim: " + victimname + ", Total Points: " + totalPoints);
             }
         }
 
