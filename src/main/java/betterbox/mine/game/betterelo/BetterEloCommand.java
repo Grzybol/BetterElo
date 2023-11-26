@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -252,8 +253,8 @@ public class BetterEloCommand implements CommandExecutor {
     private boolean handleBanCommand(CommandSender sender, String banName) {
         if (sender.hasPermission("betterelo.ban")) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Banning player " + banName);
-                sender.sendMessage("Komenda dostępna tylko dla graczy.");
+
+                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"You don't have permission to use this command!");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " don't have permission to use /br tl");
                 return false;
             }
@@ -261,27 +262,32 @@ public class BetterEloCommand implements CommandExecutor {
             Player player = (Player) sender;
 
             // Pobierz listę interakcji dla gracza, którego chcesz zbanować
-            Map<String, Double> interactionsMap = PKDB.getPlayerInteractions(banName);
+            HashMap<String, HashMap<String, Double>> interactionsMap = PKDB.getPlayerInteractions(banName);
 
             if (interactionsMap.isEmpty()) {
                 sender.sendMessage("Brak interakcji do zbanowania dla gracza " + banName);
                 return false;
             }
-
-            for (Map.Entry<String, Double> entry : interactionsMap.entrySet()) {
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Banning player " + banName);
+            for (Map.Entry<String, HashMap<String, Double>> entry : interactionsMap.entrySet()) {
                 String rankingType = entry.getKey();
-                double totalPoints = entry.getValue();
+                HashMap<String, Double> interactions = entry.getValue();
 
-                if (totalPoints > 0) {
-                    // Gracz zasługuje na karę (odejmowanie punktów)
-                    event.subtractPoints(banName, totalPoints, rankingType);
-                    sender.sendMessage("Gracz " + banName + " stracił " + totalPoints + " punktów w trybie " + rankingType);
-                } else if (totalPoints < 0) {
-                    // Gracz nie zasługuje na karę (dodawanie punktów)
-                    event.addPoints(banName, Math.abs(totalPoints), rankingType);
-                    sender.sendMessage("Gracz " + banName + " otrzymał " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
-                } else {
-                    sender.sendMessage("Gracz " + banName + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
+                for (Map.Entry<String, Double> interactionEntry : interactions.entrySet()) {
+                    String otherPlayer = interactionEntry.getKey();
+                    double totalPoints = interactionEntry.getValue();
+
+                    if (totalPoints > 0) {
+                        // Gracz zasługuje na karę (odejmowanie punktów)
+                        event.subtractPoints(otherPlayer, totalPoints, rankingType);
+                        sender.sendMessage("Gracz " + otherPlayer + " stracił " + totalPoints + " punktów w trybie " + rankingType);
+                    } else if (totalPoints < 0) {
+                        // Gracz nie zasługuje na karę (dodawanie punktów)
+                        event.addPoints(otherPlayer, Math.abs(totalPoints), rankingType);
+                        sender.sendMessage("Gracz " + otherPlayer + " otrzymał " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
+                    } else {
+                        sender.sendMessage("Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
+                    }
                 }
             }
 
@@ -293,6 +299,7 @@ public class BetterEloCommand implements CommandExecutor {
             return false;
         }
     }
+
 
 
 

@@ -80,9 +80,11 @@ public class PlayerKillDatabase {
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
-    public Map<String, Double> getPlayerInteractions(String playerName) {
+    public HashMap<String, HashMap<String, Double>> getPlayerInteractions(String playerName)
+    {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions called with parameters: " + playerName);
-        Map<String, Double> interactionsMap = new HashMap<>();
+
+        HashMap<String, HashMap<String, Double>> interactionsMap = new HashMap<>();
 
         // Tabele do przeszukania
         String[] tables = {"daily", "weekly", "monthly", "main"};
@@ -92,40 +94,43 @@ public class PlayerKillDatabase {
                 Connection connection = DriverManager.getConnection(DATABASE_URL);
 
                 // Zapytanie SQL do zliczania sumy zabójstw gracza X na graczu Y
-                String queryKillsXonY = "SELECT SUM(pointearned) AS total_points,victimname " +
-                        "FROM " + table + " " +
-                        "WHERE killername = ?";
+                String queryKillsXonY = "SELECT victimname, SUM(pointearned) AS total_points FROM " + table + " WHERE killername = ? GROUP BY victimname";
 
                 PreparedStatement preparedStatementKillsXonY = connection.prepareStatement(queryKillsXonY);
                 preparedStatementKillsXonY.setString(1, playerName);
 
                 ResultSet resultSetKillsXonY = preparedStatementKillsXonY.executeQuery();
 
+                HashMap<String, Double> victimsInteractions = new HashMap<>();
                 while (resultSetKillsXonY.next()) {
+                    String victimname = resultSetKillsXonY.getString("victimname");
                     double totalPoints = resultSetKillsXonY.getDouble("total_points");
-                    interactionsMap.put(table, totalPoints);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Points: " + totalPoints);
+
+                    victimsInteractions.put(victimname, totalPoints);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Victim: " + victimname + ", Points: " + totalPoints);
                 }
+                //interactionsMap.put(table, victimsInteractions;
 
                 resultSetKillsXonY.close();
                 preparedStatementKillsXonY.close();
 
                 // Zapytanie SQL do zliczania sumy zabójstw gracza Y na graczu X
-                String queryKillsYonX = "SELECT SUM(pointearned) AS total_points,killername " +
-                        "FROM " + table + " " +
-                        "WHERE victimname = ?";
+                String queryKillsYonX = "SELECT killername, SUM(pointearned) AS total_points FROM " + table + " WHERE victimname = ? GROUP BY killername";
 
                 PreparedStatement preparedStatementKillsYonX = connection.prepareStatement(queryKillsYonX);
                 preparedStatementKillsYonX.setString(1, playerName);
-                preparedStatementKillsYonX.setString(2, playerName);
 
                 ResultSet resultSetKillsYonX = preparedStatementKillsYonX.executeQuery();
 
                 while (resultSetKillsYonX.next()) {
+                    String killername = resultSetKillsYonX.getString("killername");
                     double totalPoints = resultSetKillsYonX.getDouble("total_points");
-                    interactionsMap.put(table, interactionsMap.getOrDefault(table, 0.0) + totalPoints);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Points (updated): " + interactionsMap.get(table));
+
+                    victimsInteractions.put(killername, victimsInteractions.getOrDefault(killername, 0.0) - totalPoints);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Killer: " + killername + ", Points (updated): " + victimsInteractions.get(killername));
                 }
+
+                interactionsMap.put(table, victimsInteractions);
 
                 resultSetKillsYonX.close();
                 preparedStatementKillsYonX.close();
@@ -136,10 +141,18 @@ public class PlayerKillDatabase {
         }
 
         // Wypisz obecne wyniki/punkty dla każdej tabeli
-        for (Map.Entry<String, Double> entry : interactionsMap.entrySet()) {
+        for (HashMap.Entry<String, HashMap<String, Double>> entry : interactionsMap.entrySet())
+        {
             String tableName = entry.getKey();
-            double totalPoints = entry.getValue();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + tableName + ", Total Points: " + totalPoints);
+            HashMap<String, Double> victimsInteractions = entry.getValue();
+
+            for (HashMap.Entry<String, Double> entry1 : victimsInteractions.entrySet())
+            {
+                String victimname = entry1.getKey();
+                Double totalPoints = entry1.getValue();
+
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + tableName + ", Victim: " + victimname + ", Total Points: " + totalPoints);
+            }
         }
 
         return interactionsMap;
