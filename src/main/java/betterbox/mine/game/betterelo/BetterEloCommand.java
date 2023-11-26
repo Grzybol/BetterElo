@@ -78,6 +78,11 @@ public class BetterEloCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.AQUA + "/be daily " + ChatColor.GREEN + "- Returns top10 daily ranking/Zwraca info o top10 rankingu dziennego");
                         sender.sendMessage(ChatColor.AQUA + "/be weekly " + ChatColor.GREEN + "- Returns top10 weekly ranking/Zwraca info o top10 rankingu tygodniowego");
                         sender.sendMessage(ChatColor.AQUA + "/be monthly " + ChatColor.GREEN + "- Returns top10 monthly ranking/Zwraca info o top10 rankingu miesięcznego");
+                        if(sender.isOp()){
+                            sender.sendMessage(ChatColor.AQUA + "/be setrewards " + ChatColor.GREEN + "- Opens a GUI for changing the rewards");
+                            sender.sendMessage(ChatColor.AQUA + "/be reload " + ChatColor.GREEN + "- Reloads the config file ");
+                            sender.sendMessage(ChatColor.AQUA + "/be ban <player> " + ChatColor.GREEN + "- resetting the player's rankings to 1000 and redeeming remaining poits to victims.");
+                        }
                         break;
                     case "top10":
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Top 10 players in the ranking:");
