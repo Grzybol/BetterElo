@@ -12,6 +12,7 @@ public class ExtendedConfigManager {
     private JavaPlugin plugin;
     private PluginLogger pluginLogger;
     List<String> logLevels = null;
+    private File configFile = null;
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
@@ -47,7 +48,7 @@ public class ExtendedConfigManager {
     public void ReloadConfig() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "ConfigManager: ReloadConfig called");
         // Odczytanie ustawień log_level z pliku konfiguracyjnego
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        configFile = new File(plugin.getDataFolder(), "config.yml");
         plugin.reloadConfig();
         logLevels = plugin.getConfig().getStringList("log_level");
         enabledLogLevels = new HashSet<>();
@@ -70,11 +71,13 @@ public class ExtendedConfigManager {
                 plugin.getServer().getLogger().warning("Invalid log level in config: " + level);
             }
         }
+        pluginLogger.setEnabledLogLevels(enabledLogLevels);
+
     }
 
     public void updateConfig(String configuration) {
 
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        configFile = new File(plugin.getDataFolder(), "config.yml");
 
         if (!configFile.exists()) {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "Config file does not exist, creating new one.");
