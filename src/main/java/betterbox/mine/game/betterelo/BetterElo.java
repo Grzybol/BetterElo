@@ -16,26 +16,31 @@ public final class BetterElo extends JavaPlugin {
     private PluginLogger pluginLogger;
     private DataManager dataManager;
     private Placeholders placeholders;
+    private CheaterCheckScheduler cheaterCheckScheduler;
+    private BetterRanksCheaters betterRanksCheaters;
     private GuiManager guiManager;
     private FileRewardManager fileRewardManager;
     private Event event;
     private BukkitTask dailyTask;
     private BukkitTask weeklyTask;
     private BukkitTask monthlyTask;
+    private PlayerKillDatabase PKDB;
     private BetterEloCommand betterEloCommand;
+    private ExtendedConfigManager configManager;
     private final Map<String, Boolean> rewardStates = new HashMap<>();
     @Override
     public void onEnable() {
         // Inicjalizacja PluginLoggera
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO,PluginLogger.LogLevel.DEBUG, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
-        pluginLogger = new PluginLogger(getDataFolder().getAbsolutePath(), defaultLogLevels);
+        pluginLogger = new PluginLogger(getDataFolder().getAbsolutePath(), defaultLogLevels,this);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"https://github.com/Grzybol/BetterElo");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Loading config.yml");
-        ExtendedConfigManager configManager = new ExtendedConfigManager(this, pluginLogger);
+        configManager = new ExtendedConfigManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano loggera.");
+        PKDB = new PlayerKillDatabase(pluginLogger);
         // Przekazujemy pluginLogger do innych klas
         dataManager = new DataManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano DataManager.");
@@ -64,10 +69,12 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"BetterElo: onEnable: Warning: PlaceholderAPI not found, placeholders will NOT be available.");
         }
         // Rejestracja komendy
-        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this));
+        betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
+        CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters);
         getServer().getPluginManager().registerEvents(event, this);
+        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);
@@ -100,6 +107,11 @@ public final class BetterElo extends JavaPlugin {
         logger.info("[BetterElo] Author " + this.getDescription().getAuthors());
         logger.info("[BetterElo] Version  " + this.getDescription().getVersion());
         logger.info("[BetterElo] " + this.getDescription().getDescription());
+        // Inicjalizacja BetterRanksCheaters
+
+
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling cheaterCheckScheduler.startScheduler()");
+        cheaterCheckScheduler.startScheduler();
 
     }
     @Override
@@ -183,7 +195,10 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: updateLastScheduledTime: period: "+period+" setting current system time as last scheduled time");
         FileConfiguration config = getConfig();
         config.set(period + "LastScheduledTime", System.currentTimeMillis());
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: updateLastScheduledTime: calling PKDB.clearTable(period) wit parameters: "+period);
+        PKDB.clearTable(period);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: updateLastScheduledTime: period: "+period+" starting saveConfig");
+
         saveConfig();
     }
 

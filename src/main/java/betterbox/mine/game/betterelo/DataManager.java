@@ -42,6 +42,7 @@ public class DataManager {
         saveDataToFileWeekly(); // Zapisz zmienione dane do pliku
         saveDataToFileMonthly(); // Zapisz zmienione dane do pliku
     }
+
     public double getPoints(String playerUUID, String ranking_type) {
         //pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPoints called with parameters: playerUUID "+playerUUID+" ranking_type "+ranking_type);
         Map<String, Double> pointsMap = allPlayerPoints.get(ranking_type);
