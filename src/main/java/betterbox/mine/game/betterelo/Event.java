@@ -266,7 +266,7 @@ public class Event implements Listener {
     public void addPoints(String playerUUID, double points, String rankingType) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerUUID);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: addPoints: playerUUID: "+player.getName()+" rankingType: "+rankingType+" points: "+points);
-        pluginLogger.log(PluginLogger.LogLevel.INFO,player.getName()+" earned "+points+" in "+rankingType+" ranking");
+        pluginLogger.log(PluginLogger.LogLevel.INFO,player.getName() +" earned "+points+" in "+rankingType+" ranking");
         updatePoints(playerUUID, points, rankingType, true);
     }
 
