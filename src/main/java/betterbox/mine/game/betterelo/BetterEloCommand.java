@@ -82,6 +82,8 @@ public class BetterEloCommand implements CommandExecutor {
                             sender.sendMessage(ChatColor.AQUA + "/be setrewards " + ChatColor.GREEN + "- Opens a GUI for changing the rewards");
                             sender.sendMessage(ChatColor.AQUA + "/be reload " + ChatColor.GREEN + "- Reloads the config file ");
                             sender.sendMessage(ChatColor.AQUA + "/be ban <player> " + ChatColor.GREEN + "- resetting the player's rankings to 1000 and redeeming remaining poits to victims.");
+                            sender.sendMessage(ChatColor.AQUA + "/be add <player> <points> <rankingtype> " + ChatColor.GREEN + "- adding points to given player in specific ranking (main,daily,weekly,monthly)");
+                            sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
                         }
                         break;
                     case "top10":
@@ -241,8 +243,43 @@ public class BetterEloCommand implements CommandExecutor {
                     handleBanCommand(sender,args[1]);
                 }
                 break;
+            case 3:
+                if (args[0].equalsIgnoreCase("add")){
+                handleAddPointsCommand(sender,args[1], Double.valueOf(args[2]),args[3]);
+            }else if(args[0].equalsIgnoreCase("sub")){
+                    handleSubtractPointsCommand(sender,args[1], Double.valueOf(args[2]),args[3]);
+                }
+                break;
+
+
         }
         return true;
+    }
+    private boolean handleAddPointsCommand(CommandSender sender, String player, Double points, String rankingType){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleAddPointsCommand called by "+sender.getName());
+        if(sender.isOp()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: calling addPoints");
+            event.addPoints(getOfflinePlayerUUID(player), points, rankingType);
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " "+points+" points has been added to "+player+"'s account in "+rankingType);
+            return true;
+        }else{
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+            return false;
+        }
+
+    }
+    private boolean handleSubtractPointsCommand(CommandSender sender, String player, Double points, String rankingType){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleSubtractPointsCommand called by "+sender.getName());
+        if(sender.isOp()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: calling addPoints");
+            event.subtractPoints(getOfflinePlayerUUID(player), points, rankingType);
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " "+points+" points has been removed from "+player+"'s account in "+rankingType);
+            return true;
+        }else{
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+            return false;
+        }
+
     }
     private boolean handleReloadCommand(CommandSender sender){
         if(sender.hasPermission("betterelo.reload")){
@@ -266,7 +303,10 @@ public class BetterEloCommand implements CommandExecutor {
             }
 
             Player player = (Player) sender;
-
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Banning "+banName+". Points in main ranking: "+dataManager.getPoints(getOfflinePlayerUUID(banName),"main")+", points to redeem "+(dataManager.getPoints(getOfflinePlayerUUID(banName),"main")-1000d));
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Banning "+banName+". Points in daily ranking: "+dataManager.getPoints(getOfflinePlayerUUID(banName),"daily")+", points to redeem "+(dataManager.getPoints(getOfflinePlayerUUID(banName),"daily")-1000d));
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Banning "+banName+". Points in weekly ranking: "+dataManager.getPoints(getOfflinePlayerUUID(banName),"weekly")+", points to redeem "+(dataManager.getPoints(getOfflinePlayerUUID(banName),"weekly")-1000d));
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Banning "+banName+". Points in monthly ranking: "+dataManager.getPoints(getOfflinePlayerUUID(banName),"monthly")+", points to redeem "+(dataManager.getPoints(getOfflinePlayerUUID(banName),"monthly")-1000d));
             // Pobierz listę interakcji dla gracza, którego chcesz zbanować
             HashMap<String, HashMap<String, Double>> interactionsMap = PKDB.getPlayerInteractions(banName);
 
@@ -277,6 +317,7 @@ public class BetterEloCommand implements CommandExecutor {
             }
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Banning player " + banName);
             try{
+                double totalPointsDistributed=0;
                 for (Map.Entry<String, HashMap<String, Double>> entry : interactionsMap.entrySet()) {
                     String rankingType = entry.getKey();
                     HashMap<String, Double> interactions = entry.getValue();
@@ -291,7 +332,7 @@ public class BetterEloCommand implements CommandExecutor {
                             if (totalPoints > 0) {
                                 // Gracz zasługuje na karę (odejmowanie punktów)
                                 event.addPoints(getOfflinePlayerUUID(otherPlayer), totalPoints, rankingType);
-                                pluginLogger.log(PluginLogger.LogLevel.INFO, "Player " + otherPlayer + " gained " + totalPoints + " in " + rankingType + " ranking");
+                                pluginLogger.log(PluginLogger.LogLevel.INFO, "Player " + otherPlayer + " gained " + totalPoints + " in " + rankingType + " ranking after banning "+banName);
                                 sender.sendMessage("Gracz " + otherPlayer + " otrzymał " + totalPoints + " punktów w trybie " + rankingType);
                             } else if (totalPoints < 0) {
                                 // Gracz nie zasługuje na karę (dodawanie punktów)
@@ -301,11 +342,14 @@ public class BetterEloCommand implements CommandExecutor {
                             } else {
                                 sender.sendMessage("Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                             }
+                            totalPointsDistributed += Math.abs(totalPoints);
+
                         }
                     }catch (Exception e){
                         pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: handleBanCommand loop2 "+e.getMessage());
                     }
                 }
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "Distributed " + totalPointsDistributed + " points in all the rankings after banning " + banName);
             }catch (Exception e){
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: handleBanCommand loop "+e.getMessage());
             }

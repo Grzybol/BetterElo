@@ -51,16 +51,16 @@ public class Placeholders extends PlaceholderExpansion {
         StringBuilder timeString = new StringBuilder();
 
         if (days > 0) {
-            timeString.append(days).append(" ").append("days").append(" ");
+            timeString.append(days).append(" ").append("days").append(" | ");
         }
         if (hours > 0) {
-            timeString.append(hours).append(" ").append("hours").append(" ");
+            timeString.append(hours).append(" ").append("hours").append(" | ");
         }
         if (minutes > 0) {
-            timeString.append(minutes).append(" ").append("minutes").append(" ");
+            timeString.append(minutes).append(" ").append("minutes").append(" | ");
         }
         if (seconds > 0 || timeString.length() == 0) {
-            timeString.append(seconds).append("seconds");
+            timeString.append(seconds).append(" ").append("seconds");
         }
 
         return timeString.toString().trim();
