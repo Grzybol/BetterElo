@@ -258,7 +258,7 @@ public class BetterEloCommand implements CommandExecutor {
     private boolean handleAddPointsCommand(CommandSender sender, String player, Double points, String rankingType){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleAddPointsCommand called by "+sender.getName());
         if(sender.isOp()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: calling addPoints");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: calling event.addPoints(getOfflinePlayerUUID(player), points, rankingType)");
             event.addPoints(getOfflinePlayerUUID(player), points, rankingType);
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " "+points+" points has been added to "+player+"'s account in "+rankingType);
             return true;
@@ -271,7 +271,7 @@ public class BetterEloCommand implements CommandExecutor {
     private boolean handleSubtractPointsCommand(CommandSender sender, String player, Double points, String rankingType){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleSubtractPointsCommand called by "+sender.getName());
         if(sender.isOp()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: calling addPoints");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: calling event.subtractPoints(getOfflinePlayerUUID(player), points, rankingType)");
             event.subtractPoints(getOfflinePlayerUUID(player), points, rankingType);
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " "+points+" points has been removed from "+player+"'s account in "+rankingType);
             return true;
@@ -343,12 +343,12 @@ public class BetterEloCommand implements CommandExecutor {
                                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterEloCommand: handleBanCommand: calling event.subtractPoints with parameters: "+getOfflinePlayerUUID(otherPlayer)+" "+Math.abs(totalPoints)+" "+rankingType);
                                 event.subtractPoints(UUID, Math.abs(totalPoints), rankingType);
                                 pluginLogger.log(PluginLogger.LogLevel.INFO, "BAN COMMAND - Player " + otherPlayer + " lost " + totalPoints + " in " + rankingType + " ranking");
-                                sender.sendMessage("Gracz " + otherPlayer + " stracił " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
+                                sender.sendMessage("Gracz " + otherPlayer + " stracił " + totalPoints + " punktów nagrody w trybie " + rankingType);
                             } else {
                                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                                 sender.sendMessage("Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                             }
-                            totalPointsDistributed += Math.abs(totalPoints);
+                            totalPointsDistributed += totalPoints;
 
                         }
                     }catch (Exception e){
