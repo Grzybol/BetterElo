@@ -27,6 +27,7 @@ public final class BetterElo extends JavaPlugin {
     private PlayerKillDatabase PKDB;
     private BetterEloCommand betterEloCommand;
     private ExtendedConfigManager configManager;
+    private WorldGuardUtils worldGuardUtils;
     private final Map<String, Boolean> rewardStates = new HashMap<>();
     @Override
     public void onEnable() {
@@ -41,26 +42,21 @@ public final class BetterElo extends JavaPlugin {
         configManager = new ExtendedConfigManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano loggera.");
         PKDB = new PlayerKillDatabase(pluginLogger);
-        // Przekazujemy pluginLogger do innych klas
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling DataManager.");
         dataManager = new DataManager(this, pluginLogger);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano DataManager.");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano RewardManager.");
-        // ... dla innych klas również
         dataManager.initializeDataFolder();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano folder.");
         dataManager.initializeDatabaseFile();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano baze danych.");
         dataManager.loadDataFromFile();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling WorldGuardUtils.");
+        worldGuardUtils = new WorldGuardUtils(pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: DataManager został zainicjowany i dane zostały wczytane.");
-        // Inicjalizacja RewardManager
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: RewardManager został zainicjowany.");
-        // Inicjalizacja FileRewardManager
         fileRewardManager = new FileRewardManager(this, pluginLogger);
-        // Jeśli FileRewardManager wymaga inicjalizacji, dodaj tutaj
-        // Inicjalizacja GuiManager
         guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager);
         getServer().getPluginManager().registerEvents(guiManager, this);
-        // Inicjalizacja Placeholders
         placeholders = new Placeholders(dataManager, this);
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             placeholders.register();
@@ -72,9 +68,13 @@ public final class BetterElo extends JavaPlugin {
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters, worldGuardUtils, configManager);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: configManager.getExcludedRegions()");
+        //List<String> excludedRegions = configManager.getExcludedRegions();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: configManager.getExcludedRegions()");
+
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);

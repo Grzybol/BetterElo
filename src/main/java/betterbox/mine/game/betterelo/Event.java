@@ -23,12 +23,16 @@ public class Event implements Listener {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private BetterRanksCheaters cheaters;
+    private WorldGuardUtils worldGuardUtils;
+    private ExtendedConfigManager extendedConfigManager;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, WorldGuardUtils worldGuardUtils, ExtendedConfigManager extendedConfigManager) {
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
         this.plugin = plugin;
         this.cheaters = cheaters;
+        this.worldGuardUtils = worldGuardUtils;
+        this.extendedConfigManager = extendedConfigManager;
     }
 
     @EventHandler
@@ -168,7 +172,13 @@ public class Event implements Listener {
             Player victim = event.getEntity();
             Player killer = victim.getKiller();
             if (!cheaters.getCheatersList().contains(victim.getName()) && !cheaters.getCheatersList().contains(killer.getName())) {
-
+                WorldGuardUtils worldGuardUtils = new WorldGuardUtils(pluginLogger);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: Players are not on the cheaters list");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: calling  WorldGuardUtils.isPlayerInRegion(victim, extendedConfigManager.getExcludedRegions() for the victim ");
+                boolean isVictimInRegion = worldGuardUtils.isPlayerInExcludedRegion(victim, extendedConfigManager.getExcludedRegions());
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: calling  WorldGuardUtils.isPlayerInRegion(victim, extendedConfigManager.getExcludedRegions() for the killer ");
+                boolean isKillerInRegion = worldGuardUtils.isPlayerInExcludedRegion(killer, extendedConfigManager.getExcludedRegions());
+                if(!isVictimInRegion && !isKillerInRegion){
 
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event);
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
@@ -211,6 +221,7 @@ public class Event implements Listener {
                     assert killer != null;
                     notifyPlayersAboutPoints(killer, victim, pointsEarned);
                 }
+                }
                 else
                 {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + " or " + killer + " " + cheaters.getCheatersList().contains(killer.getName()) + " has CHEATER rank in BetterRanks.");
@@ -225,9 +236,9 @@ public class Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
 
-        Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
-        Duration stay = Duration.ofMillis(900);    // czas wyświetlania
-        Duration fadeOut = Duration.ofMillis(300); // czas znikania
+        Duration fadeIn = Duration.ofMillis(300);
+        Duration stay = Duration.ofMillis(900);
+        Duration fadeOut = Duration.ofMillis(300);
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
         Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
         Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Victim: "+victim.getName());
