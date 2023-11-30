@@ -96,6 +96,7 @@ public class ExtendedConfigManager {
         if (newExcludedRegions != null) {
             excludedRegions.clear();
             excludedRegions.addAll(newExcludedRegions);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "ConfigManager: ReloadConfig: current log levels: " + Arrays.toString(excludedRegions.toArray()));
         } else {
             // Jeśli nie ma zdefiniowanych wyłączonych regionów, dodaj domyślny "spawn"
             excludedRegions = new ArrayList<>();
@@ -133,6 +134,8 @@ public class ExtendedConfigManager {
             List<String> lines = Files.readAllLines(Paths.get(configFile.toURI()));
             if (!excludedRegions.isEmpty()) {
                 lines.add("excluded_regions:");
+                excludedRegions.add("spawn");
+                excludedRegions.add("training");
                 for (String region : excludedRegions) {
                     lines.add("  - " + region);
                 }

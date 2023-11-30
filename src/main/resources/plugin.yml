@@ -4,7 +4,7 @@ main: betterbox.mine.game.betterelo.BetterElo
 api-version: 1.18
 description: PvP Elo with configurable rewards. https://github.com/Grzybol/BetterElo
 author: Grzybol
-depend: [PlaceholderAPI]
+depend: [PlaceholderAPI, WorldGuard]
 commands:
   be:
     description: Komenda do ogólnego zarządzania rankingiem graczy.
