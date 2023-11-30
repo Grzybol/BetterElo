@@ -107,7 +107,7 @@ public class PlayerKillDatabase {
                     double totalPoints = resultSetKillsXonY.getDouble("total_points");
 
                     victimsInteractions.put(victimname, totalPoints);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Victim: " + victimname + ", Points: " + totalPoints);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "PlayerKillDatabase: getPlayerInteractions: " + playerName + " - Table: " + table + ", Victim: " + victimname + ", Points: " + totalPoints);
                 }
                 //interactionsMap.put(table, victimsInteractions;
 

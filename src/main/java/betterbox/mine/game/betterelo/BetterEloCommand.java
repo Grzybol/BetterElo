@@ -321,37 +321,43 @@ public class BetterEloCommand implements CommandExecutor {
                 for (Map.Entry<String, HashMap<String, Double>> entry : interactionsMap.entrySet()) {
                     String rankingType = entry.getKey();
                     HashMap<String, Double> interactions = entry.getValue();
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "BetterEloCommand: handleBanCommand: loop "+rankingType);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "BetterEloCommand: handleBanCommand: starting loop "+rankingType);
 
                     try{
                         for (Map.Entry<String, Double> interactionEntry : interactions.entrySet()) {
 
                             String otherPlayer = interactionEntry.getKey();
                             double totalPoints = interactionEntry.getValue();
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "BetterEloCommand: handleBanCommand: loop2 "+otherPlayer+" "+totalPoints);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterEloCommand: handleBanCommand: starting loop2 "+otherPlayer+" "+totalPoints+" "+rankingType);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterEloCommand: handleBanCommand: calling getOfflinePlayerUUID with parameters "+otherPlayer );
+                            String UUID = getOfflinePlayerUUID(otherPlayer);
+
                             if (totalPoints > 0) {
                                 // Gracz zasługuje na karę (odejmowanie punktów)
-                                event.addPoints(getOfflinePlayerUUID(otherPlayer), totalPoints, rankingType);
-                                pluginLogger.log(PluginLogger.LogLevel.INFO, "Player " + otherPlayer + " gained " + totalPoints + " in " + rankingType + " ranking after banning "+banName);
+                                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterEloCommand: handleBanCommand: calling event.addPoints with parameters: "+getOfflinePlayerUUID(otherPlayer)+" "+Math.abs(totalPoints)+" "+rankingType);
+                                event.addPoints(UUID, totalPoints, rankingType);
+                                pluginLogger.log(PluginLogger.LogLevel.INFO, "BAN COMMAND - Player " + otherPlayer + " gained " + totalPoints + " in " + rankingType + " ranking after banning "+banName);
                                 sender.sendMessage("Gracz " + otherPlayer + " otrzymał " + totalPoints + " punktów w trybie " + rankingType);
                             } else if (totalPoints < 0) {
                                 // Gracz nie zasługuje na karę (dodawanie punktów)
-                                event.subtractPoints(getOfflinePlayerUUID(otherPlayer), Math.abs(totalPoints), rankingType);
-                                pluginLogger.log(PluginLogger.LogLevel.INFO, "Player " + otherPlayer + " lost " + totalPoints + " in " + rankingType + " ranking");
+                                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterEloCommand: handleBanCommand: calling event.subtractPoints with parameters: "+getOfflinePlayerUUID(otherPlayer)+" "+Math.abs(totalPoints)+" "+rankingType);
+                                event.subtractPoints(UUID, Math.abs(totalPoints), rankingType);
+                                pluginLogger.log(PluginLogger.LogLevel.INFO, "BAN COMMAND - Player " + otherPlayer + " lost " + totalPoints + " in " + rankingType + " ranking");
                                 sender.sendMessage("Gracz " + otherPlayer + " stracił " + Math.abs(totalPoints) + " punktów nagrody w trybie " + rankingType);
                             } else {
+                                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                                 sender.sendMessage("Gracz " + otherPlayer + " nie ma żadnych punktów do zmiany w trybie " + rankingType);
                             }
                             totalPointsDistributed += Math.abs(totalPoints);
 
                         }
                     }catch (Exception e){
-                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: handleBanCommand loop2 "+e.getMessage());
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: handleBanCommand loop2 exception "+e.getMessage());
                     }
                 }
                 pluginLogger.log(PluginLogger.LogLevel.INFO, "Distributed " + totalPointsDistributed + " points in all the rankings after banning " + banName);
             }catch (Exception e){
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: handleBanCommand loop "+e.getMessage());
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: handleBanCommand loop exception"+e.getMessage());
             }
 
             // Usuń rekordy gracza z wszystkich tabel
@@ -379,13 +385,15 @@ public class BetterEloCommand implements CommandExecutor {
 
 
     public String getOfflinePlayerUUID(String playerName) {
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: getOfflinePlayerUUID called with parameter " + playerName);
+        try {
 
-        if (offlinePlayer.hasPlayedBefore()) {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
             String UUID = String.valueOf(offlinePlayer.getUniqueId());
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: getOfflinePlayerUUID UUID " + UUID);
             return UUID;
-        } else {
-            // Gracz o podanej nazwie jeszcze nie grał
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: getOfflinePlayerUUID: "+e.getMessage());
             return null;
         }
     }
