@@ -2,7 +2,9 @@ package betterbox.mine.game.betterelo;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -78,11 +80,11 @@ public class Event implements Listener {
             double killerElo = getElo(killer.getUniqueId().toString(), rankingType);
             double maxElo = getMaxElo(rankingType);
             double minElo = dataManager.getMinElo(rankingType);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: KillEvent: rankingType: " + rankingType + " loaded variables: maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victim name: " + victim.getName() + " killerElo:" + killerElo + " killer name: " + killer.getName());
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: rankingType: " + rankingType + " loaded variables: maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victim name: " + victim.getName() + " killerElo:" + killerElo + " killer name: " + killer.getName());
             double basePoints = 100;
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo);
             pointsEarned = calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
-            pluginLogger.log(PluginLogger.LogLevel.INFO, "Event: KillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
 
             // Zapisz informacje do bazy danych
             PlayerKillDatabase playerKillDatabase = new PlayerKillDatabase(pluginLogger);
@@ -245,7 +247,7 @@ public class Event implements Listener {
         double points = base * (1 - normalizedDifference);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: eloDifference: "+eloDifference+" normalizedDifference: "+normalizedDifference+" points: "+points+" maxElo: "+maxElo+" minElo: "+minElo);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut: "+(double)Math.round(points*100));
-        pluginLogger.log(PluginLogger.LogLevel.INFO,"Event: calculatePointsEarned: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
         return (double)Math.round(points*100)/100;
     }
 
@@ -262,12 +264,16 @@ public class Event implements Listener {
 
 
     public void addPoints(String playerUUID, double points, String rankingType) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: addPoints: playerUUID: "+playerUUID+" rankingType: "+rankingType+" points: "+points);
+        OfflinePlayer player = Bukkit.getOfflinePlayer(playerUUID);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: addPoints: playerUUID: "+player.getName()+" rankingType: "+rankingType+" points: "+points);
+        pluginLogger.log(PluginLogger.LogLevel.INFO,player.getName() +" earned "+points+" in "+rankingType+" ranking");
         updatePoints(playerUUID, points, rankingType, true);
     }
 
     public void subtractPoints(String playerUUID, double points, String rankingType) {
+        OfflinePlayer player = Bukkit.getOfflinePlayer(playerUUID);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: subtractPoints: playerUUID: "+playerUUID+" rankingType: "+rankingType+" points: "+points);
+        pluginLogger.log(PluginLogger.LogLevel.INFO,player.getName()+" lost "+points+" in "+rankingType+" ranking");
         updatePoints(playerUUID, points, rankingType, false);
     }
 

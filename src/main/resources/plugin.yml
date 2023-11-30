@@ -45,6 +45,12 @@ commands:
   be-claim:
     description: Komenda do odbierania nagród offline.
     usage: /be claim
+  be-add:
+    description: Komenda do dodawania punktów graczowi.
+    usage: /be add
+  be-sub:
+    description: Komenda do odbierania punktów graczowi.
+    usage: /be sub
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.
