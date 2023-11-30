@@ -243,7 +243,7 @@ public class BetterEloCommand implements CommandExecutor {
                     handleBanCommand(sender,args[1]);
                 }
                 break;
-            case 3:
+            case 4:
                 if (args[0].equalsIgnoreCase("add")){
                 handleAddPointsCommand(sender,args[1], Double.valueOf(args[2]),args[3]);
             }else if(args[0].equalsIgnoreCase("sub")){
