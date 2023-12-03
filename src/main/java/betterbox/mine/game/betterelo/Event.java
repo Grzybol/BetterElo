@@ -221,7 +221,7 @@ public class Event implements Listener {
                 }else{
                     killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Weekly ranking is too big! No reward for this one.");
                 }
-                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"month")<1000) {
+                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"monthly")<1000) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
                     handleKillEvent("monthly", victim, killer);
                 }else{
