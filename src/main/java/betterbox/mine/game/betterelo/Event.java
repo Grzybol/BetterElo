@@ -199,17 +199,36 @@ public class Event implements Listener {
 
                         return;
                     }
+                    String victimUUID = victim.getUniqueId().toString();
+                    String killerUUID = killer.getUniqueId().toString();
+                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"main")<1000) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: main " + victim + " " + killer);
                     double pointsEarned = handleKillEvent("main", victim, killer);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + killer);
-                    handleKillEvent("daily", victim, killer);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + killer);
-                    handleKillEvent("weekly", victim, killer);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
-                    handleKillEvent("monthly", victim, killer);
-
                     assert killer != null;
                     notifyPlayersAboutPoints(killer, victim, pointsEarned);
+                }else{
+                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Main ranking is too big! No reward for this one.");
+                }
+                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"daily")<1000) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + killer);
+                    handleKillEvent("daily", victim, killer);
+                }else{
+                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Daily ranking is too big! No reward for this one.");
+                }
+                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"weekly")<1000) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + killer);
+                    handleKillEvent("weekly", victim, killer);
+                }else{
+                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Weekly ranking is too big! No reward for this one.");
+                }
+                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"month")<1000) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
+                    handleKillEvent("monthly", victim, killer);
+                }else{
+                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Monthly ranking is too big! No reward for this one.");
+                }
+
+
                 }
                 else
                 {
@@ -240,9 +259,9 @@ public class Event implements Listener {
 
 
 
-    private double calculatePointsEarned(double base, double elo1, double elo2, double maxElo, double minElo) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned called with parameters : base "+base+" elo1 "+elo1+" elo2 "+elo2+" maxElo "+maxElo+" minElo "+minElo);
-        double eloDifference = elo1 - elo2;
+    private double calculatePointsEarned(double base, double killerelo, double victimelo, double maxElo, double minElo) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned called with parameters : base "+base+" elo1 "+killerelo+" elo2 "+victimelo+" maxElo "+maxElo+" minElo "+minElo);
+        double eloDifference = killerelo - victimelo;
         double normalizedDifference = eloDifference / (maxElo - minElo + 1);
         double points = base * (1 - normalizedDifference);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: eloDifference: "+eloDifference+" normalizedDifference: "+normalizedDifference+" points: "+points+" maxElo: "+maxElo+" minElo: "+minElo);
