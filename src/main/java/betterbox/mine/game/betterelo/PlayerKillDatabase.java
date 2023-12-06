@@ -29,17 +29,19 @@ public class PlayerKillDatabase {
             createNewDatabase();
         }
     }
-    public void saveKillData(String rankingType, String victimName, String killerName, double pointsEarned) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: saveKillData called with parameters: " + rankingType+" "+victimName+" "+killerName+" "+pointsEarned);
+    public void saveKillData(String rankingType, String victimName, String killerName, double pointsEarned, double killerPoints, double victimPoints) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: saveKillData called with parameters: " + rankingType+" "+victimName+" "+killerName+" "+pointsEarned+" "+killerPoints+" "+victimPoints);
         try {
             Connection connection = DriverManager.getConnection(DATABASE_URL);
 
             // Wstawienie danych do odpowiedniej tabeli
-            String insertSQL = "INSERT INTO " + rankingType + " (killername, victimname, pointearned) VALUES (?, ?, ?)";
+            String insertSQL = "INSERT INTO " + rankingType + " (killername, victimname, pointearned, pointsBeforeKill, pointsBeforeDeath) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(insertSQL);
             preparedStatement.setString(1, killerName);
             preparedStatement.setString(2, victimName);
             preparedStatement.setDouble(3, pointsEarned);
+            preparedStatement.setDouble(4, killerPoints);
+            preparedStatement.setDouble(5, victimPoints);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "PlayerKillDatabase: saveKillData: insertSQL "+insertSQL);
 
             preparedStatement.executeUpdate();
@@ -224,7 +226,7 @@ public class PlayerKillDatabase {
     }
 
     private void createTable(Connection connection, String tableName) throws SQLException {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"PlayerKillDatabase: createTable called with paraemeters "+connection.toString()+" "+tableName);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"PlayerKillDatabase: createTable called with parameters "+connection.toString()+" "+tableName);
         Statement statement = connection.createStatement();
 
         // Tworzenie tabeli z odpowiednimi kolumnami
@@ -233,7 +235,8 @@ public class PlayerKillDatabase {
                 "time TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
                 "killername TEXT NOT NULL," +
                 "victimname TEXT NOT NULL," +
-                "pointearned DOUBLE NOT NULL" +
+                "pointearned DOUBLE NOT NULL," +
+                "pointsBeforeKill DOUBLE NOT NULL "+
                 ");";
 
         statement.execute(createTableSQL);
