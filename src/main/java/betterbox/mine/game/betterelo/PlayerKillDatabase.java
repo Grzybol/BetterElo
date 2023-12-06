@@ -236,7 +236,8 @@ public class PlayerKillDatabase {
                 "killername TEXT NOT NULL," +
                 "victimname TEXT NOT NULL," +
                 "pointearned DOUBLE NOT NULL," +
-                "pointsBeforeKill DOUBLE NOT NULL "+
+                "pointsBeforeKill DOUBLE NOT NULL,"+
+                "pointsBeforeDeath DOUBLE NOT NULL "+
                 ");";
 
         statement.execute(createTableSQL);
