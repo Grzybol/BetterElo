@@ -24,8 +24,14 @@ Only for OP
 
 Placeholders:
 IMPORTANT!! I hardcoded 10s interval for checking placeholders - lemme know if you want it to be configurable in config file
-- %be_player% returns player's points
-- %be_rank% returns player's ranking
+- %be_player% returns player's main ranking points
+- %be_rank% returns player's main ranking
+- %be_player% returns player's daily ranking points
+- %be_rank% returns player's daily ranking
+- %be_player% returns player's weekly rankingpoints
+- %be_rank% returns player's weekly ranking
+- %be_player% returns player's monthly ranking points
+- %be_rank% returns player's monthly ranking
 - %be_player_top<n>% returns player's nickname at <n> position in ranking
 - %be_points_top<n>% returns player's points at <n> position in ranking
 - %be_daily_tl% returns time left on daily rewards timer - automatically converts to D-M-S format
