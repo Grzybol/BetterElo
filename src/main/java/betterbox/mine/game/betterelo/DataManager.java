@@ -99,6 +99,23 @@ public class DataManager {
         }
         return rank; // Gracz nie jest w rankingu
     }
+    public int getPlayerRank(String playerUUID, String ranking) {
+        //pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: getPlayerRank called with parameters "+playerUUID);
+        if (!playerPoints.containsKey(playerUUID)) {
+            return -1; // Gracz nie jest w rankingu
+
+        }
+        double playerPoints = getPoints(playerUUID,ranking);
+        Map<String, Double> sortedPlayers = sortPlayersByPoints(this.playerPoints);
+        int rank = 1;
+        for (Map.Entry<String, Double> entry : sortedPlayers.entrySet()) {
+            if (entry.getKey().equals(playerUUID)) {
+                return rank;
+            }
+            rank++;
+        }
+        return rank; // Gracz nie jest w rankingu
+    }
     public void loadDataFromFile() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: loadDataFromFile called");
         playerPoints.clear();

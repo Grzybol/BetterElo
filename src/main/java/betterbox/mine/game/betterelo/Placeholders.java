@@ -93,6 +93,18 @@ public class Placeholders extends PlaceholderExpansion {
                     return formatTime(betterElo.getRemainingTimeForRewards("weekly"));
                 case "monthly_tl":
                     return formatTime(betterElo.getRemainingTimeForRewards("monthly"));
+                case "player_daily":
+                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "daily"));
+                case "player_weekly":
+                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "weekly"));
+                case "player_monthly":
+                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "monthly"));
+                case "rank_daily":
+                    return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "daily"));
+                case "rank_weekly":
+                    return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "weekly"));
+                case "rank_monthly":
+                    return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "monthly"));
                 default:
                     String result;
                     if ((result = processRankingPlaceholder(identifier, "", dataManager.playerPoints)) != null) {
