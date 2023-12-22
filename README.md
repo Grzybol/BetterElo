@@ -2,7 +2,7 @@
 Minecraft PvP Elo rank system
 Plugin created by Grzybol
 Minecraft version 1.18.2+
-Dependecies: PlaceholderAPI
+Dependecies: PlaceholderAPI, BetterRanks
 
 There are no special permissions required to use below Player commands. 
 
@@ -18,22 +18,27 @@ BetterElo commands:
 - /be weekly      [ENG]Returns top10 weekly ranking                                 [PL]Zwraca info o top10 rankingu tygodniowego
 - /be monthly   [ENG]Returns top10 monthly ranking                         [PL]Zwraca info o top10 rankingu miesięcznego
 
+
 Only for OP
 
 - /be setrewards - Opens rewards GUI configuration for all timed rankings (daily,weekly,monthly) and positions (top1,top2,top3,top4-10). IMPORTANT! "Reset" button is resetting specified ranking type timer without handing out prizes. "Redeem" is both resetting timer and handing out prizes.
+- /be ban <player>
+- /be add <player> <points> <main/daily/weekly/monthly>
+- /be sub <player> <points> <main/daily/weekly/monthly>
 
 Placeholders:
 IMPORTANT!! I hardcoded 10s interval for checking placeholders - lemme know if you want it to be configurable in config file
 - %be_player% returns player's main ranking points
+- %be_player_daily% returns player's daily ranking points
+- %be_player_weekly% returns player's weekly ranking points
+- %be_player_monthly% returns player's monthly ranking points
 - %be_rank% returns player's main ranking
-- %be_player% returns player's daily ranking points
-- %be_rank% returns player's daily ranking
-- %be_player% returns player's weekly rankingpoints
-- %be_rank% returns player's weekly ranking
-- %be_player% returns player's monthly ranking points
-- %be_rank% returns player's monthly ranking
+- %be_rank_daily% returns player's daily ranking
+- %be_rank_weekly% returns player's weekly ranking
+- %be_rank_monthly% returns player's monthly ranking
 - %be_player_top<n>% returns player's nickname at <n> position in ranking
 - %be_points_top<n>% returns player's points at <n> position in ranking
 - %be_daily_tl% returns time left on daily rewards timer - automatically converts to D-M-S format
 - %be_weekly_tl% returns time left on daily rewards timer - automatically converts to D-M-S format
 - %be_monthly_tl% returns time left on daily rewards timer - automatically converts to D-M-S format
+
