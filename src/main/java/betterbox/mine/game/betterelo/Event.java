@@ -209,19 +209,19 @@ public class Event implements Listener {
                 }else{
                     killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Main ranking is too big! No reward for this one.");
                 }
-                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"daily")<1000) {
+                if(dataManager.getPoints(killerUUID,"daily")-dataManager.getPoints(victimUUID,"daily")<1000) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + killer);
                     handleKillEvent("daily", victim, killer);
                 }else{
                     killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Daily ranking is too big! No reward for this one.");
                 }
-                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"weekly")<1000) {
+                if(dataManager.getPoints(killerUUID,"weekly")-dataManager.getPoints(victimUUID,"weekly")<1000) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + killer);
                     handleKillEvent("weekly", victim, killer);
                 }else{
                     killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"Your Elo difference in the Weekly ranking is too big! No reward for this one.");
                 }
-                if(dataManager.getPoints(killerUUID,"main")-dataManager.getPoints(victimUUID,"monthly")<1000) {
+                if(dataManager.getPoints(killerUUID,"monthly")-dataManager.getPoints(victimUUID,"monthly")<1000) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
                     handleKillEvent("monthly", victim, killer);
                 }else{
