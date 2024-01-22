@@ -236,8 +236,6 @@ public final class BetterElo extends JavaPlugin {
             }
         }.runTaskLater(this, delay);
     }
-
-
     private void rewardAndReschedule(String period, long periodMillis, boolean useNextMonthTime) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: Starting rewardTopPlayers");
         rewardTopPlayers(period);

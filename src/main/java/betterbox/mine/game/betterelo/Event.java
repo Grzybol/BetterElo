@@ -89,7 +89,7 @@ public class Event implements Listener {
             // Zapisz informacje do bazy danych
             PlayerKillDatabase playerKillDatabase = new PlayerKillDatabase(pluginLogger);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling saveKillData");
-            playerKillDatabase.saveKillData(rankingType, victim.getName(), killer.getName(), pointsEarned, dataManager.getPoints(killer.getUniqueId().toString(),rankingType), dataManager.getPoints(victim.getUniqueId().toString(),rankingType));
+            playerKillDatabase.saveKillData(rankingType, victim.getName(), killer.getName(), pointsEarned, killerElo, victimElo);
 
             // Dodaj punkty graczowi, który zabił
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling addPoints with parameters: " + killer.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);

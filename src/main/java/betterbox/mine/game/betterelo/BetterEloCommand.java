@@ -385,11 +385,6 @@ public class BetterEloCommand implements CommandExecutor {
             return false;
         }
     }
-
-
-
-
-
     public String getOfflinePlayerUUID(String playerName) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: getOfflinePlayerUUID called with parameter " + playerName);
         try {
@@ -403,7 +398,6 @@ public class BetterEloCommand implements CommandExecutor {
             return null;
         }
     }
-
     private String formatTime(long millis) {
         long seconds = millis / 1000;
         long minutes = seconds / 60;

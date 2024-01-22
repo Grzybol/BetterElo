@@ -81,7 +81,12 @@ public class ExtendedConfigManager {
 
         if (!configFile.exists()) {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "Config file does not exist, creating new one.");
-            plugin.saveDefaultConfig();
+            try {
+                configFile.createNewFile();
+            } catch (IOException e) {
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error while creating config file: " + e.getMessage());
+            }
+            updateConfig("log_level:\n  - INFO\n  - WARNING\n  - ERROR");
         }
 
         try {
@@ -99,4 +104,5 @@ public class ExtendedConfigManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error while updating config file: " + e.getMessage());
         }
     }
+
 }
