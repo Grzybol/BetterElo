@@ -76,7 +76,6 @@ public class ExtendedConfigManager {
     }
 
     public void updateConfig(String configuration) {
-
         configFile = new File(plugin.getDataFolder(), "config.yml");
 
         if (!configFile.exists()) {
@@ -86,17 +85,16 @@ public class ExtendedConfigManager {
             } catch (IOException e) {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error while creating config file: " + e.getMessage());
             }
-            updateConfig("log_level:\n  - INFO\n  - WARNING\n  - ERROR");
         }
 
         try {
+            // Usunięcie istniejących linii z log_level
             List<String> lines = Files.readAllLines(Paths.get(configFile.toURI()));
+            lines.removeIf(line -> line.trim().startsWith("log_level:"));
 
-            // Dodaj nowe zmienne konfiguracyjne
+            // Dodanie nowych danych konfiguracyjnych
             lines.add("###################################");
             lines.add(configuration);
-            // Tutaj możemy dodać nowe zmienne konfiguracyjne
-            // ...
 
             Files.write(Paths.get(configFile.toURI()), lines);
             pluginLogger.log(PluginLogger.LogLevel.INFO, "Config file updated successfully.");
@@ -104,5 +102,6 @@ public class ExtendedConfigManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error while updating config file: " + e.getMessage());
         }
     }
+
 
 }
