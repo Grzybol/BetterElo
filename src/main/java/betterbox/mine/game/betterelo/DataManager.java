@@ -78,7 +78,6 @@ public class DataManager {
 
             } catch (IOException e) {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: initializeFile: error: "+e);
-                e.printStackTrace();
             }
         }
     }
@@ -117,68 +116,33 @@ public class DataManager {
         return rank; // Gracz nie jest w rankingu
     }
     public void loadDataFromFile() {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: loadDataFromFile called");
-        playerPoints.clear();
-        dailyPlayerPoints.clear();
-        weeklyPlayerPoints.clear();
-        monthlyPayerPoints.clear();
-        try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    String playerUUID = parts[0];
-                    double points = Double.parseDouble(parts[1]);
-                    playerPoints.put(playerUUID, points);
-                }
-            }
-        } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
-
-        }
-        try (BufferedReader reader = new BufferedReader(new FileReader(dailyDatabaseFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    String playerUUID = parts[0];
-                    double points = Double.parseDouble(parts[1]);
-                    dailyPlayerPoints.put(playerUUID, points);
-                }
-            }
-        } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
-        }
-        try (BufferedReader reader = new BufferedReader(new FileReader(weeklyDatabaseFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    String playerUUID = parts[0];
-                    double points = Double.parseDouble(parts[1]);
-                    weeklyPlayerPoints.put(playerUUID, points);
-                }
-            }
-        } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
-        }
-        try (BufferedReader reader = new BufferedReader(new FileReader(monthlyDatabaseFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    String playerUUID = parts[0];
-                    double points = Double.parseDouble(parts[1]);
-                    monthlyPayerPoints.put(playerUUID, points);
-                }
-            }
-        } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
-        }
+        loadPointsFromFile(databaseFile, playerPoints);
+        loadPointsFromFile(dailyDatabaseFile, dailyPlayerPoints);
+        loadPointsFromFile(weeklyDatabaseFile, weeklyPlayerPoints);
+        loadPointsFromFile(monthlyDatabaseFile, monthlyPayerPoints);
 
         // Używamy nowego loggera do zapisywania wiadomości debugujących
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: loadDataFromFile: Data loaded");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "DataManager: loadDataFromFile: Data loaded");
     }
+
+    private void loadPointsFromFile(File file, Map<String, Double> pointsMap) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "DataManager: loadDataFromFile called for file: " + file.getName());
+        pointsMap.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    String playerUUID = parts[0];
+                    double points = Double.parseDouble(parts[1]);
+                    pointsMap.put(playerUUID, points);
+                }
+            }
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "DataManager: loadDataFromFile: error: " + e);
+        }
+    }
+
     public void saveDataToFileDaily() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileDaily called");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(dailyDatabaseFile))) {

@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class  Event implements Listener {
@@ -70,33 +71,24 @@ public class  Event implements Listener {
         }
     }
 
-    private double handleKillEvent(String rankingType, Player victim, Player killer) {
+    private double handleKillEvent(String rankingType, Player victim, Player killer, String killerUUID, String victimUUID) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
         double pointsEarned = 0;
-
-        if (killer != null && !killer.equals(victim)) {
             // Gracz zabił innego gracza
-            double victimElo = getElo(victim.getUniqueId().toString(), rankingType);
-            double killerElo = getElo(killer.getUniqueId().toString(), rankingType);
+            double victimElo = dataManager.getPoints(victim.getUniqueId().toString(), rankingType);
+            double killerElo = dataManager.getPoints(killer.getUniqueId().toString(), rankingType);
             double maxElo = getMaxElo(rankingType);
             double minElo = dataManager.getMinElo(rankingType);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: rankingType: " + rankingType + " loaded variables: maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victim name: " + victim.getName() + " killerElo:" + killerElo + " killer name: " + killer.getName());
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: rankingType: " + rankingType + " loaded variables: maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victim name: " + victim.getName() + " killerElo:" + killerElo + " killer name: " + killer.getName()+" pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
             double basePoints = 100;
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo);
             pointsEarned = calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
-
-            // Zapisz informacje do bazy danych
             PlayerKillDatabase playerKillDatabase = new PlayerKillDatabase(pluginLogger);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling saveKillData");
             playerKillDatabase.saveKillData(rankingType, victim.getName(), killer.getName(), pointsEarned, killerElo, victimElo);
-
-            // Dodaj punkty graczowi, który zabił
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling addPoints with parameters: " + killer.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);
-            addPoints(killer.getUniqueId().toString(), pointsEarned, rankingType);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling subtractPoints with parameters: " + victim.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);
-            subtractPoints(victim.getUniqueId().toString(), pointsEarned, rankingType);
-        }
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling addPoints with parameters: " + killerUUID + " " + pointsEarned + " " + rankingType);
+            addPoints(killerUUID, pointsEarned, rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling subtractPoints with parameters: " + victimUUID + " " + pointsEarned + " " + rankingType);
+            subtractPoints(victimUUID, pointsEarned, rankingType);
         return pointsEarned;
     }
 
@@ -134,11 +126,11 @@ public class  Event implements Listener {
     }
     // Metoda do znalezienia ostatniego napastnika
     private Player getLastAttacker(Player victim) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker called with parameters: " + victim);
+        //pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker called with parameters: " + victim);
         try {
             Player lastAttacker = null;
             long lastAttackTime = 0;
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker: checking online players");
+            //pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker: checking online players");
             // Iterowanie przez wszystkich graczy i znajdowanie tego, który ostatnio uderzył ofiarę
             for (Player player : plugin.getServer().getOnlinePlayers()) {
                 UUID playerId = player.getUniqueId();
@@ -152,7 +144,7 @@ public class  Event implements Listener {
                     }
                 }
             }
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker: lastAttacker " + lastAttacker);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: getLastAttacker: lastAttacker " + lastAttacker+" from victim "+victim.getName());
 
 
             return lastAttacker;
@@ -165,70 +157,21 @@ public class  Event implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+
         try {
             Player victim = event.getEntity();
             Player killer = victim.getKiller();
+            if(killer==null||!killer.equals(victim)) {
+                return;
+            }
             if (!cheaters.getCheatersList().contains(victim.getName()) && !cheaters.getCheatersList().contains(killer.getName())) {
-
-
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event);
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling deathDueToCombat(victim)");
-                if (killer == null && deathDueToCombat(victim)) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath killer is null");
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: deathDueToCombat(victim): " + deathDueToCombat(victim) + " victim: " + victim);
-                    // Znajdź ostatniego gracza, który uderzył ofiarę
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling getLastAttacker(victim)");
-                    Player lastAttacker = getLastAttacker(victim);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: lastAttacker " + lastAttacker);
-
-                    if (lastAttacker != null) {
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: calling handleKillEvent" + lastAttacker);
-                        // Oblicz punkty zdobyte/wtracone w wyniku "wirtualnej" walki
-                        double pointsEarned = handleKillEvent("main", victim, lastAttacker);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + lastAttacker);
-                        handleKillEvent("daily", victim, lastAttacker);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + lastAttacker);
-                        handleKillEvent("weekly", victim, lastAttacker);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + lastAttacker);
-                        handleKillEvent("monthly", victim, lastAttacker);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling notifyPlayersAboutPoints(lastAttacker, victim, pointsEarned)");
-                        // Powiadom graczy o zmianie punktów
-                        notifyPlayersAboutPoints(lastAttacker, victim, pointsEarned);
-                        return;
-                    }
-
-                    return;
-                }
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event+". victim: " + victim + " killer: " + killer+".");
                 String victimUUID = victim.getUniqueId().toString();
                 String killerUUID = killer.getUniqueId().toString();
-                if (dataManager.getPoints(killerUUID, "main") - dataManager.getPoints(victimUUID, "main") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: main " + victim + " " + killer);
-                    double pointsEarned = handleKillEvent("main", victim, killer);
-                    assert killer != null;
-                    notifyPlayersAboutPoints(killer, victim, pointsEarned);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Main ranking is too big! No reward for this one.");
-                }
-                if (dataManager.getPoints(killerUUID, "daily") - dataManager.getPoints(victimUUID, "daily") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + killer);
-                    handleKillEvent("daily", victim, killer);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Daily ranking is too big! No reward for this one.");
-                }
-                if (dataManager.getPoints(killerUUID, "weekly") - dataManager.getPoints(victimUUID, "weekly") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + killer);
-                    handleKillEvent("weekly", victim, killer);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Weekly ranking is too big! No reward for this one.");
-                }
-                if (dataManager.getPoints(killerUUID, "monthly") - dataManager.getPoints(victimUUID, "monthly") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
-                    handleKillEvent("monthly", victim, killer);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Monthly ranking is too big! No reward for this one.");
-                }
-
+                checkAndHandleEloDifference("main",killerUUID,victimUUID,killer,victim);
+                checkAndHandleEloDifference("daily",killerUUID,victimUUID,killer,victim);
+                checkAndHandleEloDifference("weekly",killerUUID,victimUUID,killer,victim);
+                checkAndHandleEloDifference("monthly",killerUUID,victimUUID,killer,victim);
 
             } else {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + " or " + killer + " " + cheaters.getCheatersList().contains(killer.getName()) + " has CHEATER rank in BetterRanks.");
@@ -238,8 +181,19 @@ public class  Event implements Listener {
         }
     });
 }
-
-
+    private void checkAndHandleEloDifference(String rankingType, String killerUUID, String victimUUID, Player killer, Player victim) {
+        double killerPoints = dataManager.getPoints(killerUUID, rankingType);
+        double victimPoints = dataManager.getPoints(victimUUID, rankingType);
+        if (killerPoints - victimPoints < 1000) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: " + rankingType + " " + victim + " " + killer);
+            double pointsEarned = handleKillEvent(rankingType, victim, killer, killerUUID, victimUUID);
+            if(Objects.equals(rankingType, "main")){
+                notifyPlayersAboutPoints(killer, victim, pointsEarned);
+            }
+        } else {
+            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the " + rankingType + " ranking is too big! No reward for this one.");
+        }
+    }
     private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
