@@ -105,8 +105,23 @@ public class DataManager {
             return -1; // Gracz nie jest w rankingu
 
         }
-        double playerPoints = getPoints(playerUUID,ranking);
         Map<String, Double> sortedPlayers = sortPlayersByPoints(this.playerPoints);
+        switch (ranking){
+            case "main":
+                sortedPlayers = sortPlayersByPoints(this.playerPoints);
+                break;
+            case "daily":
+                sortedPlayers = sortPlayersByPoints(this.dailyPlayerPoints);
+                break;
+            case "weekly":
+                sortedPlayers = sortPlayersByPoints(this.weeklyPlayerPoints);
+                break;
+            case "monthly":
+                sortedPlayers = sortPlayersByPoints(this.monthlyPayerPoints);
+                break;
+
+        }
+
         int rank = 1;
         for (Map.Entry<String, Double> entry : sortedPlayers.entrySet()) {
             if (entry.getKey().equals(playerUUID)) {
