@@ -93,9 +93,9 @@ public class  Event implements Listener {
 
             // Dodaj punkty graczowi, który zabił
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling addPoints with parameters: " + killer.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);
-            addPoints(killer.getUniqueId().toString(), pointsEarned, rankingType);
+            addPoints(killer, pointsEarned, rankingType);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: handleKillEvent calling subtractPoints with parameters: " + victim.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);
-            subtractPoints(victim.getUniqueId().toString(), pointsEarned, rankingType);
+            subtractPoints(victim, pointsEarned, rankingType);
         }
         return pointsEarned;
     }
@@ -294,6 +294,16 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: subtractPoints: playerUUID: "+playerUUID+" rankingType: "+rankingType+" points: "+points);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Player "+player.getName()+" lost "+points+" in "+rankingType+" ranking");
         updatePoints(playerUUID, points, rankingType, false);
+    }
+    public void addPoints(OfflinePlayer player, double points, String rankingType) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: addPoints: player: "+player.getName()+" rankingType: "+rankingType+" points: "+points);
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Player "+player.getName() +" earned "+points+" in "+rankingType+" ranking");
+        updatePoints(player.getUniqueId().toString(), points, rankingType, true);
+    }
+    public void subtractPoints(OfflinePlayer player, double points, String rankingType) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: subtractPoints: player: "+player.getName()+" rankingType: "+rankingType+" points: "+points);
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Player "+player.getName()+" lost "+points+" in "+rankingType+" ranking");
+        updatePoints(player.getUniqueId().toString(), points, rankingType, false);
     }
 
     private double getElo(String playerUUID, String rankingType) {

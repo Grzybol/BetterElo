@@ -1,9 +1,12 @@
 package betterbox.mine.game.betterelo;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
+
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
@@ -51,6 +54,14 @@ public class FileRewardManager {
             }
         }
         return rewards;
+    }
+    public List<ItemStack> loadRewards(Player player) {
+        File rewardsFile = new File(plugin.getDataFolder(), rewardType + ".yml");
+        if (!rewardsFile.exists()) {
+            return new ArrayList<>(); // return empty list if the file does not exist
+        }
+        FileConfiguration config = YamlConfiguration.loadConfiguration(rewardsFile);
+        return (List<ItemStack>) config.getList(player.getName());
     }
     public List<ItemStack> getReward(String rewardType) {
         // Załaduj konfigurację z pliku dla danego typu nagrody
