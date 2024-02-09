@@ -200,8 +200,10 @@ public class DataManager {
             for (Map.Entry<String, Double> entry : dailyPlayerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
                 double points = entry.getValue();
-                writer.write(playerUUID + ":" + points);
-                writer.newLine();
+                if (!playerUUID.equals("AIR")) {
+                    writer.write(playerUUID + ":" + points);
+                    writer.newLine();
+                }
             }
         } catch (IOException e) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileDaily: error: "+e);
@@ -215,8 +217,10 @@ public class DataManager {
             for (Map.Entry<String, Double> entry : weeklyPlayerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
                 double points = entry.getValue();
-                writer.write(playerUUID + ":" + points);
-                writer.newLine();
+                if (!playerUUID.equals("AIR")) {
+                    writer.write(playerUUID + ":" + points);
+                    writer.newLine();
+                }
             }
         } catch (IOException e) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileWeekly: error: "+e);
@@ -230,8 +234,10 @@ public class DataManager {
             for (Map.Entry<String, Double> entry : monthlyPayerPoints.entrySet()) {
                 String playerUUID = entry.getKey();
                 double points = entry.getValue();
-                writer.write(playerUUID + ":" + points);
-                writer.newLine();
+                if (!playerUUID.equals("AIR")) {
+                    writer.write(playerUUID + ":" + points);
+                    writer.newLine();
+                }
             }
         } catch (IOException e) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileMonthly: error: "+e);
