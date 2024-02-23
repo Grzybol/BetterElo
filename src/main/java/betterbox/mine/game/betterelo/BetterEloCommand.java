@@ -152,7 +152,6 @@ public class BetterEloCommand implements CommandExecutor {
                             try {
                                 rewardsConfig.save(rewardsFile);
                             } catch (IOException e) {
-                                e.printStackTrace();
                                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: claim: Error while saving rewards configuration: " + e);
                             }
                         }
@@ -405,4 +404,5 @@ public class BetterEloCommand implements CommandExecutor {
         long days = hours / 24;
         return String.format("%d days, %d hours, %d minutes, %d seconds", days, hours % 24, minutes % 60, seconds % 60);
     }
+
 }

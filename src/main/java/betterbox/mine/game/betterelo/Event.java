@@ -8,6 +8,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -23,12 +24,14 @@ public class  Event implements Listener {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private BetterRanksCheaters cheaters;
+    private ExtendedConfigManager configManager;
 
     public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters) {
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
         this.plugin = plugin;
         this.cheaters = cheaters;
+        this.configManager = configManager;
     }
 
     @EventHandler
@@ -256,6 +259,20 @@ public class  Event implements Listener {
 
         victim.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.RED +  "You have lost "+ChatColor.DARK_RED + "" + ChatColor.BOLD +df.format(pointsEarned)+" Elo");
     }
+    private void notifyPlayerAboutPoints(Player player, double pointsEarned) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+player+" "+pointsEarned);
+        DecimalFormat df = new DecimalFormat("#.##");
+
+        Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
+        Duration stay = Duration.ofMillis(900);    // czas wyświetlania
+        Duration fadeOut = Duration.ofMillis(300); // czas znikania
+        Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
+        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
+        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Current Elo: "+dataManager.getPoints(player.getUniqueId().toString(),"main"));
+        // Notify the killer
+        Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
+        player.showTitle(killerTitle);
+    }
 
 
 
@@ -267,6 +284,13 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: eloDifference: "+eloDifference+" normalizedDifference: "+normalizedDifference+" points: "+points+" maxElo: "+maxElo+" minElo: "+minElo);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut: "+(double)Math.round(points*100));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
+        return (double)Math.round(points*100)/100;
+    }
+    private double calculatePointsEarnedFromBlock(double base, double playerElo,double blockReward, double maxElo, double minElo) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock called with parameters : base "+base+" playerElo "+playerElo+" blockReward "+blockReward+" maxElo "+maxElo+" minElo "+minElo);
+        double points = base * blockReward * ((maxElo-minElo)/(playerElo-minElo));
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
         return (double)Math.round(points*100)/100;
     }
 
@@ -315,4 +339,42 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: getMaxElo: rankingType: "+rankingType);
         return dataManager.getMaxElo(rankingType);
     }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        // Sprawdź, czy blok zniszczony przez gracza znajduje się na liście nagród
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            String blockType = event.getBlock().getType().toString();
+            if (configManager.getBlockRewards().containsKey(blockType)) {
+                double blockReward = configManager.getBlockRewards().get(blockType);
+                Player player = event.getPlayer();
+                String uuid = player.getUniqueId().toString();
+                double base = configManager.blockBase;
+
+                double playerElo = dataManager.getPoints(uuid,"main");
+                double pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
+                addPoints(uuid,pointsEarned,"main");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking main");
+
+                playerElo = dataManager.getPoints(uuid,"daily");
+                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("daily"), dataManager.getMinElo("daily"));
+                addPoints(uuid,pointsEarned,"daily");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking daily");
+
+                playerElo = dataManager.getPoints(uuid,"weekly");
+                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("weekly"), dataManager.getMinElo("weekly"));
+                addPoints(uuid,pointsEarned,"weekly");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking weekly");
+
+                playerElo = dataManager.getPoints(uuid,"monthly");
+                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("monthly"), dataManager.getMinElo("monthly"));
+                addPoints(uuid,pointsEarned,"monthly");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
+
+                notifyPlayerAboutPoints(player,pointsEarned);
+            }
+        });
+    }
+
+
 }
