@@ -49,7 +49,7 @@ public class ExtendedConfigManager {
                 }
             }
         }
-
+        ReloadConfig();
         // Ustawienie aktywnych poziomów logowania w loggerze
         pluginLogger.setEnabledLogLevels(enabledLogLevels);
     }
@@ -65,6 +65,7 @@ public class ExtendedConfigManager {
             // Jeśli konfiguracja nie określa poziomów logowania, użyj domyślnych ustawień
             enabledLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
             updateConfig("log_level:\n  - INFO\n  - WARNING\n  - ERROR");
+            plugin.saveConfig();
 
         }
 
@@ -86,16 +87,19 @@ public class ExtendedConfigManager {
         if (blocksRewardsSection != null) {
             // Jeśli sekcja istnieje, odczytaj jej zawartość i zapisz w pamięci
             for (String blockType : blocksRewardsSection.getKeys(false)) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, blockType);
                 int reward = plugin.getConfig().getInt("blocks_rewards." + blockType);
                 blockRewards.put(blockType, reward);
             }
         } else {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: blocks_rewards section not found in config! Creating new section..");
             blocksRewardsSection = plugin.getConfig().createSection("blocks_rewards");
-            blocksRewardsSection.addDefault("DIAMOND_ORE", 4);
-            blocksRewardsSection.addDefault("DIAMOND_BLOCK", 4);
+            blocksRewardsSection.set("DIAMOND_ORE", 4);
+            blocksRewardsSection.set("DIAMOND_BLOCK", 4);
+            plugin.saveConfig();
 
         }
+
         blockBase = plugin.getConfig().getDouble("block_base");
         if (plugin.getConfig().contains("block_base")){
             if (plugin.getConfig().isDouble("block_base")){
@@ -104,13 +108,17 @@ public class ExtendedConfigManager {
             else {
                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base incorrect! Restoring default");
                 plugin.getConfig().set("block_base", 0.1);
+                plugin.saveConfig();
             }
         }
         else{
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
-            plugin.getConfig().addDefault("block_base", 0.1);
+            plugin.getConfig().createSection("block_base");
+            plugin.getConfig().set("block_base", 0.1);
+            //blockBaseSection.set("value", 0.1);
+            plugin.saveConfig();
         }
-        plugin.saveConfig();
+
 
     }
 

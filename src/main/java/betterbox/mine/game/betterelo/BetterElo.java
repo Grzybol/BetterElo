@@ -72,7 +72,7 @@ public final class BetterElo extends JavaPlugin {
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");

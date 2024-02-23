@@ -5,6 +5,7 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,7 +27,7 @@ public class  Event implements Listener {
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager) {
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
         this.plugin = plugin;
@@ -288,7 +289,10 @@ public class  Event implements Listener {
     }
     private double calculatePointsEarnedFromBlock(double base, double playerElo,double blockReward, double maxElo, double minElo) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock called with parameters : base "+base+" playerElo "+playerElo+" blockReward "+blockReward+" maxElo "+maxElo+" minElo "+minElo);
-        double points = base * blockReward * ((maxElo-minElo)/(playerElo-minElo));
+        double eloDifference = maxElo-minElo;
+        double S = (eloDifference+1)/playerElo;
+        double points =  base * blockReward * S;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "Event: calculatePointsEarnedFromBlock: eloDifference: "+eloDifference+", S: "+S+", points: "+points);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
         return (double)Math.round(points*100)/100;
@@ -341,10 +345,11 @@ public class  Event implements Listener {
     }
 
     @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
+    public void onBreak(BlockBreakEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"onBlockBreak called");
+        Block block = event.getBlock();
         // Sprawdź, czy blok zniszczony przez gracza znajduje się na liście nagród
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-            String blockType = event.getBlock().getType().toString();
+            String blockType = block.getType().toString();
             if (configManager.getBlockRewards().containsKey(blockType)) {
                 double blockReward = configManager.getBlockRewards().get(blockType);
                 Player player = event.getPlayer();
@@ -371,9 +376,13 @@ public class  Event implements Listener {
                 addPoints(uuid,pointsEarned,"monthly");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
 
-                notifyPlayerAboutPoints(player,pointsEarned);
+                if(pointsEarned>0.1) {
+                    notifyPlayerAboutPoints(player, pointsEarned);
+                }
             }
-        });
+            else{
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Block "+blockType+" is not on the list");
+            }
     }
 
 
