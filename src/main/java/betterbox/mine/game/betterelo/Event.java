@@ -357,12 +357,12 @@ public class  Event implements Listener {
                 double base = configManager.blockBase;
 
                 double playerElo = dataManager.getPoints(uuid,"main");
-                double pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
-                addPoints(uuid,pointsEarned,"main");
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking main");
+                double pointsEarnedMain = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
+                addPoints(uuid,pointsEarnedMain,"main");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarnedMain+", ranking main");
 
                 playerElo = dataManager.getPoints(uuid,"daily");
-                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("daily"), dataManager.getMinElo("daily"));
+                double pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("daily"), dataManager.getMinElo("daily"));
                 addPoints(uuid,pointsEarned,"daily");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking daily");
 
@@ -376,8 +376,8 @@ public class  Event implements Listener {
                 addPoints(uuid,pointsEarned,"monthly");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
 
-                if(pointsEarned>0.1) {
-                    notifyPlayerAboutPoints(player, pointsEarned);
+                if(pointsEarnedMain>0.1) {
+                    notifyPlayerAboutPoints(player, pointsEarnedMain);
                 }
             }
             else{
