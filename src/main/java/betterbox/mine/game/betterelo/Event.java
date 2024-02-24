@@ -293,7 +293,8 @@ public class  Event implements Listener {
     private double calculatePointsEarnedFromBlock(double base, double playerElo,double blockReward, double maxElo, double minElo) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock called with parameters : base "+base+" playerElo "+playerElo+" blockReward "+blockReward+" maxElo "+maxElo+" minElo "+minElo);
         double eloDifference = maxElo-minElo;
-        double S = (eloDifference+1)/playerElo;
+        double eloPlayerDiff = playerElo - minElo;
+        double S = (eloPlayerDiff)/(eloDifference+1);
         double points =  base * blockReward * S;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "Event: calculatePointsEarnedFromBlock: eloDifference: "+eloDifference+", S: "+S+", points: "+points);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
