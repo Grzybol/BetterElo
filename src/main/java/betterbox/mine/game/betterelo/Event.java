@@ -5,12 +5,17 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -23,12 +28,14 @@ public class  Event implements Listener {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private BetterRanksCheaters cheaters;
+    private ExtendedConfigManager configManager;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager) {
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
         this.plugin = plugin;
         this.cheaters = cheaters;
+        this.configManager = configManager;
     }
 
     @EventHandler
@@ -256,6 +263,20 @@ public class  Event implements Listener {
 
         victim.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.RED +  "You have lost "+ChatColor.DARK_RED + "" + ChatColor.BOLD +df.format(pointsEarned)+" Elo");
     }
+    private void notifyPlayerAboutPoints(Player player, double pointsEarned) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+player+" "+pointsEarned);
+        DecimalFormat df = new DecimalFormat("#.##");
+
+        Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
+        Duration stay = Duration.ofMillis(900);    // czas wyświetlania
+        Duration fadeOut = Duration.ofMillis(300); // czas znikania
+        Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
+        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
+        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Current Elo: "+dataManager.getPoints(player.getUniqueId().toString(),"main"));
+        // Notify the killer
+        Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
+        player.showTitle(killerTitle);
+    }
 
 
 
@@ -267,6 +288,16 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: eloDifference: "+eloDifference+" normalizedDifference: "+normalizedDifference+" points: "+points+" maxElo: "+maxElo+" minElo: "+minElo);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut: "+(double)Math.round(points*100));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
+        return (double)Math.round(points*100)/100;
+    }
+    private double calculatePointsEarnedFromBlock(double base, double playerElo,double blockReward, double maxElo, double minElo) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock called with parameters : base "+base+" playerElo "+playerElo+" blockReward "+blockReward+" maxElo "+maxElo+" minElo "+minElo);
+        double eloDifference = maxElo-minElo;
+        double S = (eloDifference+1)/playerElo;
+        double points =  base * blockReward * S;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "Event: calculatePointsEarnedFromBlock: eloDifference: "+eloDifference+", S: "+S+", points: "+points);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
         return (double)Math.round(points*100)/100;
     }
 
@@ -315,4 +346,77 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: getMaxElo: rankingType: "+rankingType);
         return dataManager.getMaxElo(rankingType);
     }
+
+    @EventHandler
+    public void onBreak(BlockBreakEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"onBlockBreak called");
+        Block block = event.getBlock();
+
+        // Sprawdź, czy blok zniszczony przez gracza znajduje się na liście nagród
+            String blockType = block.getType().toString();
+
+            if (configManager.getBlockRewards().containsKey(blockType)) {
+                for (MetadataValue meta : block.getMetadata("placed_by_player")) {
+                    if (meta.asBoolean()) {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"onBlockBreak: block was placed by a player");
+                        return;
+                    }
+                }
+                double blockReward = configManager.getBlockRewards().get(blockType);
+                Player player = event.getPlayer();
+                String uuid = player.getUniqueId().toString();
+                double base = configManager.blockBase;
+
+                double playerElo = dataManager.getPoints(uuid,"main");
+                double pointsEarnedMain = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
+                addPoints(uuid,pointsEarnedMain,"main");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarnedMain+", ranking main");
+
+                playerElo = dataManager.getPoints(uuid,"daily");
+                double pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("daily"), dataManager.getMinElo("daily"));
+                addPoints(uuid,pointsEarned,"daily");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking daily");
+
+                playerElo = dataManager.getPoints(uuid,"weekly");
+                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("weekly"), dataManager.getMinElo("weekly"));
+                addPoints(uuid,pointsEarned,"weekly");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking weekly");
+
+                playerElo = dataManager.getPoints(uuid,"monthly");
+                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("monthly"), dataManager.getMinElo("monthly"));
+                addPoints(uuid,pointsEarned,"monthly");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
+
+                if(pointsEarnedMain>0.1) {
+                    notifyPlayerAboutPoints(player, pointsEarnedMain);
+                }
+            }
+            else{
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Block "+blockType+" is not on the list");
+            }
+
+    }
+
+    // Metoda do dodawania metadanych do bloku podczas stawiania przez gracza
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event.onBlockPlace: called");
+        try {
+            Block block = event.getBlockPlaced();
+            Player player = event.getPlayer();
+
+            // Sprawdź, czy blok i gracz nie są nullami
+            if (block == null || player == null) {
+                return;
+            }
+
+            // Dodaj metadane do bloku informujące, że został postawiony przez gracza
+            block.setMetadata("placed_by_player", new FixedMetadataValue(plugin, true));
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
+        }
+    }
+
+
+
 }

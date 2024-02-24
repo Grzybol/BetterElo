@@ -1,5 +1,6 @@
 package betterbox.mine.game.betterelo;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -15,10 +16,17 @@ public class ExtendedConfigManager {
     private File configFile = null;
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
+    public Double blockBase = 0.1;
+
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
         this.pluginLogger = pluginLogger;
         configureLogger();
+    }
+    private Map<String, Integer> blockRewards = new HashMap<>();
+
+    public Map<String, Integer> getBlockRewards() {
+        return blockRewards;
     }
 
     private void configureLogger() {
@@ -29,7 +37,7 @@ public class ExtendedConfigManager {
         if (logLevels == null || logLevels.isEmpty()) {
             // Jeśli konfiguracja nie określa poziomów logowania, użyj domyślnych ustawień
             enabledLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
-            updateConfig("log_level:\n  - INFO\n  - WARNING\n  - ERROR");
+            updateConfig("\nlog_level:\n  - INFO\n  - WARNING\n  - ERROR\nblocks_rewards:\n   DIAMOND_ORE: 4\n   DIAMOND_BLOCK: 4\n   EMERALD_ORE: 3\n   EMERALD_BLOCK: 3\n   GOLD_ORE: 2\n   GOLD_BLOCK: 2\n   IRON_ORE: 1\n   IRON_BLOCK: 1\nblock_base: 0.1");
         } else {
             enabledLogLevels = new HashSet<>();
             for (String level : logLevels) {
@@ -41,7 +49,7 @@ public class ExtendedConfigManager {
                 }
             }
         }
-
+        ReloadConfig();
         // Ustawienie aktywnych poziomów logowania w loggerze
         pluginLogger.setEnabledLogLevels(enabledLogLevels);
     }
@@ -57,6 +65,7 @@ public class ExtendedConfigManager {
             // Jeśli konfiguracja nie określa poziomów logowania, użyj domyślnych ustawień
             enabledLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
             updateConfig("log_level:\n  - INFO\n  - WARNING\n  - ERROR");
+            plugin.saveConfig();
 
         }
 
@@ -72,6 +81,44 @@ public class ExtendedConfigManager {
             }
         }
         pluginLogger.setEnabledLogLevels(enabledLogLevels);
+
+
+        ConfigurationSection blocksRewardsSection = plugin.getConfig().getConfigurationSection("blocks_rewards");
+        if (blocksRewardsSection != null) {
+            // Jeśli sekcja istnieje, odczytaj jej zawartość i zapisz w pamięci
+            for (String blockType : blocksRewardsSection.getKeys(false)) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, blockType);
+                int reward = plugin.getConfig().getInt("blocks_rewards." + blockType);
+                blockRewards.put(blockType, reward);
+            }
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: blocks_rewards section not found in config! Creating new section..");
+            blocksRewardsSection = plugin.getConfig().createSection("blocks_rewards");
+            blocksRewardsSection.set("DIAMOND_ORE", 4);
+            blocksRewardsSection.set("DIAMOND_BLOCK", 4);
+            plugin.saveConfig();
+
+        }
+
+        blockBase = plugin.getConfig().getDouble("block_base");
+        if (plugin.getConfig().contains("block_base")){
+            if (plugin.getConfig().isDouble("block_base")){
+                blockBase = plugin.getConfig().getDouble("block_base");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base incorrect! Restoring default");
+                plugin.getConfig().set("block_base", 0.1);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
+            plugin.getConfig().createSection("block_base");
+            plugin.getConfig().set("block_base", 0.1);
+            //blockBaseSection.set("value", 0.1);
+            plugin.saveConfig();
+        }
+
 
     }
 
