@@ -10,9 +10,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -348,9 +351,17 @@ public class  Event implements Listener {
     public void onBreak(BlockBreakEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"onBlockBreak called");
         Block block = event.getBlock();
+
         // Sprawdź, czy blok zniszczony przez gracza znajduje się na liście nagród
             String blockType = block.getType().toString();
+
             if (configManager.getBlockRewards().containsKey(blockType)) {
+                for (MetadataValue meta : block.getMetadata("placed_by_player")) {
+                    if (meta.asBoolean()) {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"onBlockBreak: block was placed by a player");
+                        return;
+                    }
+                }
                 double blockReward = configManager.getBlockRewards().get(blockType);
                 Player player = event.getPlayer();
                 String uuid = player.getUniqueId().toString();
@@ -383,7 +394,29 @@ public class  Event implements Listener {
             else{
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Block "+blockType+" is not on the list");
             }
+
     }
+
+    // Metoda do dodawania metadanych do bloku podczas stawiania przez gracza
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event.onBlockPlace: called");
+        try {
+            Block block = event.getBlockPlaced();
+            Player player = event.getPlayer();
+
+            // Sprawdź, czy blok i gracz nie są nullami
+            if (block == null || player == null) {
+                return;
+            }
+
+            // Dodaj metadane do bloku informujące, że został postawiony przez gracza
+            block.setMetadata("placed_by_player", new FixedMetadataValue(plugin, true));
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
+        }
+    }
+
 
 
 }
