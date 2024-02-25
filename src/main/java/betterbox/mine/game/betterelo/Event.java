@@ -255,7 +255,7 @@ public class  Event implements Listener {
         Duration stay = Duration.ofMillis(900);    // czas wyświetlania
         Duration fadeOut = Duration.ofMillis(300); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
-        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
+        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format((double)Math.round(pointsEarned*100)/100)+" Elo");
         Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Victim: "+victim.getName());
         // Notify the killer
         Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
@@ -263,7 +263,7 @@ public class  Event implements Listener {
 
         victim.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.RED +  "You have lost "+ChatColor.DARK_RED + "" + ChatColor.BOLD +df.format(pointsEarned)+" Elo");
     }
-    private void notifyPlayerAboutPoints(Player player, double pointsEarned) {
+    private void notifyPlayerAboutPoints(Player player, double pointsEarned, Double blockReward) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+player+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
 
@@ -271,8 +271,8 @@ public class  Event implements Listener {
         Duration stay = Duration.ofMillis(900);    // czas wyświetlania
         Duration fadeOut = Duration.ofMillis(300); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
-        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format(pointsEarned)+" Elo");
-        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Current Elo: "+dataManager.getPoints(player.getUniqueId().toString(),"main"));
+        Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format((double)Math.round(pointsEarned*100)/100)+" Elo");
+        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Block multiplier: x"+blockReward);
         // Notify the killer
         Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
         player.showTitle(killerTitle);
@@ -288,7 +288,8 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: eloDifference: "+eloDifference+" normalizedDifference: "+normalizedDifference+" points: "+points+" maxElo: "+maxElo+" minElo: "+minElo);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut: "+(double)Math.round(points*100));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: calculatePointsEarned: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
-        return (double)Math.round(points*100)/100;
+        return points;
+        //return (double)Math.round(points*100)/100;
     }
     private double calculatePointsEarnedFromBlock(double base, double playerElo,double blockReward, double maxElo, double minElo) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock called with parameters : base "+base+" playerElo "+playerElo+" blockReward "+blockReward+" maxElo "+maxElo+" minElo "+minElo);
@@ -300,7 +301,8 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "Event: calculatePointsEarnedFromBlock: eloDifference: "+eloDifference+", S: "+S+", points: "+points);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
-            return (double)Math.round(points*100)/100;
+            return points;
+            //return (double)Math.round(points*100)/100;
         }
         else {
             return 0;
@@ -314,7 +316,8 @@ public class  Event implements Listener {
         currentPoints = isAdding ? currentPoints + points : currentPoints - points;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,String.format("Event: %sPoints: currentPoints: %sAfter: %s",
                 (isAdding ? "add" : "subtract"), rankingType, currentPoints));
-        dataManager.setPoints(playerUUID, Math.round(currentPoints * 100) / 100.0, rankingType);
+        dataManager.setPoints(playerUUID, currentPoints, rankingType);
+        //dataManager.setPoints(playerUUID, Math.round(currentPoints * 100) / 100.0, rankingType);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,String.format("Event: %sPoints: currentPoints: %s ranking saved", (isAdding ? "add" : "subtract"), rankingType));
     }
 
@@ -394,7 +397,7 @@ public class  Event implements Listener {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
 
                 if(pointsEarnedMain>0.001) {
-                    notifyPlayerAboutPoints(player, pointsEarnedMain);
+                    notifyPlayerAboutPoints(player, pointsEarnedMain, blockReward);
                 }
             }
             else{

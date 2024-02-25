@@ -53,6 +53,7 @@ public class BetterEloCommand implements CommandExecutor {
                     Player player = (Player) sender;
                     int rank = dataManager.getPlayerRank(player.getUniqueId().toString());
                     double points = dataManager.getPoints(player.getUniqueId().toString(), "main");
+                    points = (double)Math.round(points*100)/100;
                     sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Your rank: " + ChatColor.GREEN + rank);
                     sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Your points: " + ChatColor.GREEN + points);
                 } else {
@@ -91,6 +92,7 @@ public class BetterEloCommand implements CommandExecutor {
                         for (int i = 1; i <= 10; i++) {
                             String playerName = dataManager.getPlayerAtPosition(i, dataManager.playerPoints);
                             double points = dataManager.getPointsAtPosition(i, dataManager.playerPoints);
+                            points = (double)Math.round(points*100)/100;
                             if (playerName != null) {
                                 sender.sendMessage(ChatColor.AQUA.toString() + i + ". " + ChatColor.GREEN + playerName + ChatColor.AQUA + " - Points: " + ChatColor.GREEN + points);
                             }
@@ -101,6 +103,7 @@ public class BetterEloCommand implements CommandExecutor {
                         for (int i = 1; i <= 10; i++) {
                             String playerName = dataManager.getPlayerAtPosition(i, dataManager.dailyPlayerPoints);
                             double points = dataManager.getPointsAtPosition(i, dataManager.dailyPlayerPoints);
+                            points = (double)Math.round(points*100)/100;
                             if (playerName != null) {
                                 sender.sendMessage(ChatColor.AQUA.toString() + i + ". " + ChatColor.GREEN + playerName + ChatColor.AQUA + " - Points: " + ChatColor.GREEN + points);
                             }
@@ -111,6 +114,7 @@ public class BetterEloCommand implements CommandExecutor {
                         for (int i = 1; i <= 10; i++) {
                             String playerName = dataManager.getPlayerAtPosition(i, dataManager.weeklyPlayerPoints);
                             double points = dataManager.getPointsAtPosition(i, dataManager.weeklyPlayerPoints);
+                            points = (double)Math.round(points*100)/100;
                             if (playerName != null) {
                                 sender.sendMessage(ChatColor.AQUA.toString() + i + ". " + ChatColor.GREEN + playerName + ChatColor.AQUA + " - Points: " + ChatColor.GREEN + points);
                             }
@@ -121,6 +125,7 @@ public class BetterEloCommand implements CommandExecutor {
                         for (int i = 1; i <= 10; i++) {
                             String playerName = dataManager.getPlayerAtPosition(i, dataManager.monthlyPayerPoints);
                             double points = dataManager.getPointsAtPosition(i, dataManager.monthlyPayerPoints);
+                            points = (double)Math.round(points*100)/100;
                             if (playerName != null) {
                                 sender.sendMessage(ChatColor.AQUA.toString() + i + ". " + ChatColor.GREEN + playerName + ChatColor.AQUA + " - Points: " + ChatColor.GREEN + points);
                             }
@@ -215,6 +220,7 @@ public class BetterEloCommand implements CommandExecutor {
                         }
 
                         double points = dataManager.getPoints(playerUUID, "main");
+                        points = (double)Math.round(points*100)/100;
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player " + ChatColor.GREEN + playerName + ChatColor.AQUA + " is ranked " + ChatColor.GREEN + rank + ChatColor.AQUA + " in main ranking.");
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player's points: " + ChatColor.GREEN + points+ ChatColor.AQUA + " in main ranking.");
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player " + ChatColor.GREEN + playerName + ChatColor.AQUA + " is ranked " + ChatColor.GREEN + dataManager.getPlayerRank(playerUUID,"daily") + ChatColor.AQUA + ".");
@@ -233,6 +239,7 @@ public class BetterEloCommand implements CommandExecutor {
                         int position = Integer.parseInt(args[1]);
                         String playerName = dataManager.getPlayerAtPosition(position, dataManager.playerPoints);
                         double points = dataManager.getPointsAtPosition(position, dataManager.playerPoints);
+                        points = (double)Math.round(points*100)/100;
                         if (playerName != null) {
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player in position " + ChatColor.GREEN + position + ": " + ChatColor.GREEN + playerName);
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player's points: " + ChatColor.GREEN + points);
