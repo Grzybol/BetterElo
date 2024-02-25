@@ -294,12 +294,17 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock called with parameters : base "+base+" playerElo "+playerElo+" blockReward "+blockReward+" maxElo "+maxElo+" minElo "+minElo);
         double eloDifference = maxElo-minElo;
         double eloPlayerDiff = playerElo - minElo;
-        double S = (eloPlayerDiff)/(eloDifference+1);
-        double points =  base * blockReward * S;
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "Event: calculatePointsEarnedFromBlock: eloDifference: "+eloDifference+", S: "+S+", points: "+points);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
-        return (double)Math.round(points*100)/100;
+        if (eloDifference!=0) {
+            double S = 1 - (eloPlayerDiff) / (eloDifference);
+            double points =  base * blockReward * S;
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "Event: calculatePointsEarnedFromBlock: eloDifference: "+eloDifference+", S: "+S+", points: "+points);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut: "+(double)Math.round(points*100));
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: calculatePointsEarnedFromBlock: PointsEarnedOut/100: "+(double)Math.round(points*100)/100);
+            return (double)Math.round(points*100)/100;
+        }
+        else {
+            return 0;
+        }
     }
 
     private void updatePoints(String playerUUID, double points, String rankingType, boolean isAdding) {
