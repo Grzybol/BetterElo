@@ -393,7 +393,7 @@ public class  Event implements Listener {
                 addPoints(uuid,pointsEarned,"monthly");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
 
-                if(pointsEarnedMain>0.01) {
+                if(pointsEarnedMain>0.001) {
                     notifyPlayerAboutPoints(player, pointsEarnedMain);
                 }
             }

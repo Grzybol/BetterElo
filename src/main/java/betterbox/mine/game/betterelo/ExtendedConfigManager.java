@@ -23,9 +23,9 @@ public class ExtendedConfigManager {
         this.pluginLogger = pluginLogger;
         configureLogger();
     }
-    private Map<String, Integer> blockRewards = new HashMap<>();
+    private Map<String, Double> blockRewards = new HashMap<>();
 
-    public Map<String, Integer> getBlockRewards() {
+    public Map<String, Double> getBlockRewards() {
         return blockRewards;
     }
 
@@ -87,8 +87,9 @@ public class ExtendedConfigManager {
         if (blocksRewardsSection != null) {
             // Jeśli sekcja istnieje, odczytaj jej zawartość i zapisz w pamięci
             for (String blockType : blocksRewardsSection.getKeys(false)) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, blockType);
-                int reward = plugin.getConfig().getInt("blocks_rewards." + blockType);
+                double reward = plugin.getConfig().getDouble("blocks_rewards." + blockType);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, blockType+": "+reward);
+
                 blockRewards.put(blockType, reward);
             }
         } else {
