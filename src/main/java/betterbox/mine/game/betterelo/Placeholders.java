@@ -70,6 +70,7 @@ public class Placeholders extends PlaceholderExpansion {
         if (identifier.startsWith(prefix + "points_top")) {
             int position = Integer.parseInt(identifier.replace(prefix + "points_top", ""));
             double points = dataManager.getPointsAtPosition(position, pointsMap);
+            points = (double)Math.round(points*100)/100;
             return String.valueOf(points);
         } else if (identifier.startsWith(prefix + "player_top")) {
             int position = Integer.parseInt(identifier.replace(prefix + "player_top", ""));
@@ -82,9 +83,12 @@ public class Placeholders extends PlaceholderExpansion {
     @Override
     public String onPlaceholderRequest(Player player, String identifier) {
         if (player != null) {
+            double points=0;
             switch (identifier) {
                 case "player":
-                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "main"));
+                    points = dataManager.getPoints(player.getUniqueId().toString(), "main");
+                    points = (double)Math.round(points*100)/100;
+                    return String.valueOf(points);
                 case "rank":
                     return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString()));
                 case "daily_tl":
@@ -94,11 +98,17 @@ public class Placeholders extends PlaceholderExpansion {
                 case "monthly_tl":
                     return formatTime(betterElo.getRemainingTimeForRewards("monthly"));
                 case "player_daily":
-                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "daily"));
+                    points = dataManager.getPoints(player.getUniqueId().toString(), "daily");
+                    points = (double)Math.round(points*100)/100;
+                    return String.valueOf(points);
                 case "player_weekly":
-                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "weekly"));
+                    points = dataManager.getPoints(player.getUniqueId().toString(), "weekly");
+                    points = (double)Math.round(points*100)/100;
+                    return String.valueOf(points);
                 case "player_monthly":
-                    return String.valueOf(dataManager.getPoints(player.getUniqueId().toString(), "monthly"));
+                    points = dataManager.getPoints(player.getUniqueId().toString(), "monthly");
+                    points = (double)Math.round(points*100)/100;
+                    return String.valueOf(points);
                 case "rank_daily":
                     return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "daily"));
                 case "rank_weekly":
@@ -121,11 +131,16 @@ public class Placeholders extends PlaceholderExpansion {
             OfflinePlayer offlinePlayer = dataManager.getOfflinePlayer(identifier);
 
             if (offlinePlayer != null) {
+                double points=0;
                 switch (identifier) {
                     case "killed":
-                        return String.valueOf(dataManager.getPoints(offlinePlayer.getUniqueId().toString(), "main"));
+                        points = dataManager.getPoints(offlinePlayer.getUniqueId().toString(), "main");
+                        points = (double)Math.round(points*100)/100;
+                        return String.valueOf(points);
                     case "killer":
-                        return String.valueOf(dataManager.getPoints(offlinePlayer.getUniqueId().toString(), "main"));
+                        points =dataManager.getPoints(offlinePlayer.getUniqueId().toString(), "main");
+                        points = (double)Math.round(points*100)/100;
+                        return String.valueOf(points);
                 }
             }
         }
