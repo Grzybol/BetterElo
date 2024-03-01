@@ -253,6 +253,7 @@ public class BetterEloCommand implements CommandExecutor {
                 if(args[0].equalsIgnoreCase("ban")){
 
                     handleBanCommand(sender,args[1]);
+                    betterElo.notiyBannedPlayer(args[1]);
                 }
                 break;
             case 4:
@@ -307,12 +308,15 @@ public class BetterEloCommand implements CommandExecutor {
     private boolean handleBanCommand(CommandSender sender, String banName) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand called with parameters "+banName);
         if (sender.hasPermission("betterelo.ban")) {
+            /*
             if (!(sender instanceof Player)) {
 
                 sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"You don't have permission to use this command!");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: handleBanCommand: sender " + sender + " don't have permission to use /br tl");
                 return false;
             }
+
+             */
 
             Player player = (Player) sender;
             pluginLogger.log(PluginLogger.LogLevel.INFO, "Banning "+banName+". Points in main ranking: "+dataManager.getPoints(getOfflinePlayerUUID(banName),"main")+", points to redeem "+(dataManager.getPoints(getOfflinePlayerUUID(banName),"main")-1000d));
