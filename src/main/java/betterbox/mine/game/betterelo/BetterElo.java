@@ -388,7 +388,7 @@ public final class BetterElo extends JavaPlugin {
         Duration stay = Duration.ofMillis(10000);    // czas wyświetlania
         Duration fadeOut = Duration.ofMillis(5000); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
-        Component BannedTitleComponent = Component.text(ChatColor.DARK_RED +"You have been flagged as "+ChatColor.BLACK+""+ChatColor.BOLD+" CHEATER");
+        Component BannedTitleComponent = Component.text(ChatColor.DARK_RED +"!!!"+ChatColor.BLACK+""+ChatColor.BOLD+"CHEATER"+ChatColor.DARK_RED +"!!!");
         Component BannedSubtitleComponent = Component.text(ChatColor.GREEN +"Buy unban on website "+ChatColor.GOLD+ChatColor.BOLD+" BetterBox.top" );
         // Notify the killer
         Title bannedTitle = Title.title(BannedTitleComponent,BannedSubtitleComponent,times);
