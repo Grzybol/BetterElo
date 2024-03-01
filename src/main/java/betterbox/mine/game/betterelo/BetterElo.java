@@ -1,5 +1,7 @@
 package betterbox.mine.game.betterelo;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -8,8 +10,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 public final class BetterElo extends JavaPlugin {
@@ -237,6 +243,9 @@ public final class BetterElo extends JavaPlugin {
         }.runTaskLater(this, delay);
     }
     private void rewardAndReschedule(String period, long periodMillis, boolean useNextMonthTime) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.rewardAndReschedule called");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.rewardAndReschedule calling notifyTopPlayers("+period+")");
+        notifyTopPlayers(period);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: Starting rewardTopPlayers");
         rewardTopPlayers(period);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: rewardTopPlayers done");
@@ -355,4 +364,37 @@ public final class BetterElo extends JavaPlugin {
         }
     }
 
+    public void notifyTopPlayers(String period) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.notifyTopPlayers called with period=" + period);
+        DecimalFormat df = new DecimalFormat("#.##");
+        Duration fadeIn = Duration.ofMillis(500);  // czas pojawiania się
+        Duration stay = Duration.ofMillis(5000);    // czas wyświetlania
+        Duration fadeOut = Duration.ofMillis(500); // czas znikania
+        Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
+        Component rankingNotificationTileComponent = Component.text(ChatColor.GOLD + "" + ChatColor.BOLD + period.toUpperCase() + " ranking has ended!");
+        Component rankingNotificationSubtileComponent;
+        // Notify all players
+        for (Player player : Bukkit.getOnlinePlayers()){
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "BetterElo.notifyTopPlayers." + period+" notifying "+player.getName());
+            double points = dataManager.getPoints(player.getUniqueId().toString(),period);
+            int rank = dataManager.getPlayerRank(player.getUniqueId().toString(),period);
+            rankingNotificationSubtileComponent = Component.text(ChatColor.AQUA + "Your position: " + ChatColor.RED+""+ChatColor.BOLD+rank+". "+ChatColor.AQUA +"Your points: "+ ChatColor.RED+""+ChatColor.BOLD+points);
+            Title killerTitle = Title.title(rankingNotificationTileComponent, rankingNotificationSubtileComponent, times);
+            player.showTitle(killerTitle);
+    }
+    }
+    public void notiyBannedPlayer(Player player, String timeUnit,int timeAmount){
+        DecimalFormat df = new DecimalFormat("#.##");
+
+        Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
+        Duration stay = Duration.ofMillis(10000);    // czas wyświetlania
+        Duration fadeOut = Duration.ofMillis(5000); // czas znikania
+        Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
+        Component BannedTitleComponent = Component.text(ChatColor.DARK_RED +"You have been flagged as "+ChatColor.BLACK+""+ChatColor.BOLD+" CHEATER");
+        Component BannedSubtitleComponent = Component.text(ChatColor.GREEN +"Buy unban on website "+ChatColor.GOLD+ChatColor.BOLD+" BetterBox.top" );
+        // Notify the killer
+        Title bannedTitle = Title.title(BannedTitleComponent,BannedSubtitleComponent,times);
+        player.showTitle(bannedTitle);
+
+    }
 }

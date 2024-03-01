@@ -384,6 +384,7 @@ public class BetterEloCommand implements CommandExecutor {
             return false;
         }
     }
+
     public String getOfflinePlayerUUID(String playerName) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: getOfflinePlayerUUID called with parameter " + playerName);
         try {
