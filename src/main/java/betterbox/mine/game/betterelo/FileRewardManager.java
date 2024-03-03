@@ -30,7 +30,7 @@ public class FileRewardManager {
     }
 
     public void setRewardType(String rewardType,String subType) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getRewardType: rewardType: "+rewardType+" subType: "+subType);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: setRewardType: rewardType: "+rewardType+" subType: "+subType);
         this.rewardType = rewardType + "_" + subType;
 
     }
@@ -96,4 +96,27 @@ public class FileRewardManager {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getReward: items:" + rewards);
         return rewards;
     }
+    public void saveRewards(String fileName, List<ItemStack> rewards) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "FileRewardManager.saveRewards called. fileName: "+fileName);
+        File rewardsFile = new File(plugin.getDataFolder(), fileName + ".yml");
+        if (!rewardsFile.getParentFile().exists()) {
+            rewardsFile.getParentFile().mkdirs(); // Tworzy katalog, jeśli nie istnieje
+        }
+        FileConfiguration config = YamlConfiguration.loadConfiguration(rewardsFile);
+
+        ConfigurationSection itemsSection = config.createSection("items");
+        int index = 0;
+        for (ItemStack item : rewards) {
+            itemsSection.set("item" + index, item); // Zapisuje każdy element pod kluczem itemX, gdzie X to indeks elementu
+            index++;
+        }
+
+        try {
+            config.save(rewardsFile); // Zapisuje konfigurację do pliku
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "FileRewardManager: saveRewards: Zapisano nagrody do " + fileName + ".yml");
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "FileRewardManager: saveRewards: Nie udało się zapisać nagród: " + e.getMessage());
+        }
+    }
+
 }

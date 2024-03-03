@@ -82,6 +82,7 @@ public class BetterEloCommand implements CommandExecutor {
                             sender.sendMessage(ChatColor.AQUA + "/be ban <player> " + ChatColor.GREEN + "- resetting the player's rankings to 1000 and redeeming remaining poits to victims.");
                             sender.sendMessage(ChatColor.AQUA + "/be add <player> <points> <rankingtype> " + ChatColor.GREEN + "- adding points to given player in specific ranking (main,daily,weekly,monthly)");
                             sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
+                            sender.sendMessage(ChatColor.AQUA + "/be event <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
                         }
                         break;
                     case "top10":
@@ -178,7 +179,7 @@ public class BetterEloCommand implements CommandExecutor {
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for monthly rewards: " + ChatColor.GREEN + formatTime(monthlyTimeLeft));
                         if(betterElo.isEventEnabled){
                             long eventTimeLeft = betterElo.getRemainingTimeForRewards("event");
-                            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for daily rewards: " + ChatColor.GREEN + formatTime(eventTimeLeft));
+                            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for event rewards: " + ChatColor.GREEN + formatTime(eventTimeLeft));
 
                         }
                         break;
@@ -261,6 +262,7 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 3:
                 if (sender.isOp()&& Objects.equals(args[0], "event")){
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event called. Duration:"+args[1]+" timeUnit:"+args[2]);
                     betterElo.eventDuration= Integer.parseInt(args[1]);
                     betterElo.eventUnit=args[2];
                     betterElo.isEventEnabled=true;
