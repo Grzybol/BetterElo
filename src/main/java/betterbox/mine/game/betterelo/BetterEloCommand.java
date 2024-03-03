@@ -14,10 +14,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 public class BetterEloCommand implements CommandExecutor {
@@ -175,9 +172,15 @@ public class BetterEloCommand implements CommandExecutor {
                         long weeklyTimeLeft = betterElo.getRemainingTimeForRewards("weekly");
                         long monthlyTimeLeft = betterElo.getRemainingTimeForRewards("monthly");
 
+
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for daily rewards: " + ChatColor.GREEN + formatTime(dailyTimeLeft));
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for weekly rewards: " + ChatColor.GREEN + formatTime(weeklyTimeLeft));
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for monthly rewards: " + ChatColor.GREEN + formatTime(monthlyTimeLeft));
+                        if(betterElo.isEventEnabled){
+                            long eventTimeLeft = betterElo.getRemainingTimeForRewards("event");
+                            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for daily rewards: " + ChatColor.GREEN + formatTime(eventTimeLeft));
+
+                        }
                         break;
                     case "setrewards":
                         pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " issued command /be setrewards");
@@ -256,6 +259,12 @@ public class BetterEloCommand implements CommandExecutor {
                     betterElo.notiyBannedPlayer(args[1]);
                 }
                 break;
+            case 3:
+                if (sender.isOp()&& Objects.equals(args[0], "event")){
+                    betterElo.eventDuration= Integer.parseInt(args[1]);
+                    betterElo.eventUnit=args[2];
+                    betterElo.isEventEnabled=true;
+                }
             case 4:
                 if (args[0].equalsIgnoreCase("add")){
                 handleAddPointsCommand(sender,args[1], Double.valueOf(args[2]),args[3]);

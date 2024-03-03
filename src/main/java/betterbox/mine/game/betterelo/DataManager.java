@@ -12,10 +12,12 @@ public class DataManager {
     private final File dailyDatabaseFile;
     private final File weeklyDatabaseFile;
     private final File monthlyDatabaseFile;
+    private final File eventDatabasefile;
     public final Map<String, Double> playerPoints = new HashMap<>();
     public final Map<String, Double> dailyPlayerPoints = new HashMap<>();
     public final Map<String, Double> weeklyPlayerPoints = new HashMap<>();
     public final Map<String, Double> monthlyPayerPoints = new HashMap<>();
+    public final Map<String, Double> eventPlayerPoints = new HashMap<>();
     private final PluginLogger pluginLogger; // Dodajemy referencję do PluginLogger
     private final Map<String, Map<String, Double>> allPlayerPoints = new HashMap<>();
     public DataManager(JavaPlugin plugin, PluginLogger pluginLogger) {
@@ -26,21 +28,25 @@ public class DataManager {
         this.dailyDatabaseFile = new File(dataFolder, "daily_database.txt");
         this.weeklyDatabaseFile = new File(dataFolder, "weekly_database.txt");
         this.monthlyDatabaseFile = new File(dataFolder, "monthly_database.txt");
+        this.eventDatabasefile = new File(dataFolder, "event_database.txt");
         allPlayerPoints.put("main", playerPoints);
         allPlayerPoints.put("daily", dailyPlayerPoints);
         allPlayerPoints.put("weekly", weeklyPlayerPoints);
         allPlayerPoints.put("monthly", monthlyPayerPoints);
+        allPlayerPoints.put("event", eventPlayerPoints);
     }
     public void setPoints(String playerUUID, double points, String ranking_type) {
         if (ranking_type.equals("main")) playerPoints.put(playerUUID, points);
         if (ranking_type.equals("daily")) dailyPlayerPoints.put(playerUUID, points);
         if (ranking_type.equals("weekly")) weeklyPlayerPoints.put(playerUUID, points);
         if (ranking_type.equals("monthly")) monthlyPayerPoints.put(playerUUID, points);
+        if (ranking_type.equals("event")) eventPlayerPoints.put(playerUUID, points);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: setPoints: zapisywanie do bazy..");
         saveDataToFile(); // Zapisz zmienione dane do pliku
         saveDataToFileDaily(); // Zapisz zmienione dane do pliku
         saveDataToFileWeekly(); // Zapisz zmienione dane do pliku
         saveDataToFileMonthly(); // Zapisz zmienione dane do pliku
+        saveDataToFileEvent(); // Zapisz zmienione dane do pliku
     }
 
     public double getPoints(String playerUUID, String ranking_type) {
@@ -69,6 +75,7 @@ public class DataManager {
         initializeFile(dailyDatabaseFile, "dailyDatabaseFile");
         initializeFile(weeklyDatabaseFile, "weeklyDatabaseFile");
         initializeFile(monthlyDatabaseFile, "monthlyDatabaseFile");
+        initializeFile(eventDatabasefile, "eventDatabaseFile");
     }
     private void initializeFile(File file, String fileName) {
         if (!file.exists()) {
@@ -119,6 +126,9 @@ public class DataManager {
             case "monthly":
                 sortedPlayers = sortPlayersByPoints(this.monthlyPayerPoints);
                 break;
+            case "event":
+                sortedPlayers = sortPlayersByPoints(this.eventPlayerPoints);
+                break;
 
         }
 
@@ -137,6 +147,7 @@ public class DataManager {
         dailyPlayerPoints.clear();
         weeklyPlayerPoints.clear();
         monthlyPayerPoints.clear();
+        eventPlayerPoints.clear();
         try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -185,6 +196,19 @@ public class DataManager {
                     String playerUUID = parts[0];
                     double points = Double.parseDouble(parts[1]);
                     monthlyPayerPoints.put(playerUUID, points);
+                }
+            }
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: loadDataFromFile: error: "+e);
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader(eventDatabasefile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    String playerUUID = parts[0];
+                    double points = Double.parseDouble(parts[1]);
+                    eventPlayerPoints.put(playerUUID, points);
                 }
             }
         } catch (IOException e) {
@@ -245,6 +269,23 @@ public class DataManager {
         // Używamy nowego loggera do zapisywania wiadomości debugujących
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileMonthly saved");
     }
+    public void saveDataToFileEvent() {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileEvent called");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(eventDatabasefile))) {
+            for (Map.Entry<String, Double> entry : eventPlayerPoints.entrySet()) {
+                String playerUUID = entry.getKey();
+                double points = entry.getValue();
+                if (!playerUUID.equals("AIR")) {
+                    writer.write(playerUUID + ":" + points);
+                    writer.newLine();
+                }
+            }
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: saveDataToFileEvent: error: "+e);
+        }
+        // Używamy nowego loggera do zapisywania wiadomości debugujących
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFileEvent saved");
+    }
     public void saveDataToFile() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"DataManager: saveDataToFile called");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(databaseFile))) {
@@ -276,6 +317,9 @@ public class DataManager {
                 break;
             case "monthly":
                 playerPointsMap = monthlyPayerPoints; // Poprawienie literówki z "monthlyPayerPoints"
+                break;
+            case "event":
+                playerPointsMap = eventPlayerPoints; // Poprawienie literówki z "monthlyPayerPoints"
                 break;
             default:
                 break;
@@ -372,6 +416,8 @@ public class DataManager {
 
             case "monthly":
                 return monthlyPayerPoints.containsKey(playerUUID);
+            case "event":
+                return eventPlayerPoints.containsKey(playerUUID);
 
             default:
                 return playerPoints.containsKey(playerUUID);

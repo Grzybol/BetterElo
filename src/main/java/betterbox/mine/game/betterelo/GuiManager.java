@@ -37,6 +37,7 @@ public class GuiManager implements Listener {
         createItem(inv, Material.APPLE, 1, "daily", "Daily Reward");
         createItem(inv, Material.BREAD, 3, "weekly", "Weekly Reward");
         createItem(inv, Material.DIAMOND, 5, "monthly", "Monthly Reward");
+        createItem(inv, Material.EMERALD, 7, "event", "Event Reward");
         player.openInventory(inv);
     }
     private void createItem(Inventory inv, Material material, int slot, String name, String description) {
@@ -101,6 +102,10 @@ public class GuiManager implements Listener {
                             case "monthly":
                                 dataManager.monthlyPayerPoints.clear();
                                 dataManager.saveDataToFileMonthly();
+                                break;
+                            case "event":
+                                dataManager.monthlyPayerPoints.clear();
+                                dataManager.saveDataToFileEvent();
                                 break;
                         }
 
