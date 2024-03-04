@@ -97,6 +97,12 @@ public class Placeholders extends PlaceholderExpansion {
                     return formatTime(betterElo.getRemainingTimeForRewards("weekly"));
                 case "monthly_tl":
                     return formatTime(betterElo.getRemainingTimeForRewards("monthly"));
+                case "event_tl":
+                    if(betterElo.isEventEnabled) {
+                        return formatTime(betterElo.getRemainingTimeForRewards("event"));
+                    }else{
+                        return "Event is not active!";
+                }
                 case "player_daily":
                     points = dataManager.getPoints(player.getUniqueId().toString(), "daily");
                     points = (double)Math.round(points*100)/100;
@@ -109,12 +115,26 @@ public class Placeholders extends PlaceholderExpansion {
                     points = dataManager.getPoints(player.getUniqueId().toString(), "monthly");
                     points = (double)Math.round(points*100)/100;
                     return String.valueOf(points);
+                case "player_event":
+                    if(betterElo.isEventEnabled) {
+                        points = dataManager.getPoints(player.getUniqueId().toString(), "event");
+                        points = (double)Math.round(points*100)/100;
+                        return String.valueOf(points);
+                    }else{
+                        return "Event is not active!";
+                    }
                 case "rank_daily":
                     return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "daily"));
                 case "rank_weekly":
                     return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "weekly"));
                 case "rank_monthly":
                     return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "monthly"));
+                case "rank_event":
+                    if(betterElo.isEventEnabled) {
+                        return String.valueOf(dataManager.getPlayerRank(player.getUniqueId().toString(), "event"));
+                    }else{
+                        return "Event is not active!";
+                    }
                 default:
                     String result;
                     if ((result = processRankingPlaceholder(identifier, "", dataManager.playerPoints)) != null) {
@@ -124,6 +144,9 @@ public class Placeholders extends PlaceholderExpansion {
                     } else if ((result = processRankingPlaceholder(identifier, "weekly_", dataManager.weeklyPlayerPoints)) != null) {
                         return result;
                     } else if ((result = processRankingPlaceholder(identifier, "monthly_", dataManager.monthlyPayerPoints)) != null) {
+                        return result;
+                    }
+                    else if ((result = processRankingPlaceholder(identifier, "event_", dataManager.monthlyPayerPoints)) != null&&betterElo.isEventEnabled) {
                         return result;
                     }
             }

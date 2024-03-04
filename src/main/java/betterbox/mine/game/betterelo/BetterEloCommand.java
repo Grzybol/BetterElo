@@ -205,9 +205,18 @@ public class BetterEloCommand implements CommandExecutor {
                     case "event":
                         if(sender.isOp()){
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Usage /be event <duration> <h/m>");
-                        }else{
-                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
-                            return true;
+                        }
+                        if(sender instanceof Player){
+                            if(betterElo.isEventEnabled){
+                                double points = dataManager.getPoints(player.getUniqueId().toString(), "event");
+                                points = (double)Math.round(points*100)/100;
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Event active! Time left: "+formatTime(betterElo.getRemainingTimeForRewards("event")));
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Your rank: "+dataManager.getPlayerRank(player.getUniqueId().toString(), "event"));
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Your points: "+points);
+                            }
+                            else {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "Event is not active!");
+                            }
                         }
 
                     default:
@@ -454,7 +463,24 @@ public class BetterEloCommand implements CommandExecutor {
         long minutes = seconds / 60;
         long hours = minutes / 60;
         long days = hours / 24;
-        return String.format("%d days, %d hours, %d minutes, %d seconds", days, hours % 24, minutes % 60, seconds % 60);
+
+        StringBuilder formattedTime = new StringBuilder();
+
+        if (days > 0) {
+            formattedTime.append(days).append("d ");
+        }
+        if (hours % 24 > 0) {
+            formattedTime.append(hours % 24).append("h ");
+        }
+        if (minutes % 60 > 0) {
+            formattedTime.append(minutes % 60).append("m ");
+        }
+        if (seconds % 60 > 0 || formattedTime.length() == 0) {
+            formattedTime.append(seconds % 60).append("s");
+        }
+
+        return formattedTime.toString().trim(); // Usunięcie ewentualnych spacji na końcu
     }
+
 
 }
