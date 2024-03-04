@@ -9,6 +9,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +19,8 @@ public class GuiManager implements Listener {
     private final BetterElo mainClass;
     private final PluginLogger pluginLogger;
     public String periodType = null;
+    private String rewardType;
+
     private final DataManager dataManager;
     public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager) {
         this.fileRewardManager = fileRewardManager;
@@ -37,6 +41,7 @@ public class GuiManager implements Listener {
         createItem(inv, Material.APPLE, 1, "daily", "Daily Reward");
         createItem(inv, Material.BREAD, 3, "weekly", "Weekly Reward");
         createItem(inv, Material.DIAMOND, 5, "monthly", "Monthly Reward");
+        createItem(inv, Material.EMERALD, 7, "event", "Event Reward");
         player.openInventory(inv);
     }
     private void createItem(Inventory inv, Material material, int slot, String name, String description) {
@@ -49,75 +54,61 @@ public class GuiManager implements Listener {
     }
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+
+
         String title = event.getView().getTitle();
         if (!Arrays.asList("Set Rewards", "Add Items", "Select Top").contains(title)) {
             return;
         }
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick called. title:"+title);
+
         Player player = (Player) event.getWhoClicked();
         ItemStack currentItem = event.getCurrentItem();
         if (currentItem == null || currentItem.getType() == Material.AIR) {
             return;
         }
-        String rewardType = currentItem.getItemMeta().getDisplayName();
-        pluginLogger.log("GuiManager: onInventoryClick: rewardType: "+rewardType+" periodType: "+periodType);
-        if (title.equals("Set Rewards")) {
-            event.setCancelled(true);
-            periodType = currentItem.getItemMeta().getDisplayName();
-            openSubGui(player);
-        } else if (title.equals("Select Top")) {
-            event.setCancelled(true);
-            rewardType = currentItem.getItemMeta().getDisplayName();
-            pluginLogger.log("GuiManager: onInventoryClick: rewardType: " + rewardType + " periodType: " + periodType);
-            fileRewardManager.setRewardType(periodType, rewardType);
-            List<ItemStack> currentRewards = fileRewardManager.loadRewards();
-            Inventory inv = Bukkit.createInventory(null, 36, "Add Items");
-            currentRewards.forEach(inv::addItem);
-            createItem(inv, Material.GREEN_WOOL, 35, "Save", "Zapisz przedmioty");
-            createItem(inv, Material.ORANGE_WOOL, 34, "Reset", "Resetuj czas");
-            createItem(inv, Material.YELLOW_WOOL, 33, "Reedem", "Rozdaj nagrody");
-            player.openInventory(inv);
-        } else if (title.equals("Add Items")) {
-            if (List.of("Save", "Reset", "Reedem").contains(rewardType)) {
+        //String rewardTypeTemp = currentItem.getItemMeta().getDisplayName();
+        switch (title) {
+            case "Set Rewards":
                 event.setCancelled(true);
-                Inventory inv = event.getInventory();
-
-                switch (periodType) {
-                    case "daily":
-                    case "weekly":
-                    case "monthly":
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager: onInventoryClick: Reset: " + periodType + " starting dataManager.updateLastScheduledTime");
-                        mainClass.updateLastScheduledTime(periodType);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager: onInventoryClick: Reset: " + periodType + " dataManager.updateLastScheduledTime done, clearing points map");
-
-                        switch (periodType) {
-                            case "daily":
-                                dataManager.dailyPlayerPoints.clear();
-                                dataManager.saveDataToFileDaily();
-                                break;
-                            case "weekly":
-                                dataManager.weeklyPlayerPoints.clear();
-                                dataManager.saveDataToFileWeekly();
-                                break;
-                            case "monthly":
-                                dataManager.monthlyPayerPoints.clear();
-                                dataManager.saveDataToFileMonthly();
-                                break;
+                periodType = currentItem.getItemMeta().getDisplayName();
+                openSubGui(player);
+                break;
+            case "Select Top":
+                event.setCancelled(true);
+                rewardType = currentItem.getItemMeta().getDisplayName();
+                pluginLogger.log("GuiManager.onInventoryClick: rewardType:" + rewardType + " periodType:" + periodType);
+                fileRewardManager.setRewardType(periodType, rewardType);
+                List<ItemStack> currentRewards = fileRewardManager.loadRewards();
+                Inventory inv = Bukkit.createInventory(null, 36, "Add Items");
+                currentRewards.forEach(inv::addItem);
+                createItem(inv, Material.GREEN_WOOL, 35, "Save", "Save rewards");
+                //createItem(inv, Material.ORANGE_WOOL, 34, "Reset", "Resetuj czas");
+                //createItem(inv, Material.YELLOW_WOOL, 33, "Reedem", "Rozdaj nagrody");
+                player.openInventory(inv);
+                break;
+            case "Add Items":
+                //save button check
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items");
+                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 35) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items - save called.");
+                    event.setCancelled(true);
+                    Inventory inventory = event.getInventory();
+                    List<ItemStack> itemsToSave = new ArrayList<>();
+                    for (int i = 0; i < inventory.getSize(); i++) {
+                        if (i != 35) { // Pomijamy slot przycisku "Save"
+                            ItemStack item = inventory.getItem(i);
+                            if (item != null && item.getType() != Material.AIR) {
+                                itemsToSave.add(item);
+                            }
                         }
+                    }
 
-                        player.sendMessage("Zresetowano nagrode : " + periodType);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager: onInventoryClick: Reset: done");
-                        break;
-                    default:
-                        pluginLogger.log(PluginLogger.LogLevel.WARNING, "GuiManager: onInventoryClick: Reset: Wrong reward type:" + periodType);
-                        player.sendMessage("Nieznany typ nagrody: " + periodType);
-                        return;
+                    String fileName=periodType+"_"+rewardType;
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
+                    fileRewardManager.saveRewards(fileName,itemsToSave);
+
                 }
-                player.sendMessage(fileRewardManager.getRewardType() + " last scheduled time has been reset!");
-            } else if ("Reedem".equals(rewardType)) {
-                mainClass.rewardTopPlayers(periodType);
-                pluginLogger.log("GuiManager: onInventoryClick: Reedem: periodType: " + periodType);
-                player.sendMessage("Nagrody zostały przyznane!");
-            } // Jeśli nie jest to przycisk funkcji, pozwól graczowi przesuwać przedmioty
         }
     }
 }

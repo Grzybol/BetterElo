@@ -51,6 +51,9 @@ commands:
   be-sub:
     description: Komenda do odbierania punktów graczowi.
     usage: /be sub
+  be-event:
+    description: creating event
+    usage: /be event
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.

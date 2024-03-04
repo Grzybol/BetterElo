@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 public final class BetterElo extends JavaPlugin {
     private PluginLogger pluginLogger;
     private DataManager dataManager;
+    public int eventDuration;
+    public boolean isEventEnabled;
+    public String eventUnit;
     private Placeholders placeholders;
     private CheaterCheckScheduler cheaterCheckScheduler;
     private BetterRanksCheaters betterRanksCheaters;
@@ -31,7 +34,7 @@ public final class BetterElo extends JavaPlugin {
     private PlayerKillDatabase PKDB;
     private BetterEloCommand betterEloCommand;
     private ExtendedConfigManager configManager;
-    private final Map<String, Boolean> rewardStates = new HashMap<>();
+    public Map<String, Boolean> rewardStates = new HashMap<>();
     @Override
     public void onEnable() {
         // Inicjalizacja PluginLoggera
@@ -76,7 +79,7 @@ public final class BetterElo extends JavaPlugin {
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
@@ -125,6 +128,7 @@ public final class BetterElo extends JavaPlugin {
         dataManager.saveDataToFileDaily();
         dataManager.saveDataToFileWeekly();
         dataManager.saveDataToFileMonthly();
+        dataManager.saveDataToFileEvent();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onDisable: Plugin BetterElo został wyłączony.");
         // Wyłączanie nagród (kod z metody onDisable z klasy RewardManager)
         if (dailyTask != null) dailyTask.cancel();
@@ -148,6 +152,15 @@ public final class BetterElo extends JavaPlugin {
             case "monthly":
                 useNextMonthTime = true;
                 break;
+            case "event":
+                if(Objects.equals(eventUnit, "h")) {
+                    periodMillis = TimeUnit.HOURS.toMillis(eventDuration);
+                }else if(Objects.equals(eventUnit, "m")){
+                    periodMillis = TimeUnit.MINUTES.toMillis(eventDuration);
+                }else{
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterElo.getRemainingTimeForRewards: eventUnit: "+eventUnit);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Invalid period: " + period);
         }
@@ -164,7 +177,7 @@ public final class BetterElo extends JavaPlugin {
         }
     }
 
-    private void loadRewards() {
+    public void loadRewards() {
         for (String rewardType : rewardStates.keySet()) {
             File rewardFile = new File(getDataFolder(), rewardType + ".yml");
             if (!rewardFile.exists()) {
@@ -206,7 +219,7 @@ public final class BetterElo extends JavaPlugin {
         saveConfig();
     }
 
-    private void scheduleRewards(String period, long periodMillis, boolean useNextMonthTime) {
+    public void scheduleRewards(String period, long periodMillis, boolean useNextMonthTime) {
         FileConfiguration config = getConfig();
         long lastScheduledTime = config.getLong(period + "LastScheduledTime", System.currentTimeMillis());
         long delay;
@@ -228,7 +241,7 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: BukkitRunnable: rewardAndReschedule done");
             return;
         }
-
+        //saveConfig();
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -248,6 +261,16 @@ public final class BetterElo extends JavaPlugin {
         rewardTopPlayers(period);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: rewardTopPlayers done");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: Starting updateLastScheduledTime");
+        if(period.equals("event")){
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Event ended - removing data.");
+            FileConfiguration config = getConfig();
+            config.set(period + "LastScheduledTime", null);
+            rewardStates.remove("event");
+            loadRewards();
+            isEventEnabled=false;
+            saveConfig();
+        return;
+        }
         updateLastScheduledTime(period);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: updateLastScheduledTime done");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardAndReschedule: starting scheduleRewards");
@@ -258,14 +281,21 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo: rewardTopPlayers: rewardType: "+rewardType);
         for (int i = 1; i <= 10; i++) {
             String playerName = null;
-            if(rewardType.equals("daily")){
-                playerName = dataManager.getPlayerAtPosition(i,dataManager.dailyPlayerPoints);
+            switch (rewardType) {
+                case "daily":
+                    playerName = dataManager.getPlayerAtPosition(i, dataManager.dailyPlayerPoints);
 
-            }else if(rewardType.equals("weekly")){
-                playerName = dataManager.getPlayerAtPosition(i,dataManager.weeklyPlayerPoints);
+                    break;
+                case "weekly":
+                    playerName = dataManager.getPlayerAtPosition(i, dataManager.weeklyPlayerPoints);
 
-            }else if(rewardType.equals("monthly")){
-                playerName = dataManager.getPlayerAtPosition(i,dataManager.monthlyPayerPoints);
+                    break;
+                case "monthly":
+                    playerName = dataManager.getPlayerAtPosition(i, dataManager.monthlyPayerPoints);
+                    break;
+                case "event":
+                    playerName = dataManager.getPlayerAtPosition(i, dataManager.eventPlayerPoints);
+                    break;
             }
             if (playerName != null) {
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
@@ -309,27 +339,39 @@ public final class BetterElo extends JavaPlugin {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: No player at position: " + i);
             }
         }
-        if(rewardType.equals("daily")){
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the daily ranking");
-            dataManager.dailyPlayerPoints.clear();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the daily ranking");
-            dataManager.saveDataToFileDaily();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the daily ranking timer");
-            updateLastScheduledTime(rewardType);
-        }else if(rewardType.equals("weekly")){
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the weekly ranking");
-            dataManager.weeklyPlayerPoints.clear();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the weekly ranking");
-            dataManager.saveDataToFileWeekly();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the weekly ranking timer");
-            updateLastScheduledTime(rewardType);
-        }else if(rewardType.equals("monthly")){
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the monthly ranking");
-            dataManager.monthlyPayerPoints.clear();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the monthly ranking");
-            dataManager.saveDataToFileMonthly();
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the monthly ranking timer");
-            updateLastScheduledTime(rewardType);
+        switch (rewardType) {
+            case "daily":
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the daily ranking");
+                dataManager.dailyPlayerPoints.clear();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the daily ranking");
+                dataManager.saveDataToFileDaily();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the daily ranking timer");
+                updateLastScheduledTime(rewardType);
+                break;
+            case "weekly":
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the weekly ranking");
+                dataManager.weeklyPlayerPoints.clear();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the weekly ranking");
+                dataManager.saveDataToFileWeekly();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the weekly ranking timer");
+                updateLastScheduledTime(rewardType);
+                break;
+            case "monthly":
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the monthly ranking");
+                dataManager.monthlyPayerPoints.clear();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the monthly ranking");
+                dataManager.saveDataToFileMonthly();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the monthly ranking timer");
+                updateLastScheduledTime(rewardType);
+                break;
+            case "event":
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Clearing the event ranking");
+                dataManager.eventPlayerPoints.clear();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the event ranking");
+                dataManager.saveDataToFileEvent();
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the event ranking timer");
+                //updateLastScheduledTime(rewardType);
+                break;
         }
     }
     private void saveOfflineReward(String playerName, List<ItemStack> rewardItems) {
@@ -365,7 +407,7 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.notifyTopPlayers called with period=" + period);
         DecimalFormat df = new DecimalFormat("#.##");
         Duration fadeIn = Duration.ofMillis(500);  // czas pojawiania się
-        Duration stay = Duration.ofMillis(5000);    // czas wyświetlania
+        Duration stay = Duration.ofSeconds(5);    // czas wyświetlania
         Duration fadeOut = Duration.ofMillis(500); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
         Component rankingNotificationTileComponent = Component.text(ChatColor.GOLD + "" + ChatColor.BOLD + period.toUpperCase() + " ranking has ended!");

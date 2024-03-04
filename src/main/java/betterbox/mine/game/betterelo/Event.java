@@ -27,12 +27,14 @@ public class  Event implements Listener {
     private final DataManager dataManager;
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
+    private final BetterElo betterElo;
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo) {
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
+        this.betterElo = betterElo;
         this.plugin = plugin;
         this.cheaters = cheaters;
         this.configManager = configManager;
@@ -176,9 +178,6 @@ public class  Event implements Listener {
             Player victim = event.getEntity();
             Player killer = victim.getKiller();
             if (!cheaters.getCheatersList().contains(victim.getName()) && !cheaters.getCheatersList().contains(killer.getName())) {
-
-
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath called with parameters: " + event);
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling deathDueToCombat(victim)");
                 if (killer == null && deathDueToCombat(victim)) {
@@ -189,7 +188,8 @@ public class  Event implements Listener {
                     Player lastAttacker = getLastAttacker(victim);
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: lastAttacker " + lastAttacker);
 
-                    if (lastAttacker != null) {
+                    if (lastAttacker == null) {
+                        /*
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath: calling handleKillEvent" + lastAttacker);
                         // Oblicz punkty zdobyte/wtracone w wyniku "wirtualnej" walki
                         double pointsEarned = handleKillEvent("main", victim, lastAttacker);
@@ -199,13 +199,22 @@ public class  Event implements Listener {
                         handleKillEvent("weekly", victim, lastAttacker);
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + lastAttacker);
                         handleKillEvent("monthly", victim, lastAttacker);
+                        if(betterElo.isEventEnabled){
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onPlayerDeath calling handleKillEvent with parameters: event " + victim + " " + lastAttacker);
+                            handleKillEvent("event", victim, lastAttacker);
+                        }
+
+
+
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling notifyPlayersAboutPoints(lastAttacker, victim, pointsEarned)");
                         // Powiadom graczy o zmianie punktów
                         notifyPlayersAboutPoints(lastAttacker, victim, pointsEarned);
+
+                         */
                         return;
                     }
 
-                    return;
+                    //return;
                 }
                 String victimUUID = victim.getUniqueId().toString();
                 String killerUUID = killer.getUniqueId().toString();
@@ -234,6 +243,14 @@ public class  Event implements Listener {
                     handleKillEvent("monthly", victim, killer);
                 } else {
                     killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Monthly ranking is too big! No reward for this one.");
+                }
+                if(betterElo.isEventEnabled) {
+                    if (dataManager.getPoints(killerUUID, "event") - dataManager.getPoints(victimUUID, "event") < 1000) {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath calling handleKillEvent with parameters: event " + victim + " " + killer);
+                        handleKillEvent("event", victim, killer);
+                    } else {
+                        killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Event ranking is too big! No reward for this one.");
+                    }
                 }
 
 
@@ -395,7 +412,12 @@ public class  Event implements Listener {
                 pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("monthly"), dataManager.getMinElo("monthly"));
                 addPoints(uuid,pointsEarned,"monthly");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
-
+                if(betterElo.isEventEnabled){
+                    playerElo = dataManager.getPoints(uuid,"event");
+                    pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("event"), dataManager.getMinElo("event"));
+                    addPoints(uuid,pointsEarned,"event");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking event");
+                }
                 if(pointsEarnedMain>0.001) {
                     notifyPlayerAboutPoints(player, pointsEarnedMain, blockReward);
                 }

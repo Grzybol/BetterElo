@@ -14,10 +14,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 public class BetterEloCommand implements CommandExecutor {
@@ -85,6 +83,7 @@ public class BetterEloCommand implements CommandExecutor {
                             sender.sendMessage(ChatColor.AQUA + "/be ban <player> " + ChatColor.GREEN + "- resetting the player's rankings to 1000 and redeeming remaining poits to victims.");
                             sender.sendMessage(ChatColor.AQUA + "/be add <player> <points> <rankingtype> " + ChatColor.GREEN + "- adding points to given player in specific ranking (main,daily,weekly,monthly)");
                             sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
+                            sender.sendMessage(ChatColor.AQUA + "/be event <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
                         }
                         break;
                     case "top10":
@@ -175,9 +174,15 @@ public class BetterEloCommand implements CommandExecutor {
                         long weeklyTimeLeft = betterElo.getRemainingTimeForRewards("weekly");
                         long monthlyTimeLeft = betterElo.getRemainingTimeForRewards("monthly");
 
+
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for daily rewards: " + ChatColor.GREEN + formatTime(dailyTimeLeft));
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for weekly rewards: " + ChatColor.GREEN + formatTime(weeklyTimeLeft));
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for monthly rewards: " + ChatColor.GREEN + formatTime(monthlyTimeLeft));
+                        if(betterElo.isEventEnabled){
+                            long eventTimeLeft = betterElo.getRemainingTimeForRewards("event");
+                            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for event rewards: " + ChatColor.GREEN + formatTime(eventTimeLeft));
+
+                        }
                         break;
                     case "setrewards":
                         pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " issued command /be setrewards");
@@ -197,6 +202,13 @@ public class BetterEloCommand implements CommandExecutor {
                         break;
                     case "reload":
                         return handleReloadCommand(sender);
+                    case "event":
+                        if(sender.isOp()){
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Usage /be event <duration> <h/m>");
+                        }else{
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                            return true;
+                        }
 
                     default:
                         // /be <player_name> - Information about a specific player's rank and points
@@ -254,6 +266,35 @@ public class BetterEloCommand implements CommandExecutor {
 
                     handleBanCommand(sender,args[1]);
                     betterElo.notiyBannedPlayer(args[1]);
+                }
+                break;
+            case 3:
+                if (sender.isOp()&& Objects.equals(args[0], "event")){
+                    int eventDuration = Integer.parseInt(args[1]);
+                    String eventUnit = args[2];
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event called. Duration:"+args[1]+" timeUnit:"+args[2]);
+                    betterElo.eventDuration= Integer.parseInt(args[1]);
+                    betterElo.eventUnit=args[2];
+                    betterElo.isEventEnabled=true;
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Planowanie nagród dziennych...");
+                    long periodMillis =0;
+                    if(Objects.equals(eventUnit, "h")) {
+                        periodMillis = TimeUnit.HOURS.toMillis(eventDuration);
+                    }else if(Objects.equals(eventUnit, "m")){
+                        periodMillis = TimeUnit.MINUTES.toMillis(eventDuration);
+                    }else{
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterEloCommand.onCommand.event: eventUnit: "+eventUnit);
+                    }
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: scheduling event rewards periodMillis:"+periodMillis);
+                    betterElo.scheduleRewards("event", periodMillis, false);
+                    betterElo.rewardStates.put("event", true);
+                    betterElo.loadRewards();
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: calling betterElo.updateLastScheduledTime(event)");
+                    betterElo.updateLastScheduledTime("event");
+                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event started! Duration "+eventDuration+" "+eventUnit);
+                }else{
+                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                    return true;
                 }
                 break;
             case 4:
