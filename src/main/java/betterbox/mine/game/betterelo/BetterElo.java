@@ -34,7 +34,7 @@ public final class BetterElo extends JavaPlugin {
     private PlayerKillDatabase PKDB;
     private BetterEloCommand betterEloCommand;
     private ExtendedConfigManager configManager;
-    private final Map<String, Boolean> rewardStates = new HashMap<>();
+    public Map<String, Boolean> rewardStates = new HashMap<>();
     @Override
     public void onEnable() {
         // Inicjalizacja PluginLoggera
@@ -79,7 +79,7 @@ public final class BetterElo extends JavaPlugin {
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
@@ -177,7 +177,7 @@ public final class BetterElo extends JavaPlugin {
         }
     }
 
-    private void loadRewards() {
+    public void loadRewards() {
         for (String rewardType : rewardStates.keySet()) {
             File rewardFile = new File(getDataFolder(), rewardType + ".yml");
             if (!rewardFile.exists()) {
@@ -219,7 +219,7 @@ public final class BetterElo extends JavaPlugin {
         saveConfig();
     }
 
-    private void scheduleRewards(String period, long periodMillis, boolean useNextMonthTime) {
+    public void scheduleRewards(String period, long periodMillis, boolean useNextMonthTime) {
         FileConfiguration config = getConfig();
         long lastScheduledTime = config.getLong(period + "LastScheduledTime", System.currentTimeMillis());
         long delay;
@@ -241,7 +241,7 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: BukkitRunnable: rewardAndReschedule done");
             return;
         }
-
+        //saveConfig();
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -265,6 +265,8 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.INFO, "Event ended - removing data.");
             FileConfiguration config = getConfig();
             config.set(period + "LastScheduledTime", null);
+            rewardStates.remove("event");
+            loadRewards();
             isEventEnabled=false;
             saveConfig();
         return;
@@ -405,7 +407,7 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.notifyTopPlayers called with period=" + period);
         DecimalFormat df = new DecimalFormat("#.##");
         Duration fadeIn = Duration.ofMillis(500);  // czas pojawiania się
-        Duration stay = Duration.ofMillis(5000);    // czas wyświetlania
+        Duration stay = Duration.ofSeconds(5);    // czas wyświetlania
         Duration fadeOut = Duration.ofMillis(500); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
         Component rankingNotificationTileComponent = Component.text(ChatColor.GOLD + "" + ChatColor.BOLD + period.toUpperCase() + " ranking has ended!");

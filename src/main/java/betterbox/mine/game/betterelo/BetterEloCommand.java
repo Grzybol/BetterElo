@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 public class BetterEloCommand implements CommandExecutor {
@@ -262,10 +263,27 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 3:
                 if (sender.isOp()&& Objects.equals(args[0], "event")){
+                    int eventDuration = Integer.parseInt(args[1]);
+                    String eventUnit = args[2];
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event called. Duration:"+args[1]+" timeUnit:"+args[2]);
                     betterElo.eventDuration= Integer.parseInt(args[1]);
                     betterElo.eventUnit=args[2];
                     betterElo.isEventEnabled=true;
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Planowanie nagród dziennych...");
+                    long periodMillis =0;
+                    if(Objects.equals(eventUnit, "h")) {
+                        periodMillis = TimeUnit.HOURS.toMillis(eventDuration);
+                    }else if(Objects.equals(eventUnit, "m")){
+                        periodMillis = TimeUnit.MINUTES.toMillis(eventDuration);
+                    }else{
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterEloCommand.onCommand.event: eventUnit: "+eventUnit);
+                    }
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: scheduling event rewards periodMillis:"+periodMillis);
+                    betterElo.scheduleRewards("event", periodMillis, false);
+                    betterElo.rewardStates.put("event", true);
+                    betterElo.loadRewards();
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: calling betterElo.updateLastScheduledTime(event)");
+                    betterElo.updateLastScheduledTime("event");
                 }
             case 4:
                 if (args[0].equalsIgnoreCase("add")){
