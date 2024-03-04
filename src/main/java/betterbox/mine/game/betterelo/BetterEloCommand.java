@@ -208,6 +208,7 @@ public class BetterEloCommand implements CommandExecutor {
                         }
                         if(sender instanceof Player){
                             if(betterElo.isEventEnabled){
+                                player = (Player) sender;
                                 double points = dataManager.getPoints(player.getUniqueId().toString(), "event");
                                 points = (double)Math.round(points*100)/100;
                                 sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Event active! Time left: "+formatTime(betterElo.getRemainingTimeForRewards("event")));
