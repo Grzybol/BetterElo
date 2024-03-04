@@ -253,6 +253,21 @@ public final class BetterElo extends JavaPlugin {
             }
         }.runTaskLater(this, delay);
     }
+    public void stopEvent(){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.stopEvent called");
+        if(isEventEnabled) {
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Event ended - removing data.");
+            FileConfiguration config = getConfig();
+            config.set("eventLastScheduledTime", null);
+            rewardStates.remove("event");
+            loadRewards();
+            isEventEnabled = false;
+            saveConfig();
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.stopEvent event not active");
+        }
+    }
     private void rewardAndReschedule(String period, long periodMillis, boolean useNextMonthTime) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.rewardAndReschedule called");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.rewardAndReschedule calling notifyTopPlayers("+period+")");

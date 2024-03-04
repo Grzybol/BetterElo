@@ -60,6 +60,14 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "stopevent":
+                        if(sender.isOp()){
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event stopped,data removed.");
+                            betterElo.stopEvent();
+                        }else{
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                        }
+                        break;
                     case "info":
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Better Elo system for BetterBox.");
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Author: "+plugin.getDescription().getAuthors());
@@ -77,13 +85,15 @@ public class BetterEloCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.AQUA + "/be daily " + ChatColor.GREEN + "- Returns top10 daily ranking/Zwraca info o top10 rankingu dziennego");
                         sender.sendMessage(ChatColor.AQUA + "/be weekly " + ChatColor.GREEN + "- Returns top10 weekly ranking/Zwraca info o top10 rankingu tygodniowego");
                         sender.sendMessage(ChatColor.AQUA + "/be monthly " + ChatColor.GREEN + "- Returns top10 monthly ranking/Zwraca info o top10 rankingu miesięcznego");
+                        sender.sendMessage(ChatColor.AQUA + "/be event " + ChatColor.GREEN + "- Returns event info/Zwraca info o evencie");
                         if(sender.isOp()){
                             sender.sendMessage(ChatColor.AQUA + "/be setrewards " + ChatColor.GREEN + "- Opens a GUI for changing the rewards");
                             sender.sendMessage(ChatColor.AQUA + "/be reload " + ChatColor.GREEN + "- Reloads the config file ");
                             sender.sendMessage(ChatColor.AQUA + "/be ban <player> " + ChatColor.GREEN + "- resetting the player's rankings to 1000 and redeeming remaining poits to victims.");
                             sender.sendMessage(ChatColor.AQUA + "/be add <player> <points> <rankingtype> " + ChatColor.GREEN + "- adding points to given player in specific ranking (main,daily,weekly,monthly)");
                             sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
-                            sender.sendMessage(ChatColor.AQUA + "/be event <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
+                            sender.sendMessage(ChatColor.AQUA + "/be startevent <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
+                            sender.sendMessage(ChatColor.AQUA + "/be stopevent " + ChatColor.GREEN + "- Stops current event (if active).");
                         }
                         break;
                     case "top10":
@@ -204,7 +214,7 @@ public class BetterEloCommand implements CommandExecutor {
                         return handleReloadCommand(sender);
                     case "event":
                         if(sender.isOp()){
-                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Usage /be event <duration> <h/m>");
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " to start the event use /be event <duration> <h/m>");
                         }
                         if(sender instanceof Player){
                             if(betterElo.isEventEnabled){
@@ -279,7 +289,7 @@ public class BetterEloCommand implements CommandExecutor {
                 }
                 break;
             case 3:
-                if (sender.isOp()&& Objects.equals(args[0], "event")){
+                if (sender.isOp()&& Objects.equals(args[0], "startevent")){
                     int eventDuration = Integer.parseInt(args[1]);
                     String eventUnit = args[2];
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event called. Duration:"+args[1]+" timeUnit:"+args[2]);

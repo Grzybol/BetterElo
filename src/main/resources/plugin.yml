@@ -54,6 +54,9 @@ commands:
   be-event:
     description: creating event
     usage: /be event
+  be-stopevent:
+    description: removing event
+    usage: /be stopevent
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.
