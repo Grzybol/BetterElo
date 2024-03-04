@@ -202,6 +202,13 @@ public class BetterEloCommand implements CommandExecutor {
                         break;
                     case "reload":
                         return handleReloadCommand(sender);
+                    case "event":
+                        if(sender.isOp()){
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Usage /be event <duration> <h/m>");
+                        }else{
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                            return true;
+                        }
 
                     default:
                         // /be <player_name> - Information about a specific player's rank and points
@@ -284,7 +291,12 @@ public class BetterEloCommand implements CommandExecutor {
                     betterElo.loadRewards();
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: calling betterElo.updateLastScheduledTime(event)");
                     betterElo.updateLastScheduledTime("event");
+                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event started! Duration "+eventDuration+" "+eventUnit);
+                }else{
+                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                    return true;
                 }
+                break;
             case 4:
                 if (args[0].equalsIgnoreCase("add")){
                 handleAddPointsCommand(sender,args[1], Double.valueOf(args[2]),args[3]);
