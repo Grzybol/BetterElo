@@ -35,6 +35,7 @@ public final class BetterElo extends JavaPlugin {
     private BetterEloCommand betterEloCommand;
     private ExtendedConfigManager configManager;
     public Map<String, Boolean> rewardStates = new HashMap<>();
+    public boolean useHolographicDisplays;
     @Override
     public void onEnable() {
         // Inicjalizacja PluginLoggera
@@ -119,6 +120,14 @@ public final class BetterElo extends JavaPlugin {
 
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling cheaterCheckScheduler.startScheduler()");
         cheaterCheckScheduler.startScheduler();
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Checking HolographicDisplays...");
+        useHolographicDisplays = Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays");
+        if(useHolographicDisplays){
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"HolographicDisplays found.");
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING,"HolographicDisplays not found! Some feature might not be available");
+        }
+
 
     }
     @Override

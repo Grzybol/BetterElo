@@ -1,5 +1,9 @@
 package betterbox.mine.game.betterelo;
 
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
+import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -28,6 +32,11 @@ public class BetterEloCommand implements CommandExecutor {
     private final ExtendedConfigManager configManager;
     private final Event event;
     private final PlayerKillDatabase PKDB;
+    private Hologram hologramMain;
+    private Hologram hologramDaily;
+    private Hologram hologramWeekly;
+    private Hologram hologramMonthly;
+    private Hologram hologramEvent;
 
     public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager,Event event, PlayerKillDatabase PKDB) {
         this.dataManager = dataManager;
@@ -94,6 +103,8 @@ public class BetterEloCommand implements CommandExecutor {
                             sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
                             sender.sendMessage(ChatColor.AQUA + "/be startevent <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
                             sender.sendMessage(ChatColor.AQUA + "/be stopevent " + ChatColor.GREEN + "- Stops current event (if active).");
+                            sender.sendMessage(ChatColor.AQUA + "/be holo <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- creates holo at your position.");
+                            sender.sendMessage(ChatColor.AQUA + "/be holo delete <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- delete given holo");
                         }
                         break;
                     case "top10":
@@ -265,6 +276,126 @@ public class BetterEloCommand implements CommandExecutor {
                 }
                 break;
             case 2:
+                if(args[0].equalsIgnoreCase("holo")&&sender.isOp()){
+                    if(sender instanceof Player) {
+                        Player player = (Player) sender;
+                        Location where = player.getLocation();// The location where the hologram will be placed
+                        HolographicDisplaysAPI api = HolographicDisplaysAPI.get(plugin); // The API instance for your plugin
+
+
+                        switch (args[1]) {
+                            case "event":
+                                hologramEvent = api.createHologram(where);
+                                hologramEvent.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT STARTED!!");
+                                /*
+                                hologramEvent.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT RANKING");
+                                hologramEvent.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 1 - "+ChatColor.RED+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(1, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.RED+((double)Math.round(dataManager.getPointsAtPosition(1, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(2, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 2 - "+ChatColor.GREEN+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(2, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.GREEN+((double)Math.round(dataManager.getPointsAtPosition(2, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(3, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 3 - "+ChatColor.AQUA+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(3, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.AQUA+((double)Math.round(dataManager.getPointsAtPosition(3, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(4, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(4, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(4, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(5, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(5, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(5, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(6, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(6, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(6, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(7, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(7, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(7, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(8, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(8, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(8, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(9, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(9, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(9, dataManager.eventPlayerPoints)*100)/100));
+                                hologramEvent.getLines().insertText(10, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(10, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(10, dataManager.eventPlayerPoints)*100)/100));
+
+
+                                 */
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                //TextHologramLine textLine = hologram.getLines().appendText("A hologram line");
+                                //hologramEvent.getLines().appendText("A hologram line");
+                                //TextHologramLine textLine2 = hologram.getLines().insertText(0, "...");
+                                break;
+                            case "main":
+                                hologramMain = api.createHologram(where);
+                                /*
+                                hologramMain.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT RANKING");
+                                hologramMain.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 1 - "+ChatColor.RED+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(1, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.RED+((double)Math.round(dataManager.getPointsAtPosition(1, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(2, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 2 - "+ChatColor.GREEN+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(2, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.GREEN+((double)Math.round(dataManager.getPointsAtPosition(2, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(3, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 3 - "+ChatColor.AQUA+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(3, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.AQUA+((double)Math.round(dataManager.getPointsAtPosition(3, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(4, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(4, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(4, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(5, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(5, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(5, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(6, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(6, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(6, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(7, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(7, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(7, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(8, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(8, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(8, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(9, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(9, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(9, dataManager.playerPoints)*100)/100));
+                                hologramMain.getLines().insertText(10, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(10, dataManager.playerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(10, dataManager.playerPoints)*100)/100));
+
+
+                                 */
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                break;
+                            case "daily":
+                                hologramDaily = api.createHologram(where);
+                                /*
+                                hologramDaily.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT RANKING");
+                                hologramDaily.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 1 - "+ChatColor.RED+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(1, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.RED+((double)Math.round(dataManager.getPointsAtPosition(1, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(2, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 2 - "+ChatColor.GREEN+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(2, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.GREEN+((double)Math.round(dataManager.getPointsAtPosition(2, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(3, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 3 - "+ChatColor.AQUA+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(3, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.AQUA+((double)Math.round(dataManager.getPointsAtPosition(3, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(4, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(4, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(4, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(5, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(5, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(5, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(6, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(6, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(6, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(7, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(7, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(7, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(8, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(8, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(8, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(9, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(9, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(9, dataManager.dailyPlayerPoints)*100)/100));
+                                hologramDaily.getLines().insertText(10, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(10, dataManager.dailyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(10, dataManager.dailyPlayerPoints)*100)/100));
+
+
+                                 */
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                break;
+                            case "weekly":
+                                hologramWeekly = api.createHologram(where);
+                                /*
+                                hologramWeekly.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT RANKING");
+                                hologramWeekly.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 1 - "+ChatColor.RED+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(1, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.RED+((double)Math.round(dataManager.getPointsAtPosition(1, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(2, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 2 - "+ChatColor.GREEN+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(2, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.GREEN+((double)Math.round(dataManager.getPointsAtPosition(2, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(3, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 3 - "+ChatColor.AQUA+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(3, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.AQUA+((double)Math.round(dataManager.getPointsAtPosition(3, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(4, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(4, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(4, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(5, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(5, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(5, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(6, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(6, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(6, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(7, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(7, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(7, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(8, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(8, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(8, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(9, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(9, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(9, dataManager.weeklyPlayerPoints)*100)/100));
+                                hologramWeekly.getLines().insertText(10, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(10, dataManager.weeklyPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(10, dataManager.weeklyPlayerPoints)*100)/100));
+
+
+                                 */
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                break;
+                            case "monthly":
+                                hologramMonthly = api.createHologram(where);
+                                /*
+                                hologramMonthly.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT RANKING");
+                                hologramMonthly.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 1 - "+ChatColor.RED+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(1, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.RED+((double)Math.round(dataManager.getPointsAtPosition(1, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(2, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 2 - "+ChatColor.GREEN+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(2, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.GREEN+((double)Math.round(dataManager.getPointsAtPosition(2, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(3, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 3 - "+ChatColor.AQUA+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(3, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.AQUA+((double)Math.round(dataManager.getPointsAtPosition(3, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(4, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(4, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(4, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(5, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(5, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(5, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(6, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(6, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(6, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(7, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(7, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(7, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(8, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(8, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(8, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(9, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(9, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(9, dataManager.monthlyPayerPoints)*100)/100));
+                                hologramMonthly.getLines().insertText(10, ChatColor.WHITE+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(10, dataManager.monthlyPayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.WHITE+((double)Math.round(dataManager.getPointsAtPosition(10, dataManager.monthlyPayerPoints)*100)/100));
+
+
+                                 */
+                                //api.getRegisteredPlaceholders().
+
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                break;
+
+
+                        }
+                    }else {
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "Event is not active!");
+                    }
+
+                }else {
+                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You don't have permission!");
+                }
+
                 if (args[0].equalsIgnoreCase("top")) {
                     // /be top <n> - Displays the nickname and points of the player in position n in the ranking
                     try {
@@ -282,13 +413,37 @@ public class BetterEloCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Please enter a valid ranking position number.");
                     }
                 }
-                if(args[0].equalsIgnoreCase("ban")){
+                if(args[0].equalsIgnoreCase("ban")&&sender.isOp()){
 
                     handleBanCommand(sender,args[1]);
                     betterElo.notiyBannedPlayer(args[1]);
                 }
                 break;
             case 3:
+                if (sender.isOp()&& Objects.equals(args[0], "holo")&& Objects.equals(args[1], "delete")){
+                    switch (args[2]){
+                        case "event":
+                            hologramEvent.delete();
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Holo for Event removed!");
+                            break;
+                        case "main":
+                            hologramMain.delete();
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Holo for main removed!");
+                            break;
+                        case "daily":
+                            hologramDaily.delete();
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Holo for daily removed!");
+                            break;
+                        case "weekly":
+                            hologramWeekly.delete();
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Holo for weekly removed!");
+                            break;
+                        case "monthly":
+                            hologramMonthly.delete();
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Holo for monthly removed!");
+                            break;
+                    }
+                }
                 if (sender.isOp()&& Objects.equals(args[0], "startevent")){
                     int eventDuration = Integer.parseInt(args[1]);
                     String eventUnit = args[2];

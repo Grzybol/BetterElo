@@ -5,6 +5,7 @@ api-version: 1.18
 description: PvP Elo with configurable rewards. https://github.com/Grzybol/BetterElo
 author: Grzybol
 depend: [PlaceholderAPI]
+softdepend: [HolographicDisplays]
 commands:
   be:
     description: Komenda do ogólnego zarządzania rankingiem graczy.
@@ -57,6 +58,9 @@ commands:
   be-stopevent:
     description: removing event
     usage: /be stopevent
+  be-holo:
+    description: Holo management
+    usage: /be holo
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.
