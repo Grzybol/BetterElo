@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>3.2.8-SNAPSHOT</version>
+    <version>3.2.10-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BetterElo</name>
@@ -91,6 +91,10 @@
 
     <repositories>
         <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
@@ -105,6 +109,12 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>me.filoghost.holographicdisplays</groupId>
+            <artifactId>holographicdisplays-api</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-platform-bukkit</artifactId>
