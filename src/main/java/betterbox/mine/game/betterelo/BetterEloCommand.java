@@ -103,6 +103,8 @@ public class BetterEloCommand implements CommandExecutor {
                             sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
                             sender.sendMessage(ChatColor.AQUA + "/be startevent <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
                             sender.sendMessage(ChatColor.AQUA + "/be stopevent " + ChatColor.GREEN + "- Stops current event (if active).");
+                            sender.sendMessage(ChatColor.AQUA + "/be holo <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- creates holo at your position.");
+                            sender.sendMessage(ChatColor.AQUA + "/be holo delete <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- delete given holo");
                         }
                         break;
                     case "top10":
