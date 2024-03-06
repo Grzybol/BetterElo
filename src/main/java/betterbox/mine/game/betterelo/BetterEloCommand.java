@@ -287,6 +287,8 @@ public class BetterEloCommand implements CommandExecutor {
                             case "event":
                                 hologramEvent = api.createHologram(where);
                                 hologramEvent.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT STARTED!!");
+                                hologramEvent.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"Use /be event");
+                                //hologramEvent.getLines().
                                 /*
                                 hologramEvent.getLines().insertText(0, ChatColor.GOLD+""+ChatColor.BOLD+"EVENT RANKING");
                                 hologramEvent.getLines().insertText(1, ChatColor.GOLD+""+ChatColor.BOLD+"TOP 1 - "+ChatColor.RED+""+ChatColor.BOLD+dataManager.getPlayerAtPosition(1, dataManager.eventPlayerPoints)+ChatColor.GOLD+""+ChatColor.BOLD+"|| POINTS:"+ChatColor.BOLD+""+ ChatColor.RED+((double)Math.round(dataManager.getPointsAtPosition(1, dataManager.eventPlayerPoints)*100)/100));

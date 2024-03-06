@@ -146,7 +146,7 @@ public class Placeholders extends PlaceholderExpansion {
                     } else if ((result = processRankingPlaceholder(identifier, "monthly_", dataManager.monthlyPayerPoints)) != null) {
                         return result;
                     }
-                    else if ((result = processRankingPlaceholder(identifier, "event_", dataManager.monthlyPayerPoints)) != null&&betterElo.isEventEnabled) {
+                    else if ((result = processRankingPlaceholder(identifier, "event_", dataManager.eventPlayerPoints)) != null&&betterElo.isEventEnabled) {
                         return result;
                     }
             }
