@@ -99,9 +99,9 @@ public final class BetterElo extends JavaPlugin {
 
         File dataFolder = this.getDataFolder();
         File databaseFile = new File(dataFolder, "database.txt");
-        WebRankingServer server = new WebRankingServer(databaseFile.getAbsolutePath(), 39378,pluginLogger);
+        //WebRankingServer server = new WebRankingServer(databaseFile.getAbsolutePath(), 39378,pluginLogger);
 
-        server.startServer();
+        //server.startServer();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: web ranking server started");
 
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: starting ChatNotifier every 30min");

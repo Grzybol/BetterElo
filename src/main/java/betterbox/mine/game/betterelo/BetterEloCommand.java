@@ -15,6 +15,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,7 @@ public class BetterEloCommand implements CommandExecutor {
     private Hologram hologramWeekly;
     private Hologram hologramMonthly;
     private Hologram hologramEvent;
+    private BukkitTask eventHoloTask;
 
     public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager,Event event, PlayerKillDatabase PKDB) {
         this.dataManager = dataManager;
@@ -649,6 +652,22 @@ public class BetterEloCommand implements CommandExecutor {
 
         return formattedTime.toString().trim(); // Usunięcie ewentualnych spacji na końcu
     }
-
+    private void HoloTop(HashMap playerPoints, Location location,HolographicDisplaysAPI api){
+        if(eventHoloTask ==null||eventHoloTask.isCancelled()){
+           //eventHoloTask = new BukkitRunnable()
+            hologramEvent = api.createHologram(location);
+            hologramMain.getLines().insertText(0, ChatColor.GOLD + "" + ChatColor.BOLD + "EVENT RANKING");
+            hologramMain.getLines().insertText(1, ChatColor.GOLD + "" + ChatColor.BOLD + "TOP 1 - " + ChatColor.RED + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(1, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.RED + ((double) Math.round(dataManager.getPointsAtPosition(1, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(2, ChatColor.GOLD + "" + ChatColor.BOLD + "TOP 2 - " + ChatColor.GREEN + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(2, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.GREEN + ((double) Math.round(dataManager.getPointsAtPosition(2, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(3, ChatColor.GOLD + "" + ChatColor.BOLD + "TOP 3 - " + ChatColor.AQUA + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(3, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.AQUA + ((double) Math.round(dataManager.getPointsAtPosition(3, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(4, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(4, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(4, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(5, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(5, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(5, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(6, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(6, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(6, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(7, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(7, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(7, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(8, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(8, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(8, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(9, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(9, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(9, playerPoints) * 100) / 100));
+            hologramMain.getLines().insertText(10, ChatColor.WHITE + "" + ChatColor.BOLD + dataManager.getPlayerAtPosition(10, playerPoints) + ChatColor.GOLD + "" + ChatColor.BOLD + "|| POINTS:" + ChatColor.BOLD + "" + ChatColor.WHITE + ((double) Math.round(dataManager.getPointsAtPosition(10, playerPoints) * 100) / 100));
+        }
+    }
 
 }
