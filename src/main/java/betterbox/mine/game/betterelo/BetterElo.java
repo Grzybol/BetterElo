@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -342,9 +343,20 @@ public final class BetterElo extends JavaPlugin {
                     Player player = offlinePlayer.getPlayer();
                     if (player != null && player.isOnline()) {
                         for (ItemStack rewardItem : rewardItems) {
+                            // Dodaj lore jeśli przedmiot jest na liście eventItemsPlaceholder
+                            if (configManager.eventItemsPlaceholder.contains(rewardItem.getType().toString())) {
+                                ItemMeta itemMeta = rewardItem.getItemMeta();
+                                List<String> lore = itemMeta.getLore();
+                                if (lore == null) {
+                                    lore = new ArrayList<>();
+                                }
+                                lore.add(ChatColor.GRAY + "Reward for "+ChatColor.GOLD+ChatColor.BOLD + player.getName());
+                                itemMeta.setLore(lore);
+                                rewardItem.setItemMeta(itemMeta);
+                            }
                             if (player.getInventory().firstEmpty() != -1) {
                                 player.getInventory().addItem(rewardItem);
-                                pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo: rewardTopPlayers: Nagradzanie gracza: " + player.getName());
+                                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Rewarding player: " + player.getName());
                             } else {
                                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo: rewardTopPlayers: No space in inventory for player: " + player.getName());
                                 break;

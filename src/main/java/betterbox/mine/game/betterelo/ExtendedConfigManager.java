@@ -13,6 +13,8 @@ public class ExtendedConfigManager {
     private JavaPlugin plugin;
     private PluginLogger pluginLogger;
     List<String> logLevels = null;
+    List<String> eventItemsPlaceholder = null;
+    Set<PluginLogger.LogLevel> enabledEventItemsPlaceholder;
     private File configFile = null;
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
@@ -119,6 +121,47 @@ public class ExtendedConfigManager {
             //blockBaseSection.set("value", 0.1);
             plugin.saveConfig();
         }
+
+
+
+
+        //wczytywanie listy itemow do ktorych bedzie przypisywana nazwa gracza przy rozdaniu nagrod
+/*
+        ConfigurationSection eventItemsSection = plugin.getConfig().getConfigurationSection("event_items_with_username");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"extendedConfigManager.ReloadConfig checking event_items_with_username section");
+        if (eventItemsSection != null) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"extendedConfigManager.ReloadConfig event_items_with_username section not null");
+            // Jeśli sekcja istnieje, odczytaj jej zawartość i zapisz w pamięci
+            for (String eventItem : eventItemsSection.getKeys(false)) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"extendedConfigManager.ReloadConfig event_items_with_username section checking item "+eventItem);
+                String ItemID = plugin.getConfig().getString("event_items_with_username." +eventItem);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, eventItem+":"+ ItemID);
+                eventItemsPlaceholder.add(ItemID);
+            }
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: event_items_with_username section not found in config! Creating new section..");
+            eventItemsSection = plugin.getConfig().createSection("event_items_with_username");
+            //eventItemsSection.setComments("event_items_with_username", Collections.singletonList("To the lore of these items will be added a name of the player that received the item"));
+            plugin.saveConfig();
+            }
+
+ */
+// Wczytywanie listy itemów, do których będzie przypisywana nazwa gracza przy rozdaniu nagród
+        List<String> eventItemsWithUsername = plugin.getConfig().getStringList("event_items_with_username");
+        if (eventItemsWithUsername == null || eventItemsWithUsername.isEmpty()) {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: event_items_with_username section not found in config or is empty! Creating new section with default values.");
+            // Tutaj możesz ustawić domyślne wartości, jeśli lista jest pusta lub nie istnieje
+            plugin.getConfig().set("event_items_with_username", Arrays.asList("DIAMOND_PICKAXE")); // Przykład domyślnych wartości
+            plugin.saveConfig();
+        } else {
+            // Lista istnieje i ma elementy, logowanie lub inne operacje
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "event_items_with_username loaded: " + eventItemsWithUsername.toString());
+            // Możesz tutaj przypisać wczytaną listę do zmiennej klasy, jeśli potrzebujesz
+            this.eventItemsPlaceholder = eventItemsWithUsername;
+        }
+
+
+
 
 
     }

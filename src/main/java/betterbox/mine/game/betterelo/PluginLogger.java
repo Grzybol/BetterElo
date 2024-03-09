@@ -75,6 +75,11 @@ public class PluginLogger {
         log("Enabled Log levels "+ Arrays.toString(enabledLogLevels.toArray()));
 
     }
+    public void setEnabledEventItems(Set<LogLevel> configEnabledEventItems) {
+        this.enabledLogLevels = configEnabledEventItems;
+        log("Enabled Log levels "+ Arrays.toString(enabledLogLevels.toArray()));
+
+    }
 
 
 }
