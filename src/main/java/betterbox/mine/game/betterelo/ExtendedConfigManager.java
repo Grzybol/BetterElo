@@ -13,6 +13,8 @@ public class ExtendedConfigManager {
     private JavaPlugin plugin;
     private PluginLogger pluginLogger;
     List<String> logLevels = null;
+    List<String> eventItemsPlaceholder = null;
+    Set<PluginLogger.LogLevel> enabledEventItemsPlaceholder;
     private File configFile = null;
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
@@ -119,6 +121,29 @@ public class ExtendedConfigManager {
             //blockBaseSection.set("value", 0.1);
             plugin.saveConfig();
         }
+
+
+
+
+        //wczytywanie listy itemow do ktorych bedzie przypisywana nazwa gracza przy rozdaniu nagrod
+
+        ConfigurationSection eventItemsSection = plugin.getConfig().getConfigurationSection("event_items_with_username");
+        if (eventItemsSection != null) {
+            // Jeśli sekcja istnieje, odczytaj jej zawartość i zapisz w pamięci
+            for (String eventItem : eventItemsSection.getKeys(false)) {
+                String ItemID = plugin.getConfig().getString("event_items_with_username.");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, eventItem);
+                eventItemsPlaceholder.add(ItemID);
+            }
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: event_items_with_username section not found in config! Creating new section..");
+            eventItemsSection = plugin.getConfig().createSection("event_items_with_username");
+            eventItemsSection.setComments("event_items_with_username", Collections.singletonList("To lore of these items will be added a name of the player that received the item"));
+            plugin.saveConfig();
+
+        }
+
+
 
 
     }
