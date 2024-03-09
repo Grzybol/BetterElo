@@ -356,7 +356,7 @@ public final class BetterElo extends JavaPlugin {
                             }
                             if (player.getInventory().firstEmpty() != -1) {
                                 player.getInventory().addItem(rewardItem);
-                                pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo: rewardTopPlayers: Rewarding player: " + player.getName());
+                                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Rewarding player: " + player.getName());
                             } else {
                                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo: rewardTopPlayers: No space in inventory for player: " + player.getName());
                                 break;
