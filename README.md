@@ -52,6 +52,9 @@ There are no special permissions required to use the following Player commands.
   - [ENG] Returns top 10 monthly ranking.
   - [PL] Zwraca info o top 10 rankingu miesięcznego.
 
+- `/be event`
+   - return info about your postiion in evnet (if active)
+
 ## Only for OP
 
 - `/be setrewards`
@@ -60,6 +63,8 @@ There are no special permissions required to use the following Player commands.
 - `/be ban <player>`
 - `/be add <player> <points> <main/daily/weekly/monthly>`
 - `/be sub <player> <points> <main/daily/weekly/monthly>`
+- `/be startevent <duration> <timeunit>`
+- `/be stopevent`
 
 ## Placeholders
 
@@ -78,3 +83,6 @@ There are no special permissions required to use the following Player commands.
 - `%be_daily_tl%` returns time left on daily rewards timer - automatically converts to D-M-S format
 - `%be_weekly_tl%` returns time left on weekly rewards timer - automatically converts to D-M-S format
 - `%be_monthly_tl%` returns time left on monthly rewards timer - automatically converts to D-M-S format
+- `%be_event_tl%` returns time left on event rewards timer - automatically converts to D-M-S format
+- `%be_event_daily%` returns the player's event ranking
+- `%be_event_monthly%` returns the player's event ranking points
