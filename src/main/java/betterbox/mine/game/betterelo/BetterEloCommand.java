@@ -3,14 +3,13 @@ package betterbox.mine.game.betterelo;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -227,6 +226,24 @@ public class BetterEloCommand implements CommandExecutor {
                 }
                 break;
             case 2:
+                if(args[0].equalsIgnoreCase("antyweb") && (sender.hasPermission("betterelo.antyweb") || sender.isOp()) &&sender instanceof Player){
+                    Player player = ((Player) sender).getPlayer();
+                    assert player != null;
+                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                    if (itemInHand.getType().isAir()) {
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You must hold an item in your hand to add Antyweb lore!");
+                        return true;
+                    }
+                    int radius;
+                    try {
+                        // Spróbuj przekonwertować argument na liczbę
+                        radius = Integer.parseInt(args[1]);
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
+                        return true;
+                    }
+                    addAntywebLore(player, itemInHand,radius);
+                }
                 if(args[0].equalsIgnoreCase("holo")&&sender.isOp()){
                     if(sender instanceof Player) {
                         Player player = (Player) sender;
@@ -565,6 +582,37 @@ public class BetterEloCommand implements CommandExecutor {
 
         Player player = (Player) sender;
         guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
+    }
+    public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) {
+            return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
+        }
+
+        String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb " + radius;
+        List<String> lore = itemMeta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+        lore.add(antywebLore);
+        itemMeta.setLore(lore);
+        /*
+        itemStack.setItemMeta(itemMeta);
+        if (itemMeta.hasLore()) {
+            // Jeśli istnieje już lore, dodaj nową linię
+            itemMeta.getLore().add(lore);
+        } else {
+            // Jeśli nie ma jeszcze lore, utwórz nową listę
+            itemMeta.setLore(Collections.singletonList(lore));
+        }
+
+         */
+
+        itemStack.setItemMeta(itemMeta);
+
+        // Informuj gracza o dodaniu lore
+        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Antyweb lore with radius "+radius);
+        //player.sendMessage("Added Antyweb lore with radius " + radius + " to the item.");
     }
 
 }

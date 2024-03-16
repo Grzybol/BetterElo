@@ -2,18 +2,20 @@ package betterbox.mine.game.betterelo;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +23,7 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class  Event implements Listener {
@@ -38,6 +41,7 @@ public class  Event implements Listener {
         this.plugin = plugin;
         this.cheaters = cheaters;
         this.configManager = configManager;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler
@@ -447,7 +451,122 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
         }
     }
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract called");
+        Player player = event.getPlayer();
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        int removeradius = 0;
+
+        // Sprawdź, czy gracz trzyma odpowiedni przedmiot i nacisnął prawy przycisk myszy
+        if (hasAntywebLore(itemInHand) && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract antywebcheck passed");
+            removeradius = getAntywebRadius(itemInHand);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract removeradius "+removeradius);
+            Location clickedBlockLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation();
+            double totalCost=0;
+            double cost=configManager.antywebCost;
+            // Iteruj po blokach w promieniu 3 od klikniętego bloku
+            for (int x = -removeradius; x <= removeradius; x++) {
+                for (int y = -removeradius; y <= removeradius; y++) {
+                    for (int z = -removeradius; z <= removeradius; z++) {
+                        Location location = clickedBlockLocation.clone().add(x, y, z);
+                        Block block = location.getBlock();
+
+                        // Sprawdź, czy blok to pajęczyna
+                        if (block.getType() == Material.COBWEB) {
+
+                            // Usuń pajęczynę
+                            for (MetadataValue meta : block.getMetadata("placed_by_player")) {
+                                if (meta.asBoolean()) {
+                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "onPlayerInteract: cobweb was placed by a player");
+                                    block.setType(Material.AIR);
+                                    subtractPoints(player, cost, "main");
+                                    subtractPoints(player, cost, "daily");
+                                    subtractPoints(player, cost, "weekly");
+                                    subtractPoints(player, cost, "monthly");
+                                    if(betterElo.isEventEnabled){
+                                        subtractPoints(player, cost, "event");
+                                    }
+                                    totalCost=totalCost+cost;
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+            }
+            if(totalCost>0){
+                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Elo cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
+            }
+        }
 
 
+    }
+    public boolean hasAntywebLore(ItemStack itemStack) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore itemmeta check failed");
+            return false;
+        }
 
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore lore check failed");
+            return false;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore Antyweb check triggered, checking lore");
+            if (lore != null && lore.contains("Antyweb")) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore Antyweb check triggered, checking formatting");
+                // Sprawdź, czy lore zawiera słowo "Antyweb" i czy ma odpowiednie formatowanie
+                String[] parts = lore.split(" ");
+                if (parts.length == 2 && parts[0].equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb")) {
+                    try {
+                        // Sprawdź, czy druga część to liczba całkowita
+                        Integer.parseInt(parts[1]);
+                        return true;
+                    } catch (NumberFormatException ignored) {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.hasAntywebLore Antyweb value not INT!");
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+    public Integer getAntywebRadius(ItemStack itemStack) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius called");
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            return null;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            return null;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            // Sprawdź, czy linia lore zawiera napis "Antyweb" i czy zawiera formatowanie
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius Antyweb check triggered, checking lore");
+            if (lore != null && lore.contains("Antyweb")) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius Antyweb check triggered, checking formatting");
+                // Sprawdź, czy lore zawiera słowo "Antyweb" i czy ma odpowiednie formatowanie
+                String[] parts = lore.split(" ");
+                if (parts.length == 2 && parts[0].equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb")) {
+                    // Wyodrębnij promień z linii lore
+                    try {
+                        return Integer.parseInt(parts[1]);
+                    } catch (NumberFormatException e) {
+                        // Jeśli nie można przekonwertować na liczbę, zwróć null
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 }
