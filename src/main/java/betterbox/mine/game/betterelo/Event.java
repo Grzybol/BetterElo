@@ -15,6 +15,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -457,6 +458,9 @@ public class  Event implements Listener {
 
         // Sprawdź, czy gracz trzyma odpowiedni przedmiot i nacisnął prawy przycisk myszy
         if (itemInHand.getType() == Material.SHEARS && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if(!hasAntywebLore(itemInHand)){
+                return;
+            }
 
             Location clickedBlockLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation();
 
@@ -469,20 +473,26 @@ public class  Event implements Listener {
 
                         // Sprawdź, czy blok to pajęczyna
                         if (block.getType() == Material.COBWEB) {
+                            double totalCost=0;
+                            double cost=configManager.antywebCost;
                             // Usuń pajęczynę
                             for (MetadataValue meta : block.getMetadata("placed_by_player")) {
                                 if (meta.asBoolean()) {
                                     pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "onPlayerInteract: cobweb was placed by a player");
                                     block.setType(Material.AIR);
-                                    subtractPoints(player, configManager.antywebCost, "main");
-                                    subtractPoints(player, configManager.antywebCost, "daily");
-                                    subtractPoints(player, configManager.antywebCost, "weekly");
-                                    subtractPoints(player, configManager.antywebCost, "monthly");
+                                    subtractPoints(player, cost, "main");
+                                    subtractPoints(player, cost, "daily");
+                                    subtractPoints(player, cost, "weekly");
+                                    subtractPoints(player, cost, "monthly");
                                     if(betterElo.isEventEnabled){
-                                        subtractPoints(player, configManager.antywebCost, "event");
+                                        subtractPoints(player, cost, "event");
                                     }
+                                    totalCost=totalCost+cost;
                                 }
 
+                            }
+                            if(totalCost>0) {
+                                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
                             }
                         }
                     }
@@ -491,5 +501,26 @@ public class  Event implements Listener {
         }
 
 
+    }
+    public boolean hasAntywebLore(ItemStack itemStack) {
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            return false;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            return false;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            if (ChatColor.stripColor(lore).equalsIgnoreCase("Antyweb")) {
+                // Sprawdź, czy lore zawiera odpowiednie formatowanie
+                if (lore.contains(ChatColor.GOLD.toString()) && lore.contains(ChatColor.BOLD.toString())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

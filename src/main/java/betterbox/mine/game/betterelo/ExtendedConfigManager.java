@@ -136,8 +136,8 @@ public class ExtendedConfigManager {
         }
         else{
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
-            plugin.getConfig().createSection("block_base");
-            plugin.getConfig().set("block_base", 0.1);
+            plugin.getConfig().createSection("antyweb_elo_cost");
+            plugin.getConfig().set("antyweb_elo_cost", 0.1);
             //blockBaseSection.set("value", 0.1);
             plugin.saveConfig();
         }
