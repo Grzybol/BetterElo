@@ -492,14 +492,14 @@ public class  Event implements Listener {
                                 }
 
                             }
-                            if(totalCost>0) {
 
-                            }
                         }
                     }
                 }
             }
-            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Elo cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
+            if(totalCost>0){
+                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Elo cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
+            }
         }
 
 

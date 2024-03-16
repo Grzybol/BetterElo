@@ -1,5 +1,6 @@
 package betterbox.mine.game.betterelo;
 
+import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -323,6 +324,8 @@ public final class BetterElo extends JavaPlugin {
                     break;
             }
             if (playerName != null) {
+                String foramttedMessage =  ChatColor.GOLD +""+ ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Rewarding player "+ChatColor.GOLD+ ChatColor.BOLD +playerName+ChatColor.AQUA +" in "+ChatColor.GOLD+ChatColor.BOLD+rewardType+" ranking for reaching "+ ChatColor.GOLD+ChatColor.BOLD+"TOP"+i;
+                Bukkit.getServer().broadcastMessage(foramttedMessage);
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
                 if (offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
                     // Ustaw odpowiedni subType zależnie od pozycji gracza
