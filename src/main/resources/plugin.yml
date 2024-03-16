@@ -61,6 +61,9 @@ commands:
   be-holo:
     description: Holo management
     usage: /be holo
+  be-antyweb:
+    description: Add antyweb to item
+    usage: /be antyweb x
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.
@@ -79,5 +82,8 @@ permissions:
     default: op
   betterelo.ban:
     description: Deletes player.
+    default: op
+  betterelo.antyweb:
+    description: Antyweb
     default: op
 
