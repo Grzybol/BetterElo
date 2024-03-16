@@ -2,18 +2,19 @@ package betterbox.mine.game.betterelo;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +22,7 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class  Event implements Listener {
@@ -38,6 +40,7 @@ public class  Event implements Listener {
         this.plugin = plugin;
         this.cheaters = cheaters;
         this.configManager = configManager;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler
@@ -447,7 +450,46 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
         }
     }
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+        // Sprawdź, czy gracz trzyma odpowiedni przedmiot i nacisnął prawy przycisk myszy
+        if (itemInHand.getType() == Material.SHEARS && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+
+            Location clickedBlockLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation();
+
+            // Iteruj po blokach w promieniu 3 od klikniętego bloku
+            for (int x = -3; x <= 3; x++) {
+                for (int y = -3; y <= 3; y++) {
+                    for (int z = -3; z <= 3; z++) {
+                        Location location = clickedBlockLocation.clone().add(x, y, z);
+                        Block block = location.getBlock();
+
+                        // Sprawdź, czy blok to pajęczyna
+                        if (block.getType() == Material.COBWEB) {
+                            // Usuń pajęczynę
+                            for (MetadataValue meta : block.getMetadata("placed_by_player")) {
+                                if (meta.asBoolean()) {
+                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL4, "onPlayerInteract: cobweb was placed by a player");
+                                    block.setType(Material.AIR);
+                                    subtractPoints(player, configManager.antywebCost, "main");
+                                    subtractPoints(player, configManager.antywebCost, "daily");
+                                    subtractPoints(player, configManager.antywebCost, "weekly");
+                                    subtractPoints(player, configManager.antywebCost, "monthly");
+                                    if(betterElo.isEventEnabled){
+                                        subtractPoints(player, configManager.antywebCost, "event");
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 
-
+    }
 }

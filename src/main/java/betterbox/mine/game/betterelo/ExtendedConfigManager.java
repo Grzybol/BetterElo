@@ -3,6 +3,7 @@ package betterbox.mine.game.betterelo;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.servlet.annotation.HandlesTypes;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,6 +20,7 @@ public class ExtendedConfigManager {
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
     public Double blockBase = 0.1;
+    public Double antywebCost = 0.1;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
@@ -111,6 +113,24 @@ public class ExtendedConfigManager {
             else {
                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base incorrect! Restoring default");
                 plugin.getConfig().set("block_base", 0.1);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
+            plugin.getConfig().createSection("block_base");
+            plugin.getConfig().set("block_base", 0.1);
+            //blockBaseSection.set("value", 0.1);
+            plugin.saveConfig();
+        }
+        antywebCost = plugin.getConfig().getDouble("antyweb_elo_cost");
+        if (plugin.getConfig().contains("antyweb_elo_cost")){
+            if (plugin.getConfig().isDouble("antyweb_elo_cost")){
+                blockBase = plugin.getConfig().getDouble("antyweb_elo_cost");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: antyweb_elo_cost incorrect! Restoring default");
+                plugin.getConfig().set("antyweb_elo_cost", 1.5);
                 plugin.saveConfig();
             }
         }
