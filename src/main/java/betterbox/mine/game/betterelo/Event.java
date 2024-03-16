@@ -464,7 +464,8 @@ public class  Event implements Listener {
             removeradius = getAntywebRadius(itemInHand);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract removeradius "+removeradius);
             Location clickedBlockLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation();
-
+            double totalCost=0;
+            double cost=configManager.antywebCost;
             // Iteruj po blokach w promieniu 3 od klikniętego bloku
             for (int x = -removeradius; x <= removeradius; x++) {
                 for (int y = -removeradius; y <= removeradius; y++) {
@@ -474,8 +475,7 @@ public class  Event implements Listener {
 
                         // Sprawdź, czy blok to pajęczyna
                         if (block.getType() == Material.COBWEB) {
-                            double totalCost=0;
-                            double cost=configManager.antywebCost;
+
                             // Usuń pajęczynę
                             for (MetadataValue meta : block.getMetadata("placed_by_player")) {
                                 if (meta.asBoolean()) {
@@ -493,12 +493,13 @@ public class  Event implements Listener {
 
                             }
                             if(totalCost>0) {
-                                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
+
                             }
                         }
                     }
                 }
             }
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Elo cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
         }
 
 

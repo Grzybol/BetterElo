@@ -589,8 +589,15 @@ public class BetterEloCommand implements CommandExecutor {
             return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
         }
 
-        String lore = ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb " + radius;
-
+        String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb " + radius;
+        List<String> lore = itemMeta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+        lore.add(antywebLore);
+        itemMeta.setLore(lore);
+        /*
+        itemStack.setItemMeta(itemMeta);
         if (itemMeta.hasLore()) {
             // Jeśli istnieje już lore, dodaj nową linię
             itemMeta.getLore().add(lore);
@@ -598,6 +605,8 @@ public class BetterEloCommand implements CommandExecutor {
             // Jeśli nie ma jeszcze lore, utwórz nową listę
             itemMeta.setLore(Collections.singletonList(lore));
         }
+
+         */
 
         itemStack.setItemMeta(itemMeta);
 
