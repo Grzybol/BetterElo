@@ -455,19 +455,18 @@ public class  Event implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        int removeradius = 0;
 
         // Sprawdź, czy gracz trzyma odpowiedni przedmiot i nacisnął prawy przycisk myszy
-        if (itemInHand.getType() == Material.SHEARS && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if(!hasAntywebLore(itemInHand)){
-                return;
-            }
+        if (hasAntywebLore(itemInHand) && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            removeradius = getAntywebRadius(itemInHand);
 
             Location clickedBlockLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation();
 
             // Iteruj po blokach w promieniu 3 od klikniętego bloku
-            for (int x = -3; x <= 3; x++) {
-                for (int y = -3; y <= 3; y++) {
-                    for (int z = -3; z <= 3; z++) {
+            for (int x = -removeradius; x <= removeradius; x++) {
+                for (int y = -removeradius; y <= removeradius; y++) {
+                    for (int z = -removeradius; z <= removeradius; z++) {
                         Location location = clickedBlockLocation.clone().add(x, y, z);
                         Block block = location.getBlock();
 
@@ -522,5 +521,35 @@ public class  Event implements Listener {
         }
 
         return false;
+    }
+    public Integer getAntywebRadius(ItemStack itemStack) {
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            return null;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            return null;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            // Sprawdź, czy linia lore zawiera napis "Antyweb" i czy zawiera formatowanie
+            if (ChatColor.stripColor(lore).equalsIgnoreCase("Antyweb")) {
+                if (lore.contains(ChatColor.GOLD.toString()) && lore.contains(ChatColor.BOLD.toString())) {
+                    // Wyodrębnij promień z linii lore
+                    String[] parts = lore.split(" ");
+                    if (parts.length == 2) {
+                        try {
+                            return Integer.parseInt(parts[1]);
+                        } catch (NumberFormatException e) {
+                            // Jeśli nie można przekonwertować na liczbę, zwróć null
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
