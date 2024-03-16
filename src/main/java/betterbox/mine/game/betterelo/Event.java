@@ -453,14 +453,16 @@ public class  Event implements Listener {
     }
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract called");
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         int removeradius = 0;
 
         // Sprawdź, czy gracz trzyma odpowiedni przedmiot i nacisnął prawy przycisk myszy
         if (hasAntywebLore(itemInHand) && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract antywebcheck passed");
             removeradius = getAntywebRadius(itemInHand);
-
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract removeradius "+removeradius);
             Location clickedBlockLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation();
 
             // Iteruj po blokach w promieniu 3 od klikniętego bloku
@@ -502,20 +504,32 @@ public class  Event implements Listener {
 
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore itemmeta check failed");
             return false;
         }
 
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta == null || !itemMeta.hasLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore lore check failed");
             return false;
         }
 
         for (String lore : itemMeta.getLore()) {
-            if (ChatColor.stripColor(lore).equalsIgnoreCase("Antyweb")) {
-                // Sprawdź, czy lore zawiera odpowiednie formatowanie
-                if (lore.contains(ChatColor.GOLD.toString()) && lore.contains(ChatColor.BOLD.toString())) {
-                    return true;
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore Antyweb check triggered, checking lore");
+            if (lore != null && lore.contains("Antyweb")) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore Antyweb check triggered, checking formatting");
+                // Sprawdź, czy lore zawiera słowo "Antyweb" i czy ma odpowiednie formatowanie
+                String[] parts = lore.split(" ");
+                if (parts.length == 2 && parts[0].equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb")) {
+                    try {
+                        // Sprawdź, czy druga część to liczba całkowita
+                        Integer.parseInt(parts[1]);
+                        return true;
+                    } catch (NumberFormatException ignored) {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.hasAntywebLore Antyweb value not INT!");
+                    }
                 }
             }
         }
@@ -523,6 +537,7 @@ public class  Event implements Listener {
         return false;
     }
     public Integer getAntywebRadius(ItemStack itemStack) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
             return null;
         }
@@ -534,17 +549,18 @@ public class  Event implements Listener {
 
         for (String lore : itemMeta.getLore()) {
             // Sprawdź, czy linia lore zawiera napis "Antyweb" i czy zawiera formatowanie
-            if (ChatColor.stripColor(lore).equalsIgnoreCase("Antyweb")) {
-                if (lore.contains(ChatColor.GOLD.toString()) && lore.contains(ChatColor.BOLD.toString())) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius Antyweb check triggered, checking lore");
+            if (lore != null && lore.contains("Antyweb")) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius Antyweb check triggered, checking formatting");
+                // Sprawdź, czy lore zawiera słowo "Antyweb" i czy ma odpowiednie formatowanie
+                String[] parts = lore.split(" ");
+                if (parts.length == 2 && parts[0].equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb")) {
                     // Wyodrębnij promień z linii lore
-                    String[] parts = lore.split(" ");
-                    if (parts.length == 2) {
-                        try {
-                            return Integer.parseInt(parts[1]);
-                        } catch (NumberFormatException e) {
-                            // Jeśli nie można przekonwertować na liczbę, zwróć null
-                            return null;
-                        }
+                    try {
+                        return Integer.parseInt(parts[1]);
+                    } catch (NumberFormatException e) {
+                        // Jeśli nie można przekonwertować na liczbę, zwróć null
+                        return null;
                     }
                 }
             }
