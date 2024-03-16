@@ -1,5 +1,7 @@
 # BetterElo
 
+https://www.spigotmc.org/resources/betterelo.114648/
+
 Minecraft PvP Elo rank system Plugin created by Grzybol
 
 Minecraft version 1.18.2+
