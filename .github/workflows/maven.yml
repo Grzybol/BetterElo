@@ -13,18 +13,19 @@ jobs:
     outputs:
       artifact-path: ${{ steps.upload_artifact.outputs.artifact-path }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+      
     - name: Build with Maven and Auto-Versioning
       run: mvn -B build-helper:parse-version versions:set versions:commit package --file pom.xml
+      
     - name: Upload Artifact
       id: upload_artifact
       uses: actions/upload-artifact@v3
@@ -42,6 +43,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: minecraft-plugin
+      
     - name: Extract version and artifact name
       id: extract_info
       run: |
@@ -78,8 +80,7 @@ jobs:
         git config user.name "GitHub Actions"
         git config user.email "github-actions@users.noreply.github.com"
         git tag ${{ needs.extract-version-and-artifact-name.outputs.version }}
-        git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN }}@github.com/${{ github.repository }} \
-          ${{ needs.extract-version-and-artifact-name.outputs.version }}
+        git push origin ${{ needs.extract-version-and-artifact-name.outputs.version }}
 
   create-release:
     needs: create-and-push-tag
@@ -88,6 +89,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: minecraft-plugin
+      
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
