@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -71,6 +72,7 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+
                     case "stopevent":
                         if(sender.isOp()){
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event stopped,data removed.");
@@ -226,67 +228,92 @@ public class BetterEloCommand implements CommandExecutor {
                 }
                 break;
             case 2:
-                if(args[0].equalsIgnoreCase("antyweb") && (sender.hasPermission("betterelo.antyweb") || sender.isOp()) &&sender instanceof Player){
-                    Player player = ((Player) sender).getPlayer();
-                    assert player != null;
-                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                    if (itemInHand.getType().isAir()) {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You must hold an item in your hand to add Antyweb lore!");
-                        return true;
-                    }
-                    int radius;
-                    try {
-                        // Spróbuj przekonwertować argument na liczbę
-                        radius = Integer.parseInt(args[1]);
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
-                        return true;
-                    }
-                    addAntywebLore(player, itemInHand,radius);
-                }
-                if(args[0].equalsIgnoreCase("holo")&&sender.isOp()){
-                    if(sender instanceof Player) {
-                        Player player = (Player) sender;
-                        Location where = player.getLocation();// The location where the hologram will be placed
-                        HolographicDisplaysAPI api = HolographicDisplaysAPI.get(plugin); // The API instance for your plugin
+                switch (args[0].toLowerCase()) {
+                    case "antyweb":
+                        if ((sender.hasPermission("betterelo.antyweb") || sender.isOp()) && sender instanceof Player) {
+                            Player player = ((Player) sender).getPlayer();
+                            assert player != null;
+                            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                            if (itemInHand.getType().isAir()) {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You must hold an item in your hand to add Antyweb lore!");
+                                return true;
+                            }
+                            int radius;
+                            try {
+                                // Spróbuj przekonwertować argument na liczbę
+                                radius = Integer.parseInt(args[1]);
+                            } catch (NumberFormatException e) {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
+                                return true;
+                            }
+                            addAntywebLore(player, itemInHand, radius);
+                        }
+                        break;
+                    case "holo":
+                        if (sender.isOp()) {
+                            if (sender instanceof Player) {
+                                Player player = (Player) sender;
+                                Location where = player.getLocation();// The location where the hologram will be placed
+                                HolographicDisplaysAPI api = HolographicDisplaysAPI.get(plugin); // The API instance for your plugin
 
-
-                        if (args[1].equals("event")) {
-                            if (hologramEvent == null) {
-                                HoloTop(dataManager.eventPlayerPoints, where, api);
-                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                if (args[1].equals("event")) {
+                                    if (hologramEvent == null) {
+                                        HoloTop(dataManager.eventPlayerPoints, where, api);
+                                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Holo for Event created!");
+                                    } else {
+                                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Holo for Event already exists!!");
+                                    }
+                                }
                             } else {
-                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Holo for Event already exists!!");
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "Event is not active!");
                             }
                         }
-                    }else {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "Event is not active!");
-                    }
-
-                }
-                if (args[0].equalsIgnoreCase("top")) {
-                    // /be top <n> - Displays the nickname and points of the player in position n in the ranking
-                    try {
-                        int position = Integer.parseInt(args[1]);
-                        String playerName = dataManager.getPlayerAtPosition(position, dataManager.playerPoints);
-                        double points = dataManager.getPointsAtPosition(position, dataManager.playerPoints);
-                        points = (double)Math.round(points*100)/100;
-                        if (playerName != null) {
-                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player in position " + ChatColor.GREEN + position + ": " + ChatColor.GREEN + playerName);
-                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player's points: " + ChatColor.GREEN + points);
-                        } else {
-                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " No player in position " + ChatColor.GREEN + position + ChatColor.DARK_RED + " in the ranking.");
+                        break;
+                    case "top":
+                        try {
+                            int position = Integer.parseInt(args[1]);
+                            String playerName = dataManager.getPlayerAtPosition(position, dataManager.playerPoints);
+                            double points = dataManager.getPointsAtPosition(position, dataManager.playerPoints);
+                            points = (double)Math.round(points*100)/100;
+                            if (playerName != null) {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player in position " + ChatColor.GREEN + position + ": " + ChatColor.GREEN + playerName);
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Player's points: " + ChatColor.GREEN + points);
+                            } else {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " No player in position " + ChatColor.GREEN + position + ChatColor.DARK_RED + " in the ranking.");
+                            }
+                        } catch (NumberFormatException e) {
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Please enter a valid ranking position number.");
                         }
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Please enter a valid ranking position number.");
-                    }
+                        break;
+                    case "ban":
+                        if (sender.isOp()) {
+                            handleBanCommand(sender, args[1]);
+                            betterElo.notiyBannedPlayer(args[1]);
+                        }else{
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You don't have permission to use that command!");
+                        }
+                        break;
+                    case "firework":
+                        if(sender.isOp()){
+                            try {
+                                int power = Integer.parseInt(args[1]);
+                                Player player = (Player) sender;
+                                createInfiniteFireworkItem(player,power);
+                                // Tutaj możesz wykonać logikę, jeśli args[1] jest liczbą całkowitą
+                            } catch (NumberFormatException e) {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "Command usage /be firework <power> - where power is INT!");
+                            }
+                            return true;
+                        }else{
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                        }
+                        break;
+                    default:
+                        // Obsługa dla przypadków, gdy żadna z opcji nie pasuje do argumentu
+                        // Możesz dodać tutaj odpowiednią logikę lub komunikat błędu
+                        break;
                 }
-                if(args[0].equalsIgnoreCase("ban")&&sender.isOp()){
 
-                    handleBanCommand(sender,args[1]);
-                    betterElo.notiyBannedPlayer(args[1]);
-                }
-                break;
             case 3:
                 if (sender.isOp()&& Objects.equals(args[0], "holo")&& Objects.equals(args[1], "delete")&&args[2].equals("event")){
                         hologramEvent.delete();
@@ -615,5 +642,18 @@ public class BetterEloCommand implements CommandExecutor {
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Antyweb lore with radius "+radius);
         //player.sendMessage("Added Antyweb lore with radius " + radius + " to the item.");
     }
+
+
+    private static void createInfiniteFireworkItem(Player player,int power) {
+        //ItemStack firework = createInfiniteFireworkItem();
+        ItemStack firework = new ItemStack(Material.FIREWORK_ROCKET, 1);
+        FireworkMeta meta = (FireworkMeta) firework.getItemMeta();
+        meta.setDisplayName("Infinite Firework");
+        meta.setLore(java.util.Arrays.asList("§6§lInfinite usage")); // Gold bold "Infinite usage";
+        meta.setPower(power);
+        firework.setItemMeta(meta);
+        player.getInventory().addItem(firework);
+    }
+
 
 }
