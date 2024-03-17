@@ -10,92 +10,64 @@ permissions:
 jobs:
   setup-and-build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-path: ${{ steps.upload_artifact.outputs.artifact-path }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-      
-    - name: Build with Maven and Auto-Versioning
-      run: mvn -B build-helper:parse-version versions:set versions:commit package --file pom.xml
-      
-    - name: Upload Artifact
-      id: upload_artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: minecraft-plugin
-        path: target/*.jar
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # To ensure tags are fetched as well
+          token: ${{ secrets.GITHUB_TOKEN }} # Użyj GITHUB_TOKEN do checkout
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-  extract-version-and-artifact-name:
-    needs: setup-and-build
+  build-and-version:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.extract_info.outputs.version }}
-      artifact-name: ${{ steps.extract_info.outputs.artifact-name }}
+    needs: setup-and-build
     steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: minecraft-plugin
-      
-    - name: Extract version and artifact name
-      id: extract_info
-      run: |
-        JAR_NAME=$(ls *.jar)
-        ARTIFACT_NAME=$(basename $JAR_NAME)
-        VERSION=$(echo $ARTIFACT_NAME | grep -oP '(?<=-)\d+\.\d+\.\d+(?=-SNAPSHOT)')
-        echo "::set-output name=version::v$VERSION"
-        echo "::set-output name=artifact-name::$ARTIFACT_NAME"
+      - name: Build with Maven and Auto-Versioning
+        run: mvn -B build-helper:parse-version versions:set versions:commit package --file pom.xml
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: minecraft-plugin
+          path: target/*.jar
+
+  extract-info:
+    runs-on: ubuntu-latest
+    needs: build-and-version
+    steps:
+      - name: Extract version and artifact name
+        id: extract_info
+        run: |
+          JAR_NAME=$(ls target/*.jar)
+          ARTIFACT_NAME=$(basename $JAR_NAME)
+          VERSION=$(echo $ARTIFACT_NAME | grep -oP '(?<=-)\d+\.\d+\.\d+(?=-SNAPSHOT)')
+          echo "::set-output name=version::v$VERSION"
+          echo "::set-output name=artifact_name::$ARTIFACT_NAME"
 
   create-and-push-tag:
-    needs: extract-version-and-artifact-name
     runs-on: ubuntu-latest
+    needs: extract-info
     steps:
-    - name: Check if tag exists
-      id: check_tag
-      run: |
-        if git ls-remote --tags origin ${{ needs.extract-version-and-artifact-name.outputs.version }}; then
-          echo "::set-output name=exists::true"
-        else
-          echo "::set-output name=exists::false"
-        fi
-      env:
-        GIT_TERMINAL_PROMPT: 0
-
-    - name: Delete existing tag if necessary
-      if: steps.check_tag.outputs.exists == 'true'
-      run: |
-        git push --delete origin ${{ needs.extract-version-and-artifact-name.outputs.version }}
-        git tag -d ${{ needs.extract-version-and-artifact-name.outputs.version }}
-
-    - name: Create and Push Tag
-      if: steps.check_tag.outputs.exists == 'false' || steps.check_tag.outputs.exists == null
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "github-actions@users.noreply.github.com"
-        git tag ${{ needs.extract-version-and-artifact-name.outputs.version }}
-        git push origin ${{ needs.extract-version-and-artifact-name.outputs.version }}
+      - name: Create and Push Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{ needs.extract-info.outputs.version }}
+          git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN }}@github.com/${{ github.repository }} ${{ needs.extract-info.outputs.version }}
 
   create-release:
-    needs: create-and-push-tag
     runs-on: ubuntu-latest
+    needs: [build-and-version, extract-info]
     steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: minecraft-plugin
-      
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: ${{ needs.extract-version-and-artifact-name.outputs.artifact-name }}
-        tag_name: ${{ needs.extract-version-and-artifact-name.outputs.version }}
-        files: "*.jar"
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ needs.extract-info.outputs.artifact_name }}
+          tag_name: ${{ needs.extract-info.outputs.version }}
+          files: target/*.jar
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
