@@ -78,15 +78,13 @@ jobs:
       with:
         name: tag-name
     - name: Read the tag name
-      id: tag_name
       run: |
-        TAG_NAME=$(cat TAG_NAME)
-        echo "::set-output name=TAG_NAME::$TAG_NAME"
+        echo "TAG_NAME=$(cat tag-name/TAG_NAME)" >> $GITHUB_ENV
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         name: ${{ env.ARTIFACT_NAME }}
-        tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+        tag_name: ${{ env.TAG_NAME }}
         files: target/*.jar
         generate_release_notes: true
       env:
