@@ -508,18 +508,28 @@ public class  Event implements Listener {
         }
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract checking if its infinite firework");
         ItemStack item = event.getItem();
+        Location location = player.getLocation();
+        Location blockBelowLocation = location.clone().subtract(0, 1, 0);
+        boolean isNotOnGround = blockBelowLocation.getBlock().isPassable();
         if (item != null && item.getType() == Material.FIREWORK_ROCKET) {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework item check passed");
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasLore()) {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework has lore check passed");
-                if (meta.getLore().contains("§6§lInfinite usage")) { // Gold bold "Infinite usage"
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework has formatted lore check passed");
-                    event.setCancelled(true); // Cancel the event so the firework isn't consumed
-                    FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
-                    int power = fireworkMeta.getPower();
-                    launchFireworkEffect(event.getPlayer());
-                    applyBoosterEffect(event.getPlayer(),power);
+                if (meta.getLore().contains("§6§lInfinite usage")) {// Gold bold "Infinite usage"
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract firework has formatted lore check passed");
+                    if(isNotOnGround) {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract isNotOnGround check passed");
+                        event.setCancelled(true); // Cancel the event so the firework isn't consumed
+                        FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
+                        int power = fireworkMeta.getPower();
+                        launchFireworkEffect(event.getPlayer());
+                        applyBoosterEffect(event.getPlayer(), power);
+                    }
+                    else {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract isNotOnGround check failed");
+                        event.setCancelled(true);
+                    }
                 }
             }
         }
