@@ -37,6 +37,8 @@ public class  Event implements Listener {
     private final BetterElo betterElo;
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
+    private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
+    //public final long cooldownMillis = 1500; // 1.5s
 
     public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo) {
         this.dataManager = dataManager;
@@ -510,8 +512,9 @@ public class  Event implements Listener {
         ItemStack item = event.getItem();
 
 
-
+        double fireworkCooldown = (double) (configManager.fireworkCooldown) /1000;
         if (item != null && item.getType() == Material.FIREWORK_ROCKET) {
+            if(event.getAction() == Action.RIGHT_CLICK_AIR){
             Location location = player.getLocation();
             Location blockBelowLocation = location.clone().subtract(0, 1, 0);
             boolean isNotOnGround = blockBelowLocation.getBlock().isPassable();
@@ -523,25 +526,39 @@ public class  Event implements Listener {
                 return;
 
             }
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework item check passed");
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null && meta.hasLore()) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework has lore check passed");
-                if (meta.getLore().contains("§6§lInfinite usage")) {// Gold bold "Infinite usage"
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract firework has formatted lore check passed");
-                    if(isNotOnGround) {
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract isNotOnGround check passed");
-                        event.setCancelled(true); // Cancel the event so the firework isn't consumed
-                        FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
-                        int power = fireworkMeta.getPower();
-                        launchFireworkEffect(event.getPlayer());
-                        applyBoosterEffect(event.getPlayer(), power);
-                    }
-                    else {
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract isNotOnGround check failed");
+
+
+
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract firework item check passed");
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.hasLore()) {
+                    if (!canUseFirework(player)) {
                         event.setCancelled(true);
+                        return;
+
+                    }else{
+                        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] "+ChatColor.DARK_RED+"Cooldown "+fireworkCooldown+"s");
+                    }
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract firework has lore check passed");
+                    if (meta.getLore().contains("§6§lInfinite usage")) {// Gold bold "Infinite usage"
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract firework has formatted lore check passed");
+                        if (isNotOnGround) {
+                            lastFireworkUsage.put(player, System.currentTimeMillis());
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract isNotOnGround check passed");
+                            event.setCancelled(true); // Cancel the event so the firework isn't consumed
+                            FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
+                            int power = fireworkMeta.getPower();
+                            launchFireworkEffect(event.getPlayer());
+                            applyBoosterEffect(event.getPlayer(), power);
+                        } else {
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract isNotOnGround check failed");
+                            event.setCancelled(true);
+                        }
                     }
                 }
+            }else{
+                event.setCancelled(true);
+                return;
             }
         }
 
@@ -588,6 +605,14 @@ public class  Event implements Listener {
         }
 
         return false;
+    }
+    private boolean canUseFirework(Player player) {
+        if (!lastFireworkUsage.containsKey(player)) {
+            return true; // Gracz jeszcze nie używał fajerwerka
+        }
+        long lastUsage = lastFireworkUsage.get(player);
+        long currentTime = System.currentTimeMillis();
+        return (currentTime - lastUsage) >= configManager.fireworkCooldown;
     }
     public Integer getAntywebRadius(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.getAntywebRadius called");
