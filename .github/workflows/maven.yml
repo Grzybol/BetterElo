@@ -67,6 +67,12 @@ jobs:
       with:
         name: tag-name
         path: TAG_NAME
+    - name: Read the tag name
+      run: |
+        echo "TAG_NAME=$(cat tag-name/TAG_NAME)" >> $GITHUB_ENV
+    - name: Debug TAG_NAME
+      run: |
+        echo "TAG_NAME is $TAG_NAME"
 
   create-release:
     needs: create-tag
