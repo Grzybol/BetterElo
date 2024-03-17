@@ -54,6 +54,11 @@ jobs:
     needs: build-and-release
     runs-on: ubuntu-latest
     steps:
+      - name: Accept Server Host Key
+        run: ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+      
       - name: Deploy JAR to Server
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
@@ -66,3 +71,4 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           scp target/*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
         if: ${{ always() }}
+
