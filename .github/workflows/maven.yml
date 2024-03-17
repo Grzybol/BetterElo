@@ -29,21 +29,21 @@ jobs:
       id: extract_info
       run: |
         JAR_NAME=$(ls target/*.jar)
-        VERSION=$(echo $JAR_NAME | grep -oP '(?<=-)\d+\.\d+\.\d+(?=-SNAPSHOT)')
         ARTIFACT_NAME=$(basename $JAR_NAME)
+        VERSION=$(echo $ARTIFACT_NAME | grep -oP '(?<=-)\d+\.\d+\.\d+(?=-SNAPSHOT)')
         echo "::set-output name=version::v$VERSION"
         echo "::set-output name=artifact_name::$ARTIFACT_NAME"
     - name: Create and Push Tag
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git tag ${{ needs.build-and-release.outputs.version }}
-        git push origin ${{ needs.build-and-release.outputs.version }}
+        git config user.name "GitHub Actions"
+        git config user.email "github-actions@users.noreply.github.com"
+        git tag ${{ steps.extract_info.outputs.version }}
+        git push origin ${{ steps.extract_info.outputs.version }}
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        name: ${{ needs.build-and-release.outputs.artifact_name }}
-        tag_name: ${{ needs.build-and-release.outputs.version }}
+        name: ${{ steps.extract_info.outputs.artifact_name }}
+        tag_name: ${{ steps.extract_info.outputs.version }}
         files: target/*.jar
         generate_release_notes: true
       env:
