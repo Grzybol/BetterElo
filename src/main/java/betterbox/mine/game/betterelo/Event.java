@@ -518,6 +518,7 @@ public class  Event implements Listener {
 
             ItemStack chestplate = player.getInventory().getChestplate();
             if (chestplate == null || !chestplate.getType().toString().contains("ELYTRA")) {
+                event.setCancelled(true);
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract player is not wearing Elytra!");
                 return;
 
