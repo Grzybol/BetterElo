@@ -21,6 +21,7 @@ public class ExtendedConfigManager {
 
     public Double blockBase = 0.1;
     public Double antywebCost = 0.1;
+    public int fireworkCooldown = 1500;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
@@ -126,7 +127,7 @@ public class ExtendedConfigManager {
         antywebCost = plugin.getConfig().getDouble("antyweb_elo_cost");
         if (plugin.getConfig().contains("antyweb_elo_cost")){
             if (plugin.getConfig().isDouble("antyweb_elo_cost")){
-                blockBase = plugin.getConfig().getDouble("antyweb_elo_cost");
+                antywebCost = plugin.getConfig().getDouble("antyweb_elo_cost");
             }
             else {
                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: antyweb_elo_cost incorrect! Restoring default");
@@ -141,6 +142,29 @@ public class ExtendedConfigManager {
             //blockBaseSection.set("value", 0.1);
             plugin.saveConfig();
         }
+
+        //Firework cost
+        fireworkCooldown = plugin.getConfig().getInt("Infinite_firework_cooldown");
+        if (plugin.getConfig().contains("Infinite_firework_cooldown")){
+            if (plugin.getConfig().isInt("Infinite_firework_cooldown")){
+                fireworkCooldown = plugin.getConfig().getInt("Infinite_firework_cooldown");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Infinite_firework_cooldown incorrect! Restoring default");
+                plugin.getConfig().set("Infinite_firework_cooldown", 1500);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Infinite_firework_cooldown");
+            plugin.getConfig().set("Infinite_firework_cooldown", 1500);
+            //blockBaseSection.set("value", 0.1);
+            plugin.saveConfig();
+        }
+
+
+
 
 
 
