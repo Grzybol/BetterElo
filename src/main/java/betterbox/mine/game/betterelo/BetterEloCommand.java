@@ -543,6 +543,7 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be stopevent " + ChatColor.GREEN + "- Stops current event (if active).");
             sender.sendMessage(ChatColor.AQUA + "/be holo <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- creates holo at your position.");
             sender.sendMessage(ChatColor.AQUA + "/be holo delete <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- delete given holo");
+            sender.sendMessage(ChatColor.AQUA + "/be antyweb <radius> " + ChatColor.GREEN + "- creates antyweb effect with given radius");
         }
     }
     private void handleTimeLeft(CommandSender sender){
