@@ -59,27 +59,17 @@ jobs:
       run: |
         git config user.name "GitHub Actions"
         git config user.email "github-actions@users.noreply.github.com"
-        echo "${{ env.VERSION }}" > TAG_NAME
         git tag ${{ env.VERSION }}
         git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN }}@github.com/${{ github.repository }} ${{ env.VERSION }}
-    - name: Upload tag name as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: tag-name
-        path: TAG_NAME
+    - name: Export tag name for next job
+      run: |
+        echo "TAG_NAME=${{ env.VERSION }}" >> $GITHUB_ENV
 
   create-release:
     needs: create-tag
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Download tag name artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: tag-name
-    - name: Read the tag name
-      run: |
-        echo "TAG_NAME=$(cat tag-name/TAG_NAME)" >> $GITHUB_ENV
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
