@@ -51,6 +51,8 @@ jobs:
   create-tag:
     needs: prepare-release
     runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.tag_output.outputs.tag_name }} # Dodajemy output na poziomie zadania
     steps:
     - uses: actions/checkout@v3
       with:
@@ -61,9 +63,9 @@ jobs:
         git config user.email "github-actions@users.noreply.github.com"
         git tag ${{ env.VERSION }}
         git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN }}@github.com/${{ github.repository }} ${{ env.VERSION }}
-    - name: Export tag name for next job
-      run: |
-        echo "TAG_NAME=${{ env.VERSION }}" >> $GITHUB_ENV
+    - name: Set tag name output
+      id: tag_output
+      run: echo "::set-output name=tag_name::${{ env.VERSION }}"
 
   create-release:
     needs: create-tag
@@ -74,7 +76,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         name: ${{ env.ARTIFACT_NAME }}
-        tag_name: ${{ env.TAG_NAME }}
+        tag_name: ${{ needs.create-tag.outputs.tag_name }} # Używamy outputu z poprzedniego zadania
         files: target/*.jar
         generate_release_notes: true
       env:
