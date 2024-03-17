@@ -38,7 +38,7 @@ jobs:
         git config user.name "GitHub Actions"
         git config user.email "github-actions@users.noreply.github.com"
         git tag ${{ steps.extract_info.outputs.version }}
-        git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN_2 }}@github.com/${{ github.repository }} ${{ steps.extract_info.outputs.version }}
+        git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN }}@github.com/${{ github.repository }} ${{ steps.extract_info.outputs.version }}
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
