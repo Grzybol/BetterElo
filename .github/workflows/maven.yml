@@ -63,9 +63,6 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
           git tag ${{ env.VERSION }}
           git push https://x-access-token:${{ secrets.BE_ACCESS_TOKEN }}@github.com/${{ github.repository }} ${{ env.VERSION }}
-      - name: Export tag name for next job
-        run: |
-          echo "tag_name=${{ env.VERSION }}" >> $GITHUB_ENV
 
   create-release:
     needs: create-tag
@@ -76,7 +73,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          tag_name: ${{ env.tag_name }} # Używamy zmiennej środowiskowej zdefiniowanej w poprzednim kroku
+          tag_name: ${{ needs.prepare-release.outputs.VERSION }} # Zmienione na bezpośrednie odwołanie do VERSION
           files: target/*.jar
           generate_release_notes: true
         env:
