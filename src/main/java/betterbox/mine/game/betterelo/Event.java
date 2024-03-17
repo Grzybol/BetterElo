@@ -508,10 +508,20 @@ public class  Event implements Listener {
         }
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract checking if its infinite firework");
         ItemStack item = event.getItem();
-        Location location = player.getLocation();
-        Location blockBelowLocation = location.clone().subtract(0, 1, 0);
-        boolean isNotOnGround = blockBelowLocation.getBlock().isPassable();
+
+
+
         if (item != null && item.getType() == Material.FIREWORK_ROCKET) {
+            Location location = player.getLocation();
+            Location blockBelowLocation = location.clone().subtract(0, 1, 0);
+            boolean isNotOnGround = blockBelowLocation.getBlock().isPassable();
+
+            ItemStack chestplate = player.getInventory().getChestplate();
+            if (chestplate == null || !chestplate.getType().toString().contains("ELYTRA")) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract player is not wearing Elytra!");
+                return;
+
+            }
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework item check passed");
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasLore()) {
