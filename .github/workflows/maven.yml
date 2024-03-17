@@ -47,4 +47,4 @@ jobs:
         files: target/*.jar
         generate_release_notes: true
       env:
-        GITHUB_TOKEN: ${{ secrets.BE_ACCESS_TOKEN_2 }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
