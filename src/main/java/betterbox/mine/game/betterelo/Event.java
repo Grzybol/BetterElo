@@ -528,7 +528,7 @@ public class  Event implements Listener {
     }
     private static void launchFireworkEffect(Player player) {
         Location location = player.getLocation();
-        player.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+        player.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,SoundCategory.AMBIENT, 1.0f, 1.0f);
     }
     private static void applyBoosterEffect(Player player,int power) {
         // Zastosowanie efektu przyspieszenia (booster effect) dla gracza
