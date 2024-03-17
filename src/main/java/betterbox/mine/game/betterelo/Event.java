@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,10 +16,13 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
+
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.HashMap;
@@ -500,9 +504,36 @@ public class  Event implements Listener {
             if(totalCost>0){
                 player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Elo cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
             }
+
+        }
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract checking if its infinite firework");
+        ItemStack item = event.getItem();
+        if (item != null && item.getType() == Material.FIREWORK_ROCKET) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework item check passed");
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null && meta.hasLore()) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework has lore check passed");
+                if (meta.getLore().contains("§6§lInfinite usage")) { // Gold bold "Infinite usage"
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract firework has formatted lore check passed");
+                    event.setCancelled(true); // Cancel the event so the firework isn't consumed
+                    FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
+                    int power = fireworkMeta.getPower();
+                    launchFireworkEffect(event.getPlayer());
+                    applyBoosterEffect(event.getPlayer(),power);
+                }
+            }
         }
 
 
+    }
+    private static void launchFireworkEffect(Player player) {
+        Location location = player.getLocation();
+        player.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+    }
+    private static void applyBoosterEffect(Player player,int power) {
+        // Zastosowanie efektu przyspieszenia (booster effect) dla gracza
+        Vector velocity = player.getLocation().getDirection().multiply(power); // Przykładowa prędkość (można dostosować)
+        player.setVelocity(velocity);
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");
