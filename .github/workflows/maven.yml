@@ -31,6 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, set-up-jdk]
     steps:
+    - name: Check if pom.xml exists
+      run: |
+        ls -l pom.xml || true
     - name: Build with Maven and Auto-Versioning
       run: mvn -B build-helper:parse-version versions:set versions:commit package --file pom.xml
 
