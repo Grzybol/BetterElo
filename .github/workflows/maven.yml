@@ -75,6 +75,12 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: minecraft-plugin
+    - name: List downloaded files
+      run: |
+         ls -R
+         # Lub, aby znaleźć wszystkie pliki JAR w bieżącym katalogu roboczym i jego podkatalogach:
+         find . -name "*.jar"
+
 
     - name: Deploy JAR to Server
       env:
