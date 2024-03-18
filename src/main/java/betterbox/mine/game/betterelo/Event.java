@@ -514,18 +514,25 @@ public class  Event implements Listener {
 
         double fireworkCooldown = (double) (configManager.fireworkCooldown) /1000;
         if (item != null && item.getType() == Material.FIREWORK_ROCKET) {
-            if(event.getAction() == Action.RIGHT_CLICK_AIR){
+            if(event.getAction() != Action.RIGHT_CLICK_AIR) {
+                event.setCancelled(true);
+                return;
+            }
             Location location = player.getLocation();
             Location blockBelowLocation = location.clone().subtract(0, 1, 0);
             boolean isNotOnGround = blockBelowLocation.getBlock().isPassable();
 
             ItemStack chestplate = player.getInventory().getChestplate();
-            if (chestplate == null || !chestplate.getType().toString().contains("ELYTRA")) {
+            if(chestplate == null ){
                 event.setCancelled(true);
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract player is not wearing Elytra!");
                 return;
-
             }
+            if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
+
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract player is not wearing Elytra!");
+
+
+
 
 
 
@@ -572,6 +579,28 @@ public class  Event implements Listener {
         // Zastosowanie efektu przyspieszenia (booster effect) dla gracza
         Vector velocity = player.getLocation().getDirection().multiply(power); // Przykładowa prędkość (można dostosować)
         player.setVelocity(velocity);
+    }
+    public boolean hasElytraLore(ItemStack itemStack) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasElytraLore called");
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasElytraLore itemmeta check failed");
+            return false;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasElytraLore lore check failed");
+            return false;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasElytraLore Elytra check triggered, checking lore and foramtting");
+            if (lore != null && lore.contains("§6§lElytra effect")) {
+               return true;
+            }
+        }
+
+        return false;
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");

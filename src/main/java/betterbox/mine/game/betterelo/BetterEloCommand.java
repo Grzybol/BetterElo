@@ -72,7 +72,22 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
-
+                    case "addelytra":
+                        if (sender instanceof Player) {
+                            Player player = (Player) sender;
+                            if(!player.isOp()){
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                                break;
+                            }
+                            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                            if(itemInHand.getType() != Material.AIR && itemInHand.getType().toString().contains("CHESTPLATE")) {
+                                addElytraLore(player,itemInHand);
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Elytra effect added.");
+                            }
+                        }else{
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " This command can be used only by as a player.");
+                        }
+                        break;
                     case "stopevent":
                         if(sender.isOp()){
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event stopped,data removed.");
@@ -571,6 +586,8 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be holo <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- creates holo at your position.");
             sender.sendMessage(ChatColor.AQUA + "/be holo delete <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- delete given holo");
             sender.sendMessage(ChatColor.AQUA + "/be antyweb <radius> " + ChatColor.GREEN + "- creates antyweb effect with given radius");
+            sender.sendMessage(ChatColor.AQUA + "/be addelytra " + ChatColor.GREEN + "- adds Elytra Effect to the chestplate (works only with infinite Infinite Firework)");
+            sender.sendMessage(ChatColor.AQUA + "/be firework <power> " + ChatColor.GREEN + "- creates an Infinite Firework with given power");
         }
     }
     private void handleTimeLeft(CommandSender sender){
@@ -616,7 +633,6 @@ public class BetterEloCommand implements CommandExecutor {
         if (itemMeta == null) {
             return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
         }
-
         String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb " + radius;
         List<String> lore = itemMeta.getLore();
         if (lore == null) {
@@ -624,23 +640,26 @@ public class BetterEloCommand implements CommandExecutor {
         }
         lore.add(antywebLore);
         itemMeta.setLore(lore);
-        /*
         itemStack.setItemMeta(itemMeta);
-        if (itemMeta.hasLore()) {
-            // Jeśli istnieje już lore, dodaj nową linię
-            itemMeta.getLore().add(lore);
-        } else {
-            // Jeśli nie ma jeszcze lore, utwórz nową listę
-            itemMeta.setLore(Collections.singletonList(lore));
-        }
-
-         */
-
-        itemStack.setItemMeta(itemMeta);
-
-        // Informuj gracza o dodaniu lore
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Antyweb lore with radius "+radius);
-        //player.sendMessage("Added Antyweb lore with radius " + radius + " to the item.");
+
+    }
+    public void addElytraLore(Player player, ItemStack itemStack) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+
+        if (itemMeta == null) {
+            return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
+        }
+        String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Elytra effect" ;
+        List<String> lore = itemMeta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+        lore.add(antywebLore);
+        itemMeta.setLore(lore);
+        itemStack.setItemMeta(itemMeta);
+        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Elytra effect");
+
     }
 
 
