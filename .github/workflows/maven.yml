@@ -91,5 +91,5 @@ jobs:
       run: |
         echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        scp minecraft-plugin/*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
+        scp /*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
       if: ${{ always() }}
