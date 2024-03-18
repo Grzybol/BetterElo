@@ -70,6 +70,11 @@ jobs:
         SERVER_IP: ${{ secrets.SERVER_IP }}
         SERVER_USER: ${{ secrets.SERVER_USER }}
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        
+    - name: Download Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: minecraft-plugin
 
     - name: Deploy JAR to Server
       env:
@@ -78,5 +83,7 @@ jobs:
         SERVER_PATH: ${{ secrets.SERVER_PATH }}
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
-        scp target/*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        scp minecraft-plugin/*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
       if: ${{ always() }}
