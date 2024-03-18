@@ -10,11 +10,11 @@ jobs:
       - name: Setup SSH Keys and Test SSH Connection
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_BOXPVP_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           ssh -o BatchMode=yes -o ConnectTimeout=5 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo SSH connection successful"
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_BOXPVP_PRIVATE_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
