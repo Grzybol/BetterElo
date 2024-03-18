@@ -54,21 +54,29 @@ jobs:
     needs: build-and-release
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH directory and accept server host key
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-        env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
+    - name: Setup SSH directory and accept server host key
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      env:
+        SERVER_IP: ${{ secrets.SERVER_IP }}
 
-      - name: Deploy JAR to Server
-        env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          SERVER_PATH: ${{ secrets.SERVER_PATH }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_BOXPVP_PRIVATE_KEY }}
-        run: |
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          scp target/*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
-        if: ${{ always() }}
+    - name: Test SSH Connection
+      run: |
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh -o BatchMode=yes -o ConnectTimeout=5 $SERVER_USER@$SERVER_IP "echo SSH connection successful"
+      env:
+        SERVER_IP: ${{ secrets.SERVER_IP }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_BOXPVP_PRIVATE_KEY }}
+
+    - name: Deploy JAR to Server
+      env:
+        SERVER_IP: ${{ secrets.SERVER_IP }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+        SERVER_PATH: ${{ secrets.SERVER_PATH }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_BOXPVP_PRIVATE_KEY }}
+      run: |
+        scp target/*.jar $SERVER_USER@$SERVER_IP:$SERVER_PATH
+      if: ${{ always() }}
