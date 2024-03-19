@@ -88,7 +88,7 @@ jobs:
 
         
   deploy-to-server:
-    needs: build-and-release
+    needs: [build-and-release, backup-plugins]
     runs-on: ubuntu-latest
     steps:
     - name: Setup SSH directory and accept server host key
