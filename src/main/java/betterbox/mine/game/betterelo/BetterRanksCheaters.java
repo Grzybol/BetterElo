@@ -46,20 +46,20 @@ public class BetterRanksCheaters {
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         Set<String> playerNames = config.getKeys(false);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterRanksCheaters: CheckCheatersFromBetterRanks checking..");
+        pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "BetterRanksCheaters: CheckCheatersFromBetterRanks checking..");
         cheatersList.clear();
         for (String playerName : playerNames) {
             String rank = config.getString(playerName + ".rank");
             if (rank != null && rank.equalsIgnoreCase("CHEATER")) {
                 cheatersList.add(playerName);
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterRanksCheaters: CheckCheatersFromBetterRanks: adding cheater " + playerName);
+                pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "BetterRanksCheaters: CheckCheatersFromBetterRanks: adding cheater " + playerName);
             }
         }
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterRanksCheaters: CheckCheatersFromBetterRanks: Cheaters found: " + cheatersList);
+        pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "BetterRanksCheaters: CheckCheatersFromBetterRanks: Cheaters found: " + cheatersList);
     }
 
     public List<String> getCheatersList() {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "BetterRanksCheaters: getCheatersList called");
+        pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "BetterRanksCheaters: getCheatersList called");
         return cheatersList;
     }
 }

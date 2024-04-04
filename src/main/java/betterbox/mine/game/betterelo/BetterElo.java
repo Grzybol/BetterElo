@@ -1,5 +1,7 @@
 package betterbox.mine.game.betterelo;
 
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -12,12 +14,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 public final class BetterElo extends JavaPlugin {
     private PluginLogger pluginLogger;
     private DataManager dataManager;
@@ -38,6 +46,22 @@ public final class BetterElo extends JavaPlugin {
     private ExtendedConfigManager configManager;
     public Map<String, Boolean> rewardStates = new HashMap<>();
     public boolean useHolographicDisplays;
+    //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
+    public static StateFlag IS_ELO_ALLOWED;
+    @Override
+    public void onLoad() {
+        getLogger().info("Registering custom WorldGuard flags.");
+        FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
+        try {
+            StateFlag allowElo = new StateFlag("allowElo", false);
+            registry.register(allowElo);
+            IS_ELO_ALLOWED = allowElo; // only set our field if there was no error
+            getLogger().info("Custom WorldGuard flags registered.");
+        } catch (Exception e) {
+            getLogger().info("NoElo flag registration exception: " + e);
+        }
+    }
+
     @Override
     public void onEnable() {
         // Inicjalizacja PluginLoggera
@@ -131,7 +155,9 @@ public final class BetterElo extends JavaPlugin {
         }
 
 
+
     }
+
     @Override
     public void onDisable() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onDisable: Zapisywanie danych przed wyłączeniem pluginu...");
@@ -409,7 +435,6 @@ public final class BetterElo extends JavaPlugin {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Saving the event ranking");
                 dataManager.saveDataToFileEvent();
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: rewardTopPlayers: Resetting the event ranking timer");
-                //updateLastScheduledTime(rewardType);
                 break;
         }
     }
