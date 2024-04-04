@@ -84,7 +84,7 @@ public class ExtendedConfigManager {
 
             } catch (IllegalArgumentException e) {
                 // Jeśli podano nieprawidłowy poziom logowania, zaloguj błąd
-                plugin.getServer().getLogger().warning("Invalid log level in config: " + level);
+                pluginLogger.log(PluginLogger.LogLevel.ERROR,"Invalid log level in config: " + level+", exception: "+e.getMessage());
             }
         }
         pluginLogger.setEnabledLogLevels(enabledLogLevels);
