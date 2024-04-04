@@ -486,12 +486,13 @@ public class  Event implements Listener {
                     return;
                 }
             }
-            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.checking canUseZephyr");
-            if(canUseZephyr(player)) {
-                pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.canUseZephyr  passed");
-                hasZephyrLore(player);
 
-            }
+        }
+        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.checking canUseZephyr");
+        if(canUseZephyr(player) && event.getAction() != Action.RIGHT_CLICK_AIR) {
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.canUseZephyr  passed");
+            hasZephyrLore(player);
+
         }
 
 
