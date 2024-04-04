@@ -20,7 +20,7 @@ public class PluginLogger {
 
     // Enumeracja dla poziomów logowania
     public enum LogLevel {
-        INFO, WARNING, ERROR, DEBUG, DEBUG_LVL2, DEBUG_LVL3,DEBUG_LVL4,CHEATERS ,FLAMETHROWER
+        INFO, WARNING, ERROR, DEBUG, DEBUG_LVL2, DEBUG_LVL3,DEBUG_LVL4,CHEATERS ,FLAMETHROWER, ZEPHYR
     }
 
     public PluginLogger(String folderPath, Set<LogLevel> enabledLogLevels, JavaPlugin plugin) {

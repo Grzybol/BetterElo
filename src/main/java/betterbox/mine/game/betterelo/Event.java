@@ -486,9 +486,7 @@ public class  Event implements Listener {
                     return;
                 }
             }
-            if(hasZephyrLore(player)){
-
-            }
+            hasZephyrLore(player);
         }
 
 
@@ -633,22 +631,23 @@ public class  Event implements Listener {
     }
     public boolean hasZephyrLore(Player player) {
         ItemStack itemStack = player.getInventory().getItemInMainHand();
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore called");
+        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore itemmeta check failed");
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemmeta check failed");
             return false;
         }
 
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta == null || !itemMeta.hasLore()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore lore check failed");
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore lore check failed");
             return false;
         }
 
         for (String lore : itemMeta.getLore()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore Zephyr check triggered, checking lore and foramtting");
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore Zephyr check triggered, checking lore and foramtting");
             if (lore != null && lore.contains("§6§lZephyr")) {
                 String[] parts = lore.split(" ");
+                pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore Zephyr power "+parts[1]);
                 if (parts.length == 2){
                     int power = Integer.parseInt(parts[1]);
                     applyBoosterEffect(player,power);
