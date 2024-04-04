@@ -486,7 +486,12 @@ public class  Event implements Listener {
                     return;
                 }
             }
-            hasZephyrLore(player);
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.checking canUseZephyr");
+            if(canUseZephyr(player)) {
+                pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.canUseZephyr  passed");
+                hasZephyrLore(player);
+
+            }
         }
 
 
@@ -651,6 +656,7 @@ public class  Event implements Listener {
                 if (parts.length == 2){
                     int power = Integer.parseInt(parts[1]);
                     applyBoosterEffect(player,power);
+                    lastZephyrUsage.put(player, System.currentTimeMillis());
                 }
                 return true;
             }
