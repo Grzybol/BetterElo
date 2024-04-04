@@ -264,6 +264,26 @@ public class BetterEloCommand implements CommandExecutor {
                             addAntywebLore(player, itemInHand, radius);
                         }
                         break;
+                    case "zephyr":
+                        if ((sender.hasPermission("betterelo.zephyr") || sender.isOp()) && sender instanceof Player) {
+                            Player player = ((Player) sender).getPlayer();
+                            assert player != null;
+                            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                            if (itemInHand.getType().isAir()) {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You must hold an item in your hand to add Zephyr lore!");
+                                return true;
+                            }
+                            int power;
+                            try {
+                                // Spróbuj przekonwertować argument na liczbę
+                                power = Integer.parseInt(args[1]);
+                            } catch (NumberFormatException e) {
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
+                                return true;
+                            }
+                            addZephyrLore(player, itemInHand, power);
+                        }
+                        break;
                     case "holo":
                         if (sender.isOp()) {
                             if (sender instanceof Player) {
@@ -671,17 +691,33 @@ public class BetterEloCommand implements CommandExecutor {
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Antyweb lore with radius "+radius);
 
     }
+    public void addZephyrLore(Player player, ItemStack itemStack, int power) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) {
+            return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
+        }
+        String zephyrLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Zephyr " + power;
+        List<String> lore = itemMeta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+        lore.add(zephyrLore);
+        itemMeta.setLore(lore);
+        itemStack.setItemMeta(itemMeta);
+        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Zephyr lore with power "+power);
+
+    }
     public void addFlamethrowerLore(Player player, ItemStack itemStack, int radius, int distance) {
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta == null) {
             return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
         }
-        String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Flamethrower " + radius+"/"+distance;
+        String flamethrowerLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Flamethrower " + radius+"/"+distance;
         List<String> lore = itemMeta.getLore();
         if (lore == null) {
             lore = new ArrayList<>();
         }
-        lore.add(antywebLore);
+        lore.add(flamethrowerLore);
         itemMeta.setLore(lore);
         itemStack.setItemMeta(itemMeta);
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Antyweb lore with radius "+radius);

@@ -22,7 +22,7 @@ public class ExtendedConfigManager {
     public Double blockBase = 0.1;
     public Double antywebCost = 0.1;
     public int fireworkCooldown = 1500;
-
+    public int zephyrCooldown = 1500;
     public int flamethrowerCooldown = 1500;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
@@ -166,10 +166,10 @@ public class ExtendedConfigManager {
         }
 
         //Flamethrower cooldown
-        fireworkCooldown = plugin.getConfig().getInt("Flamethrower_cooldown");
+        flamethrowerCooldown = plugin.getConfig().getInt("Flamethrower_cooldown");
         if (plugin.getConfig().contains("Flamethrower_cooldown")){
             if (plugin.getConfig().isInt("Flamethrower_cooldown")){
-                fireworkCooldown = plugin.getConfig().getInt("Flamethrower_cooldown");
+                flamethrowerCooldown = plugin.getConfig().getInt("Flamethrower_cooldown");
             }
             else {
                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Flamethrower_cooldown incorrect! Restoring default");
@@ -181,6 +181,25 @@ public class ExtendedConfigManager {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Flamethrower_cooldown section not found in config! Creating new section..");
             plugin.getConfig().createSection("Flamethrower_cooldown");
             plugin.getConfig().set("Flamethrower_cooldown", 1500);
+            plugin.saveConfig();
+        }
+
+        //Zephyr cooldown
+        zephyrCooldown = plugin.getConfig().getInt("Zephyr_cooldown");
+        if (plugin.getConfig().contains("Zephyr_cooldown")){
+            if (plugin.getConfig().isInt("Zephyr_cooldown")){
+                zephyrCooldown = plugin.getConfig().getInt("Zephyr_cooldown");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Zephyr_cooldown incorrect! Restoring default");
+                plugin.getConfig().set("Zephyr_cooldown", 1500);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Zephyr_cooldown section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Zephyr_cooldown");
+            plugin.getConfig().set("Zephyr_cooldown", 1500);
             plugin.saveConfig();
         }
 

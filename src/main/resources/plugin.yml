@@ -88,4 +88,11 @@ permissions:
   betterelo.antyweb:
     description: Antyweb
     default: op
+  betterelo.zephyr:
+    description: Zephyr
+    default: op
+  betterelo.flamethrower:
+    description: flamethrower
+    default: op
+
 

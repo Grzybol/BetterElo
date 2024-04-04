@@ -43,6 +43,7 @@ public class  Event implements Listener {
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
     private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
+    private HashMap<Player, Long> lastZephyrUsage = new HashMap<>();
     private HashMap<Player, Long> lastFlameUsage = new HashMap<>();
     //public final long cooldownMillis = 1500; // 1.5s
 
@@ -485,6 +486,9 @@ public class  Event implements Listener {
                     return;
                 }
             }
+            if(hasZephyrLore(player)){
+
+            }
         }
 
 
@@ -626,6 +630,42 @@ public class  Event implements Listener {
         }
 
         return false;
+    }
+    public boolean hasZephyrLore(Player player) {
+        ItemStack itemStack = player.getInventory().getItemInMainHand();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore called");
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore itemmeta check failed");
+            return false;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore lore check failed");
+            return false;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasZephyrLore Zephyr check triggered, checking lore and foramtting");
+            if (lore != null && lore.contains("§6§lZephyr")) {
+                String[] parts = lore.split(" ");
+                if (parts.length == 2){
+                    int power = Integer.parseInt(parts[1]);
+                    applyBoosterEffect(player,power);
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+    private boolean canUseZephyr(Player player) {
+        if (!lastZephyrUsage.containsKey(player)) {
+            return true; // Gracz jeszcze nie używał fajerwerka
+        }
+        long lastUsage = lastZephyrUsage.get(player);
+        long currentTime = System.currentTimeMillis();
+        return (currentTime - lastUsage) >= configManager.fireworkCooldown;
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");
