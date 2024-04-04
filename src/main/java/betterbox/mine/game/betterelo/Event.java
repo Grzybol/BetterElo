@@ -768,10 +768,10 @@ public class  Event implements Listener {
 
             // Sprawdź, czy gracz znajduje się w obszarze podpalenia
             double distanceToTarget = target.getLocation().distance(clickLocation);
-            if (distanceToTarget <= diameter / 2) {
+            if (distanceToTarget <= diameter && target!=player) {
                 // Podpal gracza
                 target.setFireTicks(20 * 5); // Podpal na 5 sekund
-                target.sendMessage(ChatColor.RED + "Zostałeś podpalony przez gracza " + player.getName() + "!");
+                //target.sendMessage(ChatColor.RED + "Zostałeś podpalony przez gracza " + player.getName() + "!");
                 pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Player " + target.getName() + " ignited within diameter. Distance from click location: " + distanceToTarget);
             } else {
                 // Dodajemy logowanie dla sytuacji, gdy gracz jest poza zasięgiem podpalenia
