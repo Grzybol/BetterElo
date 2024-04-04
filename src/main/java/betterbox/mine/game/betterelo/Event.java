@@ -603,8 +603,8 @@ public class  Event implements Listener {
         player.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,SoundCategory.AMBIENT, 1.0f, 1.0f);
     }
     private static void applyBoosterEffect(Player player,int power) {
-        // Zastosowanie efektu przyspieszenia (booster effect) dla gracza
-        Vector velocity = player.getLocation().getDirection().multiply(power); // Przykładowa prędkość (można dostosować)
+
+        Vector velocity = player.getLocation().getDirection().multiply(power);
         player.setVelocity(velocity);
     }
     public boolean hasElytraLore(ItemStack itemStack) {
