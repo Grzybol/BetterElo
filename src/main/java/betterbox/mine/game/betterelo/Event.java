@@ -604,7 +604,7 @@ public class  Event implements Listener {
     }
     private static void applyBoosterEffect(Player player,int power) {
         // Zastosowanie efektu przyspieszenia (booster effect) dla gracza
-        Vector velocity = player.getLocation().getDirection().multiply(power); // Przykładowa prędkość (można dostosować)
+        Vector velocity = player.getLocation().getDirection().multiply(power);
         player.setVelocity(velocity);
     }
     public boolean hasElytraLore(ItemStack itemStack) {
