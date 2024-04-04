@@ -330,6 +330,33 @@ public class BetterEloCommand implements CommandExecutor {
                 }
 
             case 3:
+
+                if ((sender.hasPermission("betterelo.flamethrower") || sender.isOp()) && sender instanceof Player && Objects.equals(args[0], "flamethrower")) {
+                    Player player = ((Player) sender).getPlayer();
+                    assert player != null;
+                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                    if (itemInHand.getType().isAir()) {
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You must hold an item in your hand to add Antyweb lore!");
+                        return true;
+                    }
+                    int radius;
+                    int distance;
+                    try {
+                        // Spróbuj przekonwertować argument na liczbę
+                        radius = Integer.parseInt(args[1]);
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
+                        return true;
+                    }
+                    try {
+                        // Spróbuj przekonwertować argument na liczbę
+                        distance = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
+                        return true;
+                    }
+                    addFlamethrowerLore(player, itemInHand, radius, distance);
+                }
                 if (sender.isOp()&& Objects.equals(args[0], "holo")&& Objects.equals(args[1], "delete")&&args[2].equals("event")){
                         hologramEvent.delete();
                         //hologramEvent.isDeleted();
@@ -634,6 +661,22 @@ public class BetterEloCommand implements CommandExecutor {
             return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
         }
         String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Antyweb " + radius;
+        List<String> lore = itemMeta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+        lore.add(antywebLore);
+        itemMeta.setLore(lore);
+        itemStack.setItemMeta(itemMeta);
+        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Added Antyweb lore with radius "+radius);
+
+    }
+    public void addFlamethrowerLore(Player player, ItemStack itemStack, int radius, int distance) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) {
+            return; // Przerwij, jeśli nie można pobrać metadanych przedmiotu
+        }
+        String antywebLore = ChatColor.GOLD + "" + ChatColor.BOLD + "Flamethrower " + radius+"/"+distance;
         List<String> lore = itemMeta.getLore();
         if (lore == null) {
             lore = new ArrayList<>();

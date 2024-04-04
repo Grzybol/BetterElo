@@ -23,6 +23,8 @@ public class ExtendedConfigManager {
     public Double antywebCost = 0.1;
     public int fireworkCooldown = 1500;
 
+    public int flamethrowerCooldown = 1500;
+
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
         this.pluginLogger = pluginLogger;
@@ -136,14 +138,14 @@ public class ExtendedConfigManager {
             }
         }
         else{
-            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: antyweb_elo_cost section not found in config! Creating new section..");
             plugin.getConfig().createSection("antyweb_elo_cost");
             plugin.getConfig().set("antyweb_elo_cost", 0.1);
             //blockBaseSection.set("value", 0.1);
             plugin.saveConfig();
         }
 
-        //Firework cost
+        //Firework cooldown
         fireworkCooldown = plugin.getConfig().getInt("Infinite_firework_cooldown");
         if (plugin.getConfig().contains("Infinite_firework_cooldown")){
             if (plugin.getConfig().isInt("Infinite_firework_cooldown")){
@@ -156,10 +158,29 @@ public class ExtendedConfigManager {
             }
         }
         else{
-            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: block_base section not found in config! Creating new section..");
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Infinite_firework_cooldown section not found in config! Creating new section..");
             plugin.getConfig().createSection("Infinite_firework_cooldown");
             plugin.getConfig().set("Infinite_firework_cooldown", 1500);
             //blockBaseSection.set("value", 0.1);
+            plugin.saveConfig();
+        }
+
+        //Flamethrower cooldown
+        fireworkCooldown = plugin.getConfig().getInt("Flamethrower_cooldown");
+        if (plugin.getConfig().contains("Flamethrower_cooldown")){
+            if (plugin.getConfig().isInt("Flamethrower_cooldown")){
+                fireworkCooldown = plugin.getConfig().getInt("Flamethrower_cooldown");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Flamethrower_cooldown incorrect! Restoring default");
+                plugin.getConfig().set("Flamethrower_cooldown", 1500);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Flamethrower_cooldown section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Flamethrower_cooldown");
+            plugin.getConfig().set("Flamethrower_cooldown", 1500);
             plugin.saveConfig();
         }
 

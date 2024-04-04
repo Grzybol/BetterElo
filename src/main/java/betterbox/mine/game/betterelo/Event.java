@@ -1,5 +1,13 @@
 package betterbox.mine.game.betterelo;
-
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldguard.LocalPlayer;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.RegionContainer;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
@@ -25,10 +33,7 @@ import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class  Event implements Listener {
     private final DataManager dataManager;
@@ -38,6 +43,7 @@ public class  Event implements Listener {
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
     private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
+    private HashMap<Player, Long> lastFlameUsage = new HashMap<>();
     //public final long cooldownMillis = 1500; // 1.5s
 
     public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo) {
@@ -226,6 +232,11 @@ public class  Event implements Listener {
 
                     //return;
                 }
+                if(!isEloAllowed(victim,victim.getLocation())){
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: onPlayerDeath noElo zone!");
+                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
+                    return;
+                }
                 String victimUUID = victim.getUniqueId().toString();
                 String killerUUID = killer.getUniqueId().toString();
                 if (dataManager.getPoints(killerUUID, "main") - dataManager.getPoints(victimUUID, "main") < 1000) {
@@ -272,7 +283,6 @@ public class  Event implements Listener {
         }
     });
 }
-
 
     private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
@@ -464,7 +474,20 @@ public class  Event implements Listener {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         int removeradius = 0;
 
-        // Sprawdź, czy gracz trzyma odpowiedni przedmiot i nacisnął prawy przycisk myszy
+
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            double flamethrowerCooldown = (double) (configManager.flamethrowerCooldown) /1000;
+            if (canUseFlamethrower(player)) {
+                if(hasFlamethrowerLore(player)) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.onPlayerInteract hasFlamethrowerLore passed");
+                    player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Cooldown " + flamethrowerCooldown + "s");
+                    lastFlameUsage.put(player, System.currentTimeMillis());
+                    return;
+                }
+            }
+        }
+
+
         if (hasAntywebLore(itemInHand) && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract antywebcheck passed");
             removeradius = getAntywebRadius(itemInHand);
@@ -506,8 +529,10 @@ public class  Event implements Listener {
             if(totalCost>0){
                 player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.AQUA + "Elo cost for removing webs: " + ChatColor.DARK_RED + ChatColor.BOLD + totalCost);
             }
-
+            return;
         }
+
+
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.onPlayerInteract checking if its infinite firework");
         ItemStack item = event.getItem();
 
@@ -674,5 +699,158 @@ public class  Event implements Listener {
         }
 
         return null;
+    }
+    public boolean hasFlamethrowerLore(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.hasFlamethrowerLore called");
+        ItemStack itemStack = player.getInventory().getItemInMainHand();
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.hasFlamethrowerLore itemmeta check failed");
+            return false;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "Event.hasFlamethrowerLore lore check failed");
+            return false;
+        }
+
+        for (String lore : itemMeta.getLore()) {
+            pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Event.hasFlamethrowerLore Flamethrower check triggered, checking lore");
+            if (lore != null && lore.contains("Flamethrower")) {
+                pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Event.hasFlamethrowerLore Flamethrower check triggered, checking formatting");
+                // Sprawdź, czy lore zawiera słowo "Flamethrower" i czy ma odpowiednie formatowanie
+                String[] parts = lore.split(" ");
+                if (parts.length == 2 && parts[0].equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Flamethrower")) {
+                    try {
+                        // Sprawdź, czy druga część to format: X/Y
+                        String[] range = parts[1].split("/");
+                        if (range.length == 2) {
+                            int diameter = Integer.parseInt(range[0]);
+                            int rangeValue = Integer.parseInt(range[1]);
+
+                            // Podpal graczy w okolicy
+                            ignitePlayersInArea(player,diameter,rangeValue);
+                            lastFlameUsage.put(player, System.currentTimeMillis());
+                            return true;
+                        } else {
+                            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.hasFlamethrowerLore Lore value format incorrect!");
+                        }
+                    } catch (NumberFormatException ignored) {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.hasFlamethrowerLore Lore value not INT!");
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+    public void ignitePlayersInArea(Player player, int diameter, int range) {
+        pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER,"ignitePlayersInArea called player:"+player.getName()+" diameter:"+diameter+" range:"+range);
+        // Pobierz blok, na który gracz aktualnie wskazuje
+        Set<Material> transparent = new HashSet<>(Arrays.asList(Material.AIR, Material.WATER)); // Zdefiniuj przezroczyste bloki, które mają być ignorowane.
+        Block clickedBlock = player.getTargetBlock(transparent,range);
+        if (clickedBlock == null) {
+            pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "No block in player's sight within range: " + range + ". IgnitePlayersInArea aborted for " + player.getName() + ".");
+            return; // Jeśli gracz nie wskazuje na żaden blok, zakończ działanie funkcji
+        }
+        Location clickLocation = clickedBlock.getLocation();
+        // Oblicz i zaloguj odległość od gracza rzucającego zaklęcie do klikniętego bloku
+        double distanceFromCaster = clickLocation.distance(player.getLocation());
+        pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Event.ignitePlayersInArea called for player: " + player.getName() + " at click location: " + clickLocation.toString() + ", caster distance from click location: " + distanceFromCaster + ", with diameter: " + diameter + " and range: " + range);
+        if(isPvPDeniedAtLocation(player,clickLocation)){
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] "+ChatColor.DARK_RED+"Ypu cannot use that in non-pvp zones!");
+            pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "PVP Denied");
+            return;
+        }
+        // Iteruj przez wszystkich graczy online w tym samym świecie
+        for (Player target : player.getWorld().getPlayers()) {
+            pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Checking player: " + target.getName() + " for potential ignition.");
+
+            // Sprawdź, czy gracz znajduje się w obszarze podpalenia
+            double distanceToTarget = target.getLocation().distance(clickLocation);
+            if (distanceToTarget <= diameter / 2) {
+                // Podpal gracza
+                target.setFireTicks(20 * 5); // Podpal na 5 sekund
+                target.sendMessage(ChatColor.RED + "Zostałeś podpalony przez gracza " + player.getName() + "!");
+                pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Player " + target.getName() + " ignited within diameter. Distance from click location: " + distanceToTarget);
+            } else {
+                // Dodajemy logowanie dla sytuacji, gdy gracz jest poza zasięgiem podpalenia
+                pluginLogger.log(PluginLogger.LogLevel.FLAMETHROWER, "Player " + target.getName() + " is outside the ignition diameter: " + diameter + ". Distance from click location: " + distanceToTarget);
+            }
+        }
+    }
+
+
+
+
+    private boolean canUseFlamethrower(Player player) {
+        if (!lastFlameUsage.containsKey(player)) {
+            return true; // Gracz jeszcze nie używał fajerwerka
+        }
+        long lastUsage = lastFlameUsage.get(player);
+        long currentTime = System.currentTimeMillis();
+        return (currentTime - lastUsage) >= configManager.fireworkCooldown;
+    }
+
+    public boolean isPvPDeniedAtLocation(Player player, Location location) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event.isPvPDeniedAtLocation called");
+        try {
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(location.getWorld());
+
+            RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
+            RegionManager regions = container.get(weWorld);
+
+            if (regions == null) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isPvPDeniedAtLocation No regions in world.");
+                return false;
+            } else {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isPvPDeniedAtLocation Found regions: " + regions);
+            }
+
+            LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapPlayer(player);
+
+            ApplicableRegionSet regionSet = regions.getApplicableRegions(BukkitAdapter.asBlockVector(location));
+
+            StateFlag.State pvpState = regionSet.queryState(localPlayer, Flags.PVP);
+            boolean isPvPDenied = pvpState == StateFlag.State.DENY;
+
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isPvPDeniedAtLocation PvP Denied at location: " + location + " is " + isPvPDenied);
+
+            return isPvPDenied;
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.isPvPDeniedAtLocation: "+e.toString());
+            return false;
+        }
+    }
+    public boolean isEloAllowed(Player player, Location location) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed called");
+        try {
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(location.getWorld());
+
+            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+            RegionManager regions = container.get(weWorld);
+
+            if (regions == null) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed No regions in world.");
+                return true; // Jeśli nie ma regionów, domyślnie zezwalaj na Elo
+            } else {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed Found regions: " + regions);
+            }
+
+            LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapPlayer(player);
+
+            ApplicableRegionSet regionSet = regions.getApplicableRegions(BukkitAdapter.asBlockVector(location));
+
+            // Zmieniamy sprawdzanie z flagi PVP na Twoją niestandardową flagę noElo
+            StateFlag.State EloState = regionSet.queryState(localPlayer, BetterElo.IS_ELO_ALLOWED);
+            boolean isEloAllowed = EloState != StateFlag.State.DENY; // Jeśli flaga noElo jest ustawiona na DENY, Elo nie jest dozwolone
+
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed Elo Allowed at location: " + location + " is " + isEloAllowed);
+
+            return isEloAllowed;
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.isEloAllowed: " + e.toString());
+            return false;
+        }
     }
 }

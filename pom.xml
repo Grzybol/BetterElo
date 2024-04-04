@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>3.2.73-SNAPSHOT</version>
+    <version>4.0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BetterElo</name>
@@ -106,6 +106,10 @@
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
+        <repository>
+            <id>sk89q-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -135,6 +139,21 @@
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.11.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- WorldEdit -->
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>7.2.0</version> <!-- Zaktualizuj do wersji kompatybilnej z Twoim serwerem -->
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- WorldGuard -->
+        <dependency>
+            <groupId>com.sk89q.worldguard</groupId>
+            <artifactId>worldguard-bukkit</artifactId>
+            <version>7.0.4</version> <!-- Zaktualizuj do wersji kompatybilnej z Twoim serwerem -->
             <scope>provided</scope>
         </dependency>
     </dependencies>
