@@ -29,6 +29,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
@@ -613,6 +614,11 @@ public class  Event implements Listener {
         Vector velocity = player.getLocation().getDirection().multiply(power);
         player.setVelocity(velocity);
     }
+    private static void applyZephyrEffect(Player player,int power) {
+
+        Vector velocity = player.getLocation().getDirection().multiply(power);
+        player.setVelocity(velocity);
+    }
     public boolean hasElytraLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasElytraLore called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
@@ -636,12 +642,19 @@ public class  Event implements Listener {
         return false;
     }
     public boolean hasZephyrLore(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called, player "+player.getName());
         ItemStack itemStack = player.getInventory().getItemInMainHand();
+        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemInHand: "+itemStack.displayName());
         ItemStack chestplate = player.getInventory().getChestplate();
-        if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
-            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore player "+player.getName()+" is wearing Elytra! Aborting");
-            player.sendMessage((ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "You cannot use Zephyr while wearing Elytra!"));
-            return false;
+        try{
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore chestplate: " + chestplate.displayName());
+            if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
+                pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore player " + player.getName() + " is wearing Elytra! Aborting");
+                player.sendMessage((ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "You cannot use Zephyr while wearing Elytra!"));
+                return false;
+            }
+        }catch(Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.hasZephyrLore exception:  " +e.getMessage());
         }
 
 
@@ -665,7 +678,16 @@ public class  Event implements Listener {
                 if (parts.length == 2){
                     int power = Integer.parseInt(parts[1]);
                     applyBoosterEffect(player,power);
+                    pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore adding player "+player.getName()+" to the lastZephyrUsage list");
                     lastZephyrUsage.put(player, System.currentTimeMillis());
+                    // Stwórz nowe zadanie BukkitRunnable, które zatrzyma gracza po 0,75 sekundy
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            // Ustawienie wektora prędkości na bardzo małą wartość w kierunku obecnym dla gracza, aby "wyzerować" ruch
+                            player.setVelocity(new Vector(0, -0.0784000015258789, 0)); // Minimalna wartość, by gracze nie utknęli w powietrzu
+                        }
+                    }.runTaskLater(betterElo, 10L); // 15 ticków = 0,75 sekundy
                 }
                 return true;
             }
@@ -677,12 +699,12 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr called");
         if (!lastZephyrUsage.containsKey(player)) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr PLAYER NOT LISTED");
-            return true; // Gracz jeszcze nie używał fajerwerka
+            return true;
         }
         long lastUsage = lastZephyrUsage.get(player);
         long currentTime = System.currentTimeMillis();
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr lastUsage: "+lastUsage+" currentTime: "+currentTime);
-        return (currentTime - lastUsage) >= configManager.fireworkCooldown;
+        return (currentTime - lastUsage) >= configManager.zephyrCooldown;
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");
