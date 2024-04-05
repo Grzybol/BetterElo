@@ -29,6 +29,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
@@ -613,6 +614,11 @@ public class  Event implements Listener {
         Vector velocity = player.getLocation().getDirection().multiply(power);
         player.setVelocity(velocity);
     }
+    private static void applyZephyrEffect(Player player,int power) {
+
+        Vector velocity = player.getLocation().getDirection().multiply(power);
+        player.setVelocity(velocity);
+    }
     public boolean hasElytraLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasElytraLore called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
@@ -674,6 +680,14 @@ public class  Event implements Listener {
                     applyBoosterEffect(player,power);
                     pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore adding player "+player.getName()+" to the lastZephyrUsage list");
                     lastZephyrUsage.put(player, System.currentTimeMillis());
+                    // Stwórz nowe zadanie BukkitRunnable, które zatrzyma gracza po 0,75 sekundy
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            // Ustawienie wektora prędkości na bardzo małą wartość w kierunku obecnym dla gracza, aby "wyzerować" ruch
+                            player.setVelocity(new Vector(0, -0.0784000015258789, 0)); // Minimalna wartość, by gracze nie utknęli w powietrzu
+                        }
+                    }.runTaskLater(betterElo, 10L); // 15 ticków = 0,75 sekundy
                 }
                 return true;
             }
