@@ -635,6 +635,8 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be antyweb <radius> " + ChatColor.GREEN + "- creates antyweb effect with given radius");
             sender.sendMessage(ChatColor.AQUA + "/be addelytra " + ChatColor.GREEN + "- adds Elytra Effect to the chestplate (works only with infinite Infinite Firework)");
             sender.sendMessage(ChatColor.AQUA + "/be firework <power> " + ChatColor.GREEN + "- creates an Infinite Firework with given power");
+            sender.sendMessage(ChatColor.AQUA + "/be flamethrower <distance> <range>" + ChatColor.GREEN + "- adds Flamethrower effect");
+            sender.sendMessage(ChatColor.AQUA + "/be zephyr <power> " + ChatColor.GREEN + "- adds Zephyr effect");
         }
     }
     private void handleTimeLeft(CommandSender sender){
