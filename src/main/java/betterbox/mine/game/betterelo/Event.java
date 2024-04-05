@@ -672,6 +672,7 @@ public class  Event implements Listener {
                 if (parts.length == 2){
                     int power = Integer.parseInt(parts[1]);
                     applyBoosterEffect(player,power);
+                    pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore adding player "+player.getName()+" to the lastZephyrUsage list");
                     lastZephyrUsage.put(player, System.currentTimeMillis());
                 }
                 return true;
@@ -684,12 +685,12 @@ public class  Event implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr called");
         if (!lastZephyrUsage.containsKey(player)) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr PLAYER NOT LISTED");
-            return true; // Gracz jeszcze nie używał fajerwerka
+            return true;
         }
         long lastUsage = lastZephyrUsage.get(player);
         long currentTime = System.currentTimeMillis();
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr lastUsage: "+lastUsage+" currentTime: "+currentTime);
-        return (currentTime - lastUsage) >= configManager.fireworkCooldown;
+        return (currentTime - lastUsage) >= configManager.zephyrCooldown;
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3,"Event.hasAntywebLore called");
