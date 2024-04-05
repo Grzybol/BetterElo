@@ -587,7 +587,7 @@ public class BetterEloCommand implements CommandExecutor {
         return formattedTime.toString().trim(); // Usunięcie ewentualnych spacji na końcu
     }
     private void HoloTop(Map playerPoints, Location location,HolographicDisplaysAPI api){
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.HoloTop called");
+        pluginLogger.log(PluginLogger.LogLevel.COMMAND, "BetterEloCommand.HoloTop called");
         if(eventHoloTask ==null||eventHoloTask.isCancelled()){
            eventHoloTask = new BukkitRunnable() {
 
