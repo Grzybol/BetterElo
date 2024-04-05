@@ -637,6 +637,13 @@ public class  Event implements Listener {
     }
     public boolean hasZephyrLore(Player player) {
         ItemStack itemStack = player.getInventory().getItemInMainHand();
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore player "+player.getName()+" is wearing Elytra! Aborting");
+            player.sendMessage((ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "You cannot use Zephyr while wearing Elytra!"));
+        }
+
+
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemmeta check failed");
