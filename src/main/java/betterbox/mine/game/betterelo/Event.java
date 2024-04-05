@@ -641,6 +641,7 @@ public class  Event implements Listener {
         if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore player "+player.getName()+" is wearing Elytra! Aborting");
             player.sendMessage((ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "You cannot use Zephyr while wearing Elytra!"));
+            return false;
         }
 
 
