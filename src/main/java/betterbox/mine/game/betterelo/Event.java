@@ -489,7 +489,7 @@ public class  Event implements Listener {
 
         }
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.checking canUseZephyr");
-        if(canUseZephyr(player) && event.getAction() != Action.RIGHT_CLICK_AIR) {
+        if(canUseZephyr(player) && event.getAction() == Action.RIGHT_CLICK_AIR) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.canUseZephyr  passed");
             hasZephyrLore(player);
 
@@ -666,11 +666,14 @@ public class  Event implements Listener {
         return false;
     }
     private boolean canUseZephyr(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr called");
         if (!lastZephyrUsage.containsKey(player)) {
+            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr PLAYER NOT LISTED");
             return true; // Gracz jeszcze nie używał fajerwerka
         }
         long lastUsage = lastZephyrUsage.get(player);
         long currentTime = System.currentTimeMillis();
+        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.canUseZephyr lastUsage: "+lastUsage+" currentTime: "+currentTime);
         return (currentTime - lastUsage) >= configManager.fireworkCooldown;
     }
     public boolean hasAntywebLore(ItemStack itemStack) {
