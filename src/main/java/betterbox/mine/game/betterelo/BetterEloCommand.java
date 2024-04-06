@@ -73,6 +73,8 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "zombietest":
+                        handleCustomMobsCommands(sender);
                     case "addelytra":
                         if (sender instanceof Player) {
                             Player player = (Player) sender;
