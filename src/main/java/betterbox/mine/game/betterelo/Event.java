@@ -13,13 +13,16 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -46,6 +49,7 @@ public class  Event implements Listener {
     private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
     private HashMap<Player, Long> lastZephyrUsage = new HashMap<>();
     private HashMap<Player, Long> lastFlameUsage = new HashMap<>();
+    private final Random random = new Random();
     //public final long cooldownMillis = 1500; // 1.5s
 
     public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo) {
@@ -144,21 +148,7 @@ public class  Event implements Listener {
         Long lastHit = lastHitTime.get(player.getUniqueId());
         return lastHit != null && (System.currentTimeMillis() - lastHit <= 10000); // 10 sekund
     }
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity called");
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
 
-            Player damager = (Player) event.getDamager();
-            Player victim = (Player) event.getEntity();
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
-
-            // Aktualizacja czasu ostatniego uderzenia
-            updateLastHitTime(damager);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
-            updateLastHitTime(victim);
-        }
-    }
     // Metoda do znalezienia ostatniego napastnika
     private Player getLastAttacker(Player victim) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: getLastAttacker called with parameters: " + victim);
@@ -939,5 +929,90 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.isEloAllowed: " + e.toString());
             return false;
         }
+    }
+
+    @EventHandler
+    public void onMobDeath(EntityDeathEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
+        LivingEntity entity = event.getEntity();
+        if (entity instanceof Zombie && entity.getCustomName() != null && entity.getCustomName().equals("Modyfikowany Zombiak")) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath mob check passed");
+            List<ItemStack> drops = event.getDrops();
+            drops.clear(); // Usuwa standardowy drop, jeśli chcesz
+
+            // Dodaj swój niestandardowy drop
+            ItemStack customDrop = new ItemStack(Material.DIAMOND);
+            ItemMeta meta = customDrop.getItemMeta();
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath diamond created");
+            if (meta != null) {
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath meta check passed");
+                meta.setDisplayName("Niestandardowy Drop");
+                meta.setLore(Arrays.asList("To jest niestandardowy drop zombiaka."));
+                customDrop.setItemMeta(meta);
+            }else{
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath meta null");
+            }
+            drops.add(customDrop);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath diamond added");
+        }
+
+    }
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+
+            Player damager = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
+
+            // Aktualizacja czasu ostatniego uderzenia
+            updateLastHitTime(damager);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
+            updateLastHitTime(victim);
+        }
+        LivingEntity entity = (LivingEntity) event.getEntity();
+        if (entity.hasMetadata("CustomZombie")){
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity custom mod detected");
+            customEntityDamageEvent(event);
+        }
+
+
+    }
+    public void customEntityDamageEvent(EntityDamageByEntityEvent event){
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
+
+        if (event.getDamager() instanceof Player) {
+            Player player = (Player) event.getDamager();
+            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+            if (itemInHand.hasItemMeta()) {
+                ItemMeta meta = itemInHand.getItemMeta();
+                if (meta != null && meta.hasLore()) {
+                    List<String> lore = meta.getLore();
+                    if (lore != null) {
+                        for (String line : lore) {
+                            if (line.startsWith("Damage")) {
+                                try {
+                                    String[] parts = line.split(" ")[1].split("-");
+                                    int minDamage = Integer.parseInt(parts[0]);
+                                    int maxDamage = Integer.parseInt(parts[1]);
+
+                                    int damage = minDamage + random.nextInt(maxDamage - minDamage + 1);
+                                    event.setDamage(damage);
+
+                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Custom damage applied: " + damage);
+                                    return;
+                                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Error parsing damage range from lore: " + line);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        event.setCancelled(true);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
     }
 }

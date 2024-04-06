@@ -74,6 +74,7 @@ public class BetterEloCommand implements CommandExecutor {
             case 1:
                 switch (args[0].toLowerCase()) {
                     case "zombietest":
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
                         handleCustomMobsCommands(sender);
                     case "addelytra":
                         if (sender instanceof Player) {
@@ -427,6 +428,7 @@ public class BetterEloCommand implements CommandExecutor {
         return true;
     }
     private void handleCustomMobsCommands(CommandSender sender){
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.handleCustomMobsCommands called, sender: "+sender.getName());
         if(sender.isOp() && sender instanceof Player) {
         customMobs.spawnModifiedZombie((Player) sender);
     }else{

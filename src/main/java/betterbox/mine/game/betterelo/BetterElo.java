@@ -104,7 +104,7 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"BetterElo: onEnable: Warning: PlaceholderAPI not found, placeholders will NOT be available.");
         }
 
-        customMobs = new CustomMobs(pluginLogger);
+        customMobs = new CustomMobs(pluginLogger,this);
 
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
