@@ -33,6 +33,7 @@ public final class BetterElo extends JavaPlugin {
     public boolean isEventEnabled;
     public String eventUnit;
     private Placeholders placeholders;
+    private CustomMobs customMobs;
     private CheaterCheckScheduler cheaterCheckScheduler;
     private BetterRanksCheaters betterRanksCheaters;
     private GuiManager guiManager;
@@ -102,13 +103,16 @@ public final class BetterElo extends JavaPlugin {
         } else {
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"BetterElo: onEnable: Warning: PlaceholderAPI not found, placeholders will NOT be available.");
         }
+
+        customMobs = new CustomMobs(pluginLogger);
+
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
         event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this);
         getServer().getPluginManager().registerEvents(event, this);
-        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
+        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);

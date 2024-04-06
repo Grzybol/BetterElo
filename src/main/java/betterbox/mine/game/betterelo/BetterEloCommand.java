@@ -39,12 +39,13 @@ public class BetterEloCommand implements CommandExecutor {
     private Hologram hologramWeekly;
     private Hologram hologramMonthly;
     private Hologram hologramEvent;
+    private CustomMobs customMobs;
     private BukkitTask eventHoloTask;
 
-    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager,Event event, PlayerKillDatabase PKDB) {
+    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager,Event event, PlayerKillDatabase PKDB,CustomMobs customMobs) {
         this.dataManager = dataManager;
         this.plugin = plugin;
-
+        this.customMobs = customMobs;
         this.guiManager = guiManager; // Inicjalizujemy referencję do GuiManager
         this.pluginLogger = pluginLogger;
         this.betterElo = betterElo; // Inicjalizujemy referencję do BetterElo
@@ -422,6 +423,14 @@ public class BetterEloCommand implements CommandExecutor {
 
         }
         return true;
+    }
+    private void handleCustomMobsCommands(CommandSender sender){
+        if(sender.isOp() && sender instanceof Player) {
+        customMobs.spawnModifiedZombie((Player) sender);
+    }else{
+        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+
+    }
     }
     private boolean handleAddPointsCommand(CommandSender sender, String player, Double points, String rankingType){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleAddPointsCommand called by "+sender.getName());
