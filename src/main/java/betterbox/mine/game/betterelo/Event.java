@@ -645,22 +645,7 @@ public class  Event implements Listener {
     public boolean hasZephyrLore(Player player) {
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called, player "+player.getName());
         ItemStack itemStack = player.getInventory().getItemInMainHand();
-        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemInHand: "+itemStack.displayName());
-        if(player.getInventory().getChestplate()!=null){
-            ItemStack chestplate = player.getInventory().getChestplate();
-            try {
-                pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore chestplate: " + chestplate.displayName());
-                if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
-                    pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore player " + player.getName() + " is wearing Elytra! Aborting");
-                    player.sendMessage((ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "You cannot use Zephyr while wearing Elytra!"));
-                    return false;
-                }
-            } catch (Exception e) {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.hasZephyrLore exception:  " + e.getMessage());
-            }
-        }else{
-            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore player: "+player.getName()+" is not wearing chestplate.");
-        }
+
 
 
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called");
@@ -678,6 +663,22 @@ public class  Event implements Listener {
         for (String lore : itemMeta.getLore()) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore Zephyr check triggered, checking lore and foramtting");
             if (lore != null && lore.contains("§6§lZephyr")) {
+                pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemInHand: "+itemStack.displayName());
+                if(player.getInventory().getChestplate()!=null){
+                    ItemStack chestplate = player.getInventory().getChestplate();
+                    try {
+                        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore chestplate: " + chestplate.displayName());
+                        if (chestplate.getType().toString().contains("ELYTRA") || hasElytraLore(chestplate)) {
+                            pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore player " + player.getName() + " is wearing Elytra! Aborting");
+                            player.sendMessage((ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "You cannot use Zephyr while wearing Elytra!"));
+                            return false;
+                        }
+                    } catch (Exception e) {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.hasZephyrLore exception:  " + e.getMessage());
+                    }
+                }else{
+                    pluginLogger.log(PluginLogger.LogLevel.ZEPHYR, "Event.hasZephyrLore player: "+player.getName()+" is not wearing chestplate.");
+                }
                 String[] parts = lore.split(" ");
                 pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore Zephyr power "+parts[1]);
                 if (parts.length == 2){
