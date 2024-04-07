@@ -23,6 +23,7 @@ import java.util.UUID;
 public class CustomMobs {
     private final PluginLogger pluginLogger;
     private final JavaPlugin plugin;
+    private static final Random random = new Random();
     public CustomMobs(PluginLogger pluginLogger, JavaPlugin plugin){
         this.plugin = plugin;
         this.pluginLogger = pluginLogger;
@@ -48,8 +49,8 @@ public class CustomMobs {
 
         // Modyfikowanie parametrów zombiaka
         // Przykładowe zmiany - możesz dostosować według własnych preferencji
-        zombie.setMaxHealth(40); // Zwiększenie maksymalnego zdrowia zombiaka
-        zombie.setHealth(40); // Ustawienie aktualnego zdrowia na maksymalne
+        zombie.setMaxHealth(1000); // Zwiększenie maksymalnego zdrowia zombiaka
+        zombie.setHealth(1000); // Ustawienie aktualnego zdrowia na maksymalne
         zombie.setBaby(false); // Upewnienie się, że zombiak nie jest dzieckiem
         zombie.setCustomName("Modyfikowany Zombiak"); // Ustawienie niestandardowego nazwy
         zombie.setCustomNameVisible(true); // Wyświetlanie niestandardowej nazwy nad zombiakiem
@@ -71,13 +72,27 @@ public class CustomMobs {
             customDropItem.setItemMeta(customDropItemMeta);
         }
         customDrops.add(customDropItem);
+        updateZombieCustomName(zombie);
 
         // Ustawienie niestandardowego dropu
         //zombie.setCustomDropItems(customDrops);
     }
     public void updateZombieCustomName(Zombie zombie) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "CustomMobs.updateZombieCustomName called");
         String customName = "Modyfikowany Zombiak";
         zombie.setCustomName(customName + " HP: " + Math.round(zombie.getHealth()) + "/" + Math.round(zombie.getMaxHealth()));
         zombie.setCustomNameVisible(true);
     }
+    public static String dropAverageDamage() {
+        // Używamy funkcji wykładniczej do zmniejszenia prawdopodobieństwa wyższych wartości
+        double x = -Math.log(random.nextDouble()) / 10.0; // Dostosuj parametr 10.0, aby zmienić rozkład
+        int bonus = (int) Math.round(x * 100); // Skalowanie wyniku
+
+        // Ograniczamy wartość bonusu do maksymalnie 60%
+        bonus = Math.min(bonus, 60);
+
+        return "§6§lAverage Damage +" + bonus + "%";
+    }
+
+
 }

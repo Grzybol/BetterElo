@@ -12,7 +12,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
@@ -22,6 +21,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -49,16 +49,18 @@ public class  Event implements Listener {
     private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
     private HashMap<Player, Long> lastZephyrUsage = new HashMap<>();
     private HashMap<Player, Long> lastFlameUsage = new HashMap<>();
+    private CustomMobs customMobs;
     private final Random random = new Random();
     //public final long cooldownMillis = 1500; // 1.5s
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs) {
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
         this.betterElo = betterElo;
         this.plugin = plugin;
         this.cheaters = cheaters;
         this.configManager = configManager;
+        this.customMobs = customMobs;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -933,26 +935,29 @@ public class  Event implements Listener {
 
     @EventHandler
     public void onMobDeath(EntityDeathEvent event) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
+        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
         LivingEntity entity = event.getEntity();
-        if (entity instanceof Zombie && entity.getCustomName() != null && entity.getCustomName().equals("Modyfikowany Zombiak")) {
+        if (entity instanceof Zombie && entity.getCustomName() != null && entity.hasMetadata("CustomZombie")) {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath mob check passed");
             List<ItemStack> drops = event.getDrops();
             drops.clear(); // Usuwa standardowy drop, jeśli chcesz
 
             // Dodaj swój niestandardowy drop
-            ItemStack customDrop = new ItemStack(Material.DIAMOND);
-            ItemMeta meta = customDrop.getItemMeta();
+            ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+            ItemMeta meta = sword.getItemMeta();
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath diamond created");
             if (meta != null) {
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath meta check passed");
-                meta.setDisplayName("Niestandardowy Drop");
-                meta.setLore(Arrays.asList("To jest niestandardowy drop zombiaka."));
-                customDrop.setItemMeta(meta);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath meta check passed, generat");
+                meta.setDisplayName("§6§lCustom Sword");
+                List<String> lore = new ArrayList<>();
+                lore.add("§6§lDamage 75-100");
+                lore.add(CustomMobs.dropAverageDamage());
+                meta.setLore(lore);
+                sword.setItemMeta(meta);
             }else{
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath meta null");
             }
-            drops.add(customDrop);
+            drops.add(sword);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath diamond added");
         }
 
@@ -973,8 +978,24 @@ public class  Event implements Listener {
         }
         LivingEntity entity = (LivingEntity) event.getEntity();
         if (entity.hasMetadata("CustomZombie")){
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity custom mod detected");
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
+            Zombie zombie = (Zombie) entity;
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
+            customMobs.updateZombieCustomName(zombie);
+        }
+
+
+    }
+    @EventHandler
+    public void EntityDamageEvent(EntityDamageEvent event) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent  called");
+        LivingEntity entity = (LivingEntity) event.getEntity();
+        if (entity.hasMetadata("CustomZombie")){
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent custom mob detected");
+            Zombie zombie = (Zombie) entity;
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
+            customMobs.updateZombieCustomName(zombie);
         }
 
 
@@ -991,22 +1012,43 @@ public class  Event implements Listener {
                 if (meta != null && meta.hasLore()) {
                     List<String> lore = meta.getLore();
                     if (lore != null) {
+                        int averageDamageBonusPercent = 0;
+                        int minDamage = 0;
+                        int maxDamage = 0;
+                        boolean validDamageLoreFound = false;
+                        boolean validAverageDamage = false;
                         for (String line : lore) {
-                            if (line.startsWith("Damage")) {
+                            if (line.startsWith("§6§lDamage") || line.startsWith("Damage")) {
                                 try {
                                     String[] parts = line.split(" ")[1].split("-");
-                                    int minDamage = Integer.parseInt(parts[0]);
-                                    int maxDamage = Integer.parseInt(parts[1]);
-
-                                    int damage = minDamage + random.nextInt(maxDamage - minDamage + 1);
-                                    event.setDamage(damage);
-
-                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Custom damage applied: " + damage);
-                                    return;
+                                    minDamage = Integer.parseInt(parts[0]);
+                                    maxDamage = Integer.parseInt(parts[1]);
+                                    validDamageLoreFound = true;
                                 } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Error parsing damage range from lore: " + line);
+                                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing damage range from lore: " + line);
+                                }
+                            }else if (line.startsWith("§6§lAverage Damage +")) {
+                                try {
+                                    String percentString = line.replace("§6§lAverage Damage +", "").replace("%", "");
+                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent percentString: " + percentString);
+                                    averageDamageBonusPercent = Integer.parseInt(percentString);
+                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent averageDamageBonusPercent: " + averageDamageBonusPercent);
+                                    validAverageDamage = true;
+                                } catch (NumberFormatException e) {
+                                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
                                 }
                             }
+
+                        }
+                        // Jeśli znaleziono lore z obrażeniami, oblicz i zastosuj obrażenia
+                        if (validDamageLoreFound) {
+                            int averageDamage = (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
+                            int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
+                            int totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", bonusAverageDamage: "+bonusDamage);
+                            event.setDamage(totalDamage);
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage);
+                            return;
                         }
                     }
                 }
@@ -1015,4 +1057,5 @@ public class  Event implements Listener {
         event.setCancelled(true);
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
     }
+
 }
