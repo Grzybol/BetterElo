@@ -6,6 +6,7 @@ import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
@@ -26,6 +27,8 @@ import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import org.checkerframework.checker.units.qual.C;
+
 public final class BetterElo extends JavaPlugin {
     private PluginLogger pluginLogger;
     private DataManager dataManager;
@@ -34,6 +37,7 @@ public final class BetterElo extends JavaPlugin {
     public String eventUnit;
     private Placeholders placeholders;
     private CustomMobs customMobs;
+    private CustomMobsFileManager customMobsFileManager;
     private CheaterCheckScheduler cheaterCheckScheduler;
     private BetterRanksCheaters betterRanksCheaters;
     private GuiManager guiManager;
@@ -49,6 +53,7 @@ public final class BetterElo extends JavaPlugin {
     public boolean useHolographicDisplays;
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
+    private String folderPath;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -67,7 +72,8 @@ public final class BetterElo extends JavaPlugin {
     public void onEnable() {
         // Inicjalizacja PluginLoggera
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO,PluginLogger.LogLevel.DEBUG, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
-        pluginLogger = new PluginLogger(getDataFolder().getAbsolutePath(), defaultLogLevels,this);
+        folderPath = getDataFolder().getAbsolutePath();
+        pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
@@ -104,7 +110,15 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"BetterElo: onEnable: Warning: PlaceholderAPI not found, placeholders will NOT be available.");
         }
 
-        customMobs = new CustomMobs(pluginLogger,this);
+
+
+        customMobsFileManager = new CustomMobsFileManager(folderPath,this, pluginLogger);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling customMobsFileManager.loadSpawners()");
+        customMobsFileManager.loadSpawners();
+        customMobs = new CustomMobs(pluginLogger,this,customMobsFileManager);
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
+        customMobs.startSpawnerScheduler();
+
 
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
@@ -112,7 +126,7 @@ public final class BetterElo extends JavaPlugin {
         // Rejestracja listenera eventów
         event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs);
         getServer().getPluginManager().registerEvents(event, this);
-        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs));
+        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);
@@ -175,6 +189,7 @@ public final class BetterElo extends JavaPlugin {
         if (dailyTask != null) dailyTask.cancel();
         if (weeklyTask != null) weeklyTask.cancel();
         if (monthlyTask != null) monthlyTask.cancel();
+        killAllCustomMobs();
     }
     // Dodajemy nowe metody do uzyskania pozostałego czasu dla nagród
     public long getRemainingTimeForRewards(String period) {
@@ -508,6 +523,20 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "Banned player "+bannedPlayer+" is offline - cannot send notification");
         }
 
+    }
+    public void killAllCustomMobs() {
+        for (World world : Bukkit.getWorlds()) {
+            for (LivingEntity entity : world.getLivingEntities()) {
+                if (entity.hasMetadata("CustomZombie")) {
+                    // Zabijamy niestandardowego zombiaka
+                    entity.remove();
+                }
+                // Możesz dodać inne rodzaje niestandardowych mobów, jeśli je masz
+                // else if (entity.hasMetadata("InnyNiestandardowyMob")) {
+                //     entity.remove();
+                // }
+            }
+        }
     }
 
 }

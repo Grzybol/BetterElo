@@ -945,7 +945,7 @@ public class  Event implements Listener {
             // Dodaj swój niestandardowy drop
             ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
             ItemMeta meta = sword.getItemMeta();
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath diamond created");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath sword created");
             if (meta != null) {
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath meta check passed, generat");
                 meta.setDisplayName("§6§lCustom Sword");
@@ -958,10 +958,19 @@ public class  Event implements Listener {
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath meta null");
             }
             drops.add(sword);
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath diamond added");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath sword added");
+            if(entity.hasMetadata("SpawnerName")){
+
+                String spawnerName = entity.getMetadata("SpawnerName").get(0).asString();
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath fromSpawner check passed. spawnerName: "+spawnerName);
+                // Zmniejsz liczbę mobów w spawnerze
+                customMobs.decreaseMobCount(spawnerName);
+            }
         }
 
+
     }
+
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
