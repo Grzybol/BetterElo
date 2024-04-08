@@ -17,6 +17,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -1023,11 +1024,29 @@ public class  Event implements Listener {
             //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
             Zombie zombie = (Zombie) entity;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-            customMobs.updateCustomMobName(zombie);
+            //customMobs.updateCustomMobName(zombie);
         }
 
 
     }
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDamageUpdateCustomMobHealth(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof LivingEntity) {
+            LivingEntity entity = (LivingEntity) event.getEntity();
+            if (entity.hasMetadata("CustomZombie")) {
+                // Opóźnienie wykonania aktualizacji nazwy, aby zdążyć na aktualizację zdrowia
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    // Sprawdzenie, czy mob nadal żyje przed aktualizacją nazwy
+                    if (!entity.isDead()) {
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected. Updating name.");
+                        customMobs.updateCustomMobName(entity);
+                    }
+                }, 1L); // Opóźnienie o 1 tick
+            }
+        }
+    }
+
+    /*
     @EventHandler
     public void EntityDamageEvent(EntityDamageEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent  called");
@@ -1038,17 +1057,17 @@ public class  Event implements Listener {
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent custom mob detected");
                 try {
                     //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) livingEntity;
-                    Zombie zombie = (Zombie) entity;
+                    //Zombie zombie = (Zombie) entity;
                     pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-                    customMobs.updateCustomMobName(zombie);
+                    customMobs.updateCustomMobName(livingEntity);
                 }catch (Exception e){
                     pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.EntityDamageEvent exception "+e.getMessage());
                 }
             }
         }
-
-
     }
+
+     */
     public void customEntityDamageEvent(EntityDamageByEntityEvent event){
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
 

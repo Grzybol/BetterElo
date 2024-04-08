@@ -249,6 +249,7 @@ public class CustomMobs {
         if (!mob.hasMetadata("MobName")) {
             return;
         }
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName mobName: "+mob.getName()+", currentHP: "+mob.getHealth()+", maxHP: "+mob.getMaxHealth());
         List<MetadataValue> values = mob.getMetadata("MobName");
         MetadataValue value = values.get(0);
         String customName = value.asString();
