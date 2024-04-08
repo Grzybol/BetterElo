@@ -12,6 +12,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
@@ -50,11 +51,13 @@ public class  Event implements Listener {
     private HashMap<Player, Long> lastZephyrUsage = new HashMap<>();
     private HashMap<Player, Long> lastFlameUsage = new HashMap<>();
     private CustomMobs customMobs;
+    private FileRewardManager fileRewardManager;
     private final Random random = new Random();
     //public final long cooldownMillis = 1500; // 1.5s
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager) {
         this.dataManager = dataManager;
+        this.fileRewardManager = fileRewardManager;
         this.pluginLogger = pluginLogger;
         this.betterElo = betterElo;
         this.plugin = plugin;
@@ -938,26 +941,31 @@ public class  Event implements Listener {
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
         LivingEntity entity = event.getEntity();
         if (entity instanceof Zombie && entity.getCustomName() != null && entity.hasMetadata("CustomZombie")) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath mob check passed");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.onMobDeath mob check passed");
             List<ItemStack> drops = event.getDrops();
             drops.clear(); // Usuwa standardowy drop, jeśli chcesz
-
-            // Dodaj swój niestandardowy drop
-            ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
-            ItemMeta meta = sword.getItemMeta();
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath sword created");
-            if (meta != null) {
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath meta check passed, generat");
-                meta.setDisplayName("§6§lCustom Sword");
-                List<String> lore = new ArrayList<>();
-                lore.add("§6§lDamage 75-100");
-                lore.add(CustomMobs.dropAverageDamage());
-                meta.setLore(lore);
-                sword.setItemMeta(meta);
-            }else{
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath meta null");
+            // Tutaj zakładamy, że niestandardowa nazwa moba jest kluczem do dropTable
+            if (entity.hasMetadata("MobName")) {
+                pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.onMobDeath MobName check passed");
+                List<MetadataValue> values = entity.getMetadata("MobName");
+                // Zakładając, że pierwsza wartość jest właściwą wartością dla twojego pluginu
+                String mobName = values.get(0).asString();
+                // Załadowanie dropTable dla tego moba
+                HashMap<Double, ItemStack> dropTable = fileRewardManager.loadCustomDrops(mobName);
+                // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
+                for (Map.Entry<Double, ItemStack> entry : dropTable.entrySet()) {
+                    if (Math.random() < entry.getKey()) { // entry.getKey() to szansa na drop
+                        drops.add(entry.getValue());
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Added drop item to the drops.");
+                    }
+                }
             }
-            drops.add(sword);
+            double dropChance = 0.1;
+            double randomValue = Math.random();
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath EMKS drop chance: "+dropChance+", randomValue: "+randomValue);
+            if (randomValue <= dropChance) {
+            drops.add(dropMobKillerSword());
+            }
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath sword added");
             if(entity.hasMetadata("SpawnerName")){
 
@@ -970,28 +978,52 @@ public class  Event implements Listener {
 
 
     }
+    private ItemStack dropMobKillerSword(){
+        int minDamage = 10 + (int) (Math.random() * 65); // Losuje wartość od 10 do 100
+        int maxDamage = minDamage + (int) (Math.random() * (101 - minDamage)); // Losuje wartość od minDamage do 100
+
+        // Dodaj swój niestandardowy drop
+        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+        ItemMeta meta = sword.getItemMeta();
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword sword created");
+        if (meta != null) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword");
+            meta.setDisplayName("§6§lEpic Mob Slayer Sword");
+            List<String> lore = new ArrayList<>();
+            lore.add("§6§lMob Damage " + minDamage + "-" + maxDamage);
+            lore.add(CustomMobs.dropAverageDamage());
+            meta.setLore(lore);
+            sword.setItemMeta(meta);
+            return sword;
+        }else{
+
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword meta null");
+            return null;
+        }
+    }
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
+        //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
         if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
 
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
+            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
 
             // Aktualizacja czasu ostatniego uderzenia
             updateLastHitTime(damager);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
+            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
             updateLastHitTime(victim);
         }
         LivingEntity entity = (LivingEntity) event.getEntity();
         if (entity.hasMetadata("CustomZombie")){
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity custom mob detected");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
+            //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
             Zombie zombie = (Zombie) entity;
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-            customMobs.updateZombieCustomName(zombie);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
+            customMobs.updateCustomMobName(zombie);
         }
 
 
@@ -999,12 +1031,20 @@ public class  Event implements Listener {
     @EventHandler
     public void EntityDamageEvent(EntityDamageEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent  called");
-        LivingEntity entity = (LivingEntity) event.getEntity();
-        if (entity.hasMetadata("CustomZombie")){
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent custom mob detected");
-            Zombie zombie = (Zombie) entity;
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-            customMobs.updateZombieCustomName(zombie);
+        Entity entity = event.getEntity();
+        if (entity instanceof LivingEntity) {
+            LivingEntity livingEntity  = (LivingEntity) event.getEntity();
+            if (entity.hasMetadata("CustomZombie")) {
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent custom mob detected");
+                try {
+                    //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) livingEntity;
+                    Zombie zombie = (Zombie) entity;
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
+                    customMobs.updateCustomMobName(zombie);
+                }catch (Exception e){
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.EntityDamageEvent exception "+e.getMessage());
+                }
+            }
         }
 
 
@@ -1027,9 +1067,9 @@ public class  Event implements Listener {
                         boolean validDamageLoreFound = false;
                         boolean validAverageDamage = false;
                         for (String line : lore) {
-                            if (line.startsWith("§6§lDamage") || line.startsWith("Damage")) {
+                            if (line.startsWith("§6§lMob Damage") || line.startsWith("Mob Damage")) {
                                 try {
-                                    String[] parts = line.split(" ")[1].split("-");
+                                    String[] parts = line.split("Mob Damage ")[1].split("-");
                                     minDamage = Integer.parseInt(parts[0]);
                                     maxDamage = Integer.parseInt(parts[1]);
                                     validDamageLoreFound = true;
@@ -1062,9 +1102,12 @@ public class  Event implements Listener {
                     }
                 }
             }
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Only items with "+ChatColor.GOLD + ChatColor.BOLD +"Mob Damage"+ ChatColor.DARK_RED +" effect can attack mobs!");
+
         }
         event.setCancelled(true);
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
+
+        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
     }
 
 }

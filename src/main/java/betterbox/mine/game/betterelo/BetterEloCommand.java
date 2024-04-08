@@ -703,6 +703,22 @@ public class BetterEloCommand implements CommandExecutor {
         Player player = (Player) sender;
         guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
     }
+    private void handleCreateDropTable(CommandSender sender){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: Player " + sender.getName() + " issued command /be setrewards");
+        if (!sender.hasPermission("betterelo.setrewards")||!sender.isOp()) {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand: Player " + sender.getName() + " was denied access to command /be createdroptable");
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+            return ;
+        }
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " was granted access to command /be setrewards");
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " This command can only be used by online players.");
+            return ;
+        }
+
+        Player player = (Player) sender;
+        guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
+    }
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta == null) {
@@ -792,5 +808,24 @@ public class BetterEloCommand implements CommandExecutor {
         } else{
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand:handleAddSpawnerCommand this is only-player command!");
         }
+    }
+    public String getPlayerChatInput(Player player) {
+        // Wyślij wiadomość do gracza, prosząc o wpisanie wiadomości
+        player.sendMessage("Wpisz swoją wiadomość do czatu i naciśnij Enter:");
+
+        // Stworzenie obiektu nasłuchującego
+        ChatInputListener chatInputListener = new ChatInputListener(plugin);
+
+        // Dodanie gracza do listy oczekujących na odpowiedź
+        ChatInputListener.addPlayerWaitingForInput(player);
+
+        // Poczekaj na odpowiedź gracza
+        String input = chatInputListener.waitForInput(player);
+
+        // Usunięcie gracza z listy oczekujących
+        ChatInputListener.removePlayerWaitingForInput(player);
+
+        // Zwrócenie wprowadzonej wiadomości
+        return input;
     }
 }

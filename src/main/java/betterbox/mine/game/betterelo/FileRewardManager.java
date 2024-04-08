@@ -7,12 +7,18 @@ import java.io.File;
 import java.io.IOException;
 
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.configuration.ConfigurationSection;;
 
@@ -118,5 +124,81 @@ public class FileRewardManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "FileRewardManager: saveRewards: Nie udało się zapisać nagród: " + e.getMessage());
         }
     }
+    public void saveCustomDrops(String fileName, List<ItemStack> rewards) {
+        File customDropsFolder = new File(plugin.getDataFolder() + File.separator + "customDrops");
+        if (!customDropsFolder.exists()) {
+            customDropsFolder.mkdirs();
+        }
+
+        File customDropTablesFolder = new File(plugin.getDataFolder() + File.separator + "customDropTables");
+        if (!customDropTablesFolder.exists()) {
+            customDropTablesFolder.mkdirs();
+        }
+
+        File dropTableFile = new File(customDropTablesFolder, "Change_My_Name" + ".yml");
+        FileConfiguration dropTableConfig = new YamlConfiguration();
+
+        int index = 0;
+        for (ItemStack item : rewards) {
+            String itemFileName = fileName + "_item" + index + ".yml";
+            File itemFile = new File(customDropsFolder, itemFileName);
+            try {
+                itemFile.createNewFile();
+                FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
+                itemConfig.set("item", item);
+                itemConfig.save(itemFile);
+
+                // Dodaj wpis do pliku tabeli dropów
+                String itemPath = "customDrops/" + itemFileName;
+                dropTableConfig.set("Item" + index + ".itemPath", itemPath);
+                dropTableConfig.set("Item" + index + ".dropChance", 0.00); // Tutaj można ustawić faktyczną szansę na drop
+
+                index++;
+            } catch (IOException e) {
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać przedmiotu: " + e.getMessage());
+            }
+        }
+
+        try {
+            dropTableConfig.save(dropTableFile);
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać tabeli dropów: " + e.getMessage());
+        }
+    }
+    public HashMap<Double, ItemStack> loadCustomDrops(String dropTableName) {
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops called, dropTableName: " + dropTableName);
+        HashMap<Double, ItemStack> drops = new HashMap<>();
+        File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
+        if (!dropTableFile.exists()) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Tabela dropów " + dropTableName + " nie istnieje.");
+            return drops;
+        }
+
+        FileConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
+
+        dropTableConfig.getKeys(false).forEach(key -> {
+            String itemPath = dropTableConfig.getString(key + ".itemPath");
+            double dropChance = dropTableConfig.getDouble(key + ".dropChance");
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance);
+            File itemFile = new File(plugin.getDataFolder(), itemPath);
+            if (itemFile.exists()) {
+                try {
+                    FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
+                    ItemStack itemStack = itemConfig.getItemStack("item");
+                    if (itemStack != null) {
+                        drops.put(dropChance, itemStack);
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops item: " + itemStack);
+                    }
+                } catch (Exception e) {
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage());
+                }
+            }
+        });
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops drops: " + drops);
+        return drops;
+    }
+
+
+
 
 }

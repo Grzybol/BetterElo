@@ -37,11 +37,12 @@ public class GuiManager implements Listener {
         player.openInventory(subInv);
     }
     public void openMainGui(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 9, "Set Rewards");
+        Inventory inv = Bukkit.createInventory(null, 18, "Set Rewards");
         createItem(inv, Material.APPLE, 1, "daily", "Daily Reward");
         createItem(inv, Material.BREAD, 3, "weekly", "Weekly Reward");
         createItem(inv, Material.DIAMOND, 5, "monthly", "Monthly Reward");
         createItem(inv, Material.EMERALD, 7, "event", "Event Reward");
+        createItem(inv, Material.EMERALD, 14, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
     }
     private void createItem(Inventory inv, Material material, int slot, String name, String description) {
@@ -72,6 +73,14 @@ public class GuiManager implements Listener {
             case "Set Rewards":
                 event.setCancelled(true);
                 periodType = currentItem.getItemMeta().getDisplayName();
+                if(periodType.equals("dropTable")){
+                    List<ItemStack> currentRewards = fileRewardManager.loadRewards();
+                    Inventory inv = Bukkit.createInventory(null, 36, "Add Items");
+                    currentRewards.forEach(inv::addItem);
+                    createItem(inv, Material.GREEN_WOOL, 35, "Save", "Save drop table");
+                    player.openInventory(inv);
+                    break;
+                }
                 openSubGui(player);
                 break;
             case "Select Top":
@@ -106,7 +115,12 @@ public class GuiManager implements Listener {
 
                     String fileName=periodType+"_"+rewardType;
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
-                    fileRewardManager.saveRewards(fileName,itemsToSave);
+                    if(periodType.equals("dropTable")){
+                        fileName=periodType;
+                        fileRewardManager.saveCustomDrops(fileName, itemsToSave);
+                    }else{
+                        fileRewardManager.saveRewards(fileName, itemsToSave);
+                    }
 
                 }
         }
