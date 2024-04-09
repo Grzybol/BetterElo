@@ -165,38 +165,7 @@ public class FileRewardManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać tabeli dropów: " + e.getMessage());
         }
     }
-    public HashMap<Double, ItemStack> loadCustomDrops(String dropTableName) {
-        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops called, dropTableName: " + dropTableName);
-        HashMap<Double, ItemStack> drops = new HashMap<>();
-        File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
-        if (!dropTableFile.exists()) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!");
-            return drops;
-        }
 
-        FileConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
-
-        dropTableConfig.getKeys(false).forEach(key -> {
-            String itemPath = dropTableConfig.getString(key + ".itemPath");
-            double dropChance = dropTableConfig.getDouble(key + ".dropChance");
-            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance);
-            File itemFile = new File(plugin.getDataFolder(), itemPath);
-            if (itemFile.exists()) {
-                try {
-                    FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
-                    ItemStack itemStack = itemConfig.getItemStack("item");
-                    if (itemStack != null) {
-                        drops.put(dropChance, itemStack);
-                        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops item: " + itemStack);
-                    }
-                } catch (Exception e) {
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage());
-                }
-            }
-        });
-        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.loadCustomDrops drops: " + drops);
-        return drops;
-    }
 
 
 

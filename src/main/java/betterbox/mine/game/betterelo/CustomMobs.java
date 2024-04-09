@@ -35,7 +35,7 @@ public class CustomMobs {
     private Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
 
     static class CustomMob {
-        String mobName, dropTablename, spawnerName;
+        String mobName, dropTableName, spawnerName;
         boolean dropEMKS;
         EntityType entityType;
         LivingEntity entity;
@@ -45,9 +45,9 @@ public class CustomMobs {
         int hp;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
-        FileRewardManager dropFileManager;
+        CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin,FileRewardManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, Map<String, Object> customMetadata) {
+        CustomMob(JavaPlugin plugin,CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, Map<String, Object> customMetadata, String dropTableName) {
             this.plugin = plugin;
 
             this.mobName = mobName;
@@ -65,7 +65,8 @@ public class CustomMobs {
             this.leggings = leggings;
             this.boots = boots;
             this.dropFileManager = dropFileManager;
-            this.dropTable = dropFileManager.loadCustomDrops(mobName);
+            this.dropTableName = dropTableName;
+            this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
             this.armor = armor;
             this.hp = hp;
             this.speed = speed;
@@ -89,7 +90,7 @@ public class CustomMobs {
                     this.helmet.clone(), this.chestplate.clone(),
                     this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                     this.armor, this.hp, this.speed,
-                    this.attackDamage, new HashMap<>(this.customMetadata));
+                    this.attackDamage, new HashMap<>(this.customMetadata), this.dropTableName);
             newMob.spawnMob(spawnLocation);
             return newMob;
         }
@@ -408,6 +409,8 @@ public class CustomMobs {
             CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
             newMob.customMetadata.put("SpawnerName", spawnerName);
             newMob.spawnerName = spawnerName;
+            newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
         } else {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }

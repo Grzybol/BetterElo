@@ -22,6 +22,7 @@ public class CustomMobsFileManager {
     private File spawnersFile;
     public Map<String, SpawnerData> spawnersData = new HashMap<>();
 
+
     public CustomMobsFileManager(String folderPath, JavaPlugin plugin, PluginLogger pluginLogger) {
 
         this.plugin = plugin;
@@ -81,6 +82,7 @@ public class CustomMobsFileManager {
                 config.set("spawners.exampleSpawner.mobName", "exampleMobName");
                 config.set("spawners.exampleSpawner.cooldown", "exampleCooldown");
                 config.set("spawners.exampleSpawner.mobsPerSpawn", "mobsPerSpawn");
+                config.set("spawners.exampleSpawner.mobsPerSpawn", "maxMobs");
                 // Zapisujemy zmiany do pliku
                 config.save(spawnersFile);
             } else {
@@ -247,14 +249,17 @@ public class CustomMobsFileManager {
             double speed = mobData.getDouble("speed");
             double attackDamage = mobData.getDouble("attackDamage");
             boolean dropEMKS = false;
+
+
             if(mobData.contains("dropEMKS")){
                 dropEMKS = mobData.getBoolean("dropEMKS");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded dropEMKS:" + dropEMKS);
             }
-
-            String mobName = mobData.getString("mobName");
             String entityTypeString = mobData.getString("type");
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS);
+            String mobName = mobData.getString("mobName");
+            String dropTableName = mobData.getString("dropTable");
+
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS+", dropTablename: "+dropTableName);
             EntityType entityType = EntityType.valueOf(entityTypeString);
 
             // Wczytanie niestandardowych metadanych i ustawienie spawnerName
@@ -263,8 +268,10 @@ public class CustomMobsFileManager {
 
             // Utworzenie instancji CustomMob
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
-            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, dropFileManager, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage, customMetadata);
+            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage, customMetadata, dropTableName);
             customMob.dropEMKS = dropEMKS;
+            pluginLogger.log(PluginLogger.LogLevel.DROP,"CustomMobsFileManager.loadCustomMob customMob.dropTablename: "+customMob.dropTableName);
+
             return customMob;
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"CustomMobsFileManager.loadCustomMob exception: " + e.getMessage());
@@ -309,6 +316,38 @@ public class CustomMobsFileManager {
         }
 
         return customMobFiles;
+    }
+    public HashMap<Double, ItemStack> loadCustomDrops(String dropTableName) {
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops called, dropTableName: " + dropTableName);
+        HashMap<Double, ItemStack> drops = new HashMap<>();
+        File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
+        if (!dropTableFile.exists()) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!");
+            return drops;
+        }
+
+        FileConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
+
+        dropTableConfig.getKeys(false).forEach(key -> {
+            String itemPath = dropTableConfig.getString(key + ".itemPath");
+            double dropChance = dropTableConfig.getDouble(key + ".dropChance");
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance);
+            File itemFile = new File(plugin.getDataFolder(), itemPath);
+            if (itemFile.exists()) {
+                try {
+                    FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
+                    ItemStack itemStack = itemConfig.getItemStack("item");
+                    if (itemStack != null) {
+                        drops.put(dropChance, itemStack);
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops item: " + itemStack);
+                    }
+                } catch (Exception e) {
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage());
+                }
+            }
+        });
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops drops: " + drops);
+        return drops;
     }
 
 }
