@@ -983,7 +983,7 @@ public class  Event implements Listener {
                 }
                 if(customMob.dropEMKS) {
                     double EMKSchance = 0.00;
-                    EMKSchance = customMob.EMKSchance;
+                    EMKSchance = customMob.EMKSchance/100;
                     double randomValue = Math.random();
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS drop chance: " + EMKSchance + ", randomValue: " + randomValue);
                     if (randomValue <= EMKSchance) {
