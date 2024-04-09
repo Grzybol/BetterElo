@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -20,6 +21,7 @@ public class GuiManager implements Listener {
     private final PluginLogger pluginLogger;
     public String periodType = null;
     private String rewardType;
+    private String dropTableName;
 
     private final DataManager dataManager;
     public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager) {
@@ -42,7 +44,13 @@ public class GuiManager implements Listener {
         createItem(inv, Material.BREAD, 3, "weekly", "Weekly Reward");
         createItem(inv, Material.DIAMOND, 5, "monthly", "Monthly Reward");
         createItem(inv, Material.EMERALD, 7, "event", "Event Reward");
-        createItem(inv, Material.EMERALD, 14, "dropTable", "Create new Drop Table");
+        //createItem(inv, Material.EMERALD, 14, "dropTable", "Create new Drop Table");
+        player.openInventory(inv);
+    }
+    public void openDroptableGui(Player player, String dropTable_Name) {
+        dropTableName= dropTable_Name;
+        Inventory inv = Bukkit.createInventory(null, 9, "Set Rewards");
+        createItem(inv, Material.EMERALD, 4, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
     }
     private void createItem(Inventory inv, Material material, int slot, String name, String description) {
@@ -53,7 +61,7 @@ public class GuiManager implements Listener {
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
 
 
@@ -116,7 +124,7 @@ public class GuiManager implements Listener {
                     String fileName=periodType+"_"+rewardType;
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
                     if(periodType.equals("dropTable")){
-                        fileName=periodType;
+                        fileName=dropTableName;
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }else{
                         fileRewardManager.saveRewards(fileName, itemsToSave);

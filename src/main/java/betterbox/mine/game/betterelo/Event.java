@@ -937,37 +937,57 @@ public class  Event implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onMobDeath(EntityDeathEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
         LivingEntity entity = event.getEntity();
-        if (entity instanceof Zombie && entity.getCustomName() != null && entity.hasMetadata("CustomZombie")) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.onMobDeath mob check passed");
+        if (entity.hasMetadata("DeathHandled")) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mobDeath already processed!");
+            return; // Zdarzenie śmierci zostało już obsłużone, więc nic nie rób
+        }
+        //CustomMobs.CustomMob customMob = entity;
+        if (entity instanceof Zombie && entity.getCustomName() != null && entity.hasMetadata("CustomMob")) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mob check passed");
             List<ItemStack> drops = event.getDrops();
             drops.clear(); // Usuwa standardowy drop, jeśli chcesz
             // Tutaj zakładamy, że niestandardowa nazwa moba jest kluczem do dropTable
             if (entity.hasMetadata("MobName")) {
-                pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.onMobDeath MobName check passed");
+                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath MobName check passed");
                 List<MetadataValue> values = entity.getMetadata("MobName");
                 // Zakładając, że pierwsza wartość jest właściwą wartością dla twojego pluginu
                 String mobName = values.get(0).asString();
+
                 // Załadowanie dropTable dla tego moba
-                HashMap<Double, ItemStack> dropTable = fileRewardManager.loadCustomDrops(mobName);
-                // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
-                for (Map.Entry<Double, ItemStack> entry : dropTable.entrySet()) {
-                    if (Math.random() < entry.getKey()) { // entry.getKey() to szansa na drop
-                        drops.add(entry.getValue());
-                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Added drop item to the drops.");
+                //HashMap<Double, ItemStack> dropTable = fileRewardManager.loadCustomDrops(mobName);
+                CustomMobs.CustomMob customMob =  betterElo.getCustomMobFromEntity(entity);
+                if(customMob!=null)
+                {
+                    HashMap<Double, ItemStack> dropTable = customMob.dropTable;
+                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: "+dropTable);
+
+                    // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
+                    for (Map.Entry<Double, ItemStack> entry : dropTable.entrySet()) {
+                        double rolledCance = Math.random();
+                        double dropChance = entry.getKey()/100;
+                        if ( rolledCance< dropChance) { // entry.getKey() to szansa na drop
+                            drops.add(entry.getValue());
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
+                        }else{
+                            pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
+                        }
                     }
+                }else {
+                    pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
             }
             double dropChance = 0.1;
             double randomValue = Math.random();
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath EMKS drop chance: "+dropChance+", randomValue: "+randomValue);
+            pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath EMKS drop chance: "+dropChance+", randomValue: "+randomValue);
             if (randomValue <= dropChance) {
             drops.add(dropMobKillerSword());
+                pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath EMKS sword added");
             }
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath sword added");
+
             if(entity.hasMetadata("SpawnerName")){
 
                 String spawnerName = entity.getMetadata("SpawnerName").get(0).asString();
@@ -975,6 +995,7 @@ public class  Event implements Listener {
                 // Zmniejsz liczbę mobów w spawnerze
                 customMobs.decreaseMobCount(spawnerName);
             }
+            entity.setMetadata("DeathHandled", new FixedMetadataValue(plugin, true));
         }
 
 
@@ -1018,7 +1039,7 @@ public class  Event implements Listener {
             updateLastHitTime(victim);
         }
         LivingEntity entity = (LivingEntity) event.getEntity();
-        if (entity.hasMetadata("CustomZombie")){
+        if (entity.hasMetadata("CustomMob")){
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
             //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
@@ -1033,7 +1054,7 @@ public class  Event implements Listener {
     public void onDamageUpdateCustomMobHealth(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof LivingEntity) {
             LivingEntity entity = (LivingEntity) event.getEntity();
-            if (entity.hasMetadata("CustomZombie")) {
+            if (entity.hasMetadata("CustomMob")) {
                 // Opóźnienie wykonania aktualizacji nazwy, aby zdążyć na aktualizację zdrowia
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     // Sprawdzenie, czy mob nadal żyje przed aktualizacją nazwy

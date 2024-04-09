@@ -135,7 +135,7 @@ public class FileRewardManager {
             customDropTablesFolder.mkdirs();
         }
 
-        File dropTableFile = new File(customDropTablesFolder, "Change_My_Name" + ".yml");
+        File dropTableFile = new File(customDropTablesFolder, fileName + ".yml");
         FileConfiguration dropTableConfig = new YamlConfiguration();
 
         int index = 0;

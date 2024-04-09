@@ -73,6 +73,13 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "killallmobs":
+                        if(!sender.isOp()){
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                            break;
+                        }
+                        betterElo.killAllCustomMobs();
+                        break;
                     case "zombietest":
                         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
                         handleCustomMobsCommands(sender);
@@ -248,6 +255,11 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 2:
                 switch (args[0].toLowerCase()) {
+                    case "droptable":
+                    if(sender.isOp()||sender.hasPermission("betterelo.droptable")){
+                        handleCreateDropTable(sender,args[1]);
+                    }
+                    break;
                     case "antyweb":
                         if ((sender.hasPermission("betterelo.antyweb") || sender.isOp()) && sender instanceof Player) {
                             Player player = ((Player) sender).getPlayer();
@@ -663,6 +675,8 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be flamethrower <distance> <range>" + ChatColor.GREEN + "- adds Flamethrower effect");
             sender.sendMessage(ChatColor.AQUA + "/be zephyr <power> " + ChatColor.GREEN + "- adds Zephyr effect");
             sender.sendMessage(ChatColor.AQUA + "/be addspawner <spawnerName> <mobName> <cooldown(s)> <mobCountPerSpawn> <maxMobs>" + ChatColor.GREEN + "- creates custom mob spawner");
+            sender.sendMessage(ChatColor.AQUA + "/be droptable <name> - opens a GUI to create new drop table");
+            sender.sendMessage(ChatColor.AQUA + "/be killallmobs - kills all custom mobs");
         }
     }
     private void handleTimeLeft(CommandSender sender){
@@ -703,21 +717,21 @@ public class BetterEloCommand implements CommandExecutor {
         Player player = (Player) sender;
         guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
     }
-    private void handleCreateDropTable(CommandSender sender){
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: Player " + sender.getName() + " issued command /be setrewards");
-        if (!sender.hasPermission("betterelo.setrewards")||!sender.isOp()) {
-            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand: Player " + sender.getName() + " was denied access to command /be createdroptable");
+    private void handleCreateDropTable(CommandSender sender,String dropTableName){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: Player " + sender.getName() + " issued command /be droptable "+dropTableName);
+        if (!sender.hasPermission("betterelo.droptable")||!sender.isOp()) {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand: Player " + sender.getName() + " was denied access to command /be droptable");
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
             return ;
         }
-        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " was granted access to command /be setrewards");
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " was granted access to command /be droptable");
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " This command can only be used by online players.");
             return ;
         }
 
         Player player = (Player) sender;
-        guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
+        guiManager.openDroptableGui(player,dropTableName); // Otwieramy główne menu GUI dla gracza
     }
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
         ItemMeta itemMeta = itemStack.getItemMeta();
@@ -809,23 +823,5 @@ public class BetterEloCommand implements CommandExecutor {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand:handleAddSpawnerCommand this is only-player command!");
         }
     }
-    public String getPlayerChatInput(Player player) {
-        // Wyślij wiadomość do gracza, prosząc o wpisanie wiadomości
-        player.sendMessage("Wpisz swoją wiadomość do czatu i naciśnij Enter:");
 
-        // Stworzenie obiektu nasłuchującego
-        ChatInputListener chatInputListener = new ChatInputListener(plugin);
-
-        // Dodanie gracza do listy oczekujących na odpowiedź
-        ChatInputListener.addPlayerWaitingForInput(player);
-
-        // Poczekaj na odpowiedź gracza
-        String input = chatInputListener.waitForInput(player);
-
-        // Usunięcie gracza z listy oczekujących
-        ChatInputListener.removePlayerWaitingForInput(player);
-
-        // Zwrócenie wprowadzonej wiadomości
-        return input;
-    }
 }
