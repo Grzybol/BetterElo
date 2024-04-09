@@ -465,7 +465,7 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
         }
     }
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.PLAYER_INTERACT,"Event.onPlayerInteract called");
         Player player = event.getPlayer();
@@ -641,10 +641,6 @@ public class  Event implements Listener {
     public boolean hasZephyrLore(Player player) {
         pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called, player "+player.getName());
         ItemStack itemStack = player.getInventory().getItemInMainHand();
-
-
-
-        pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore called");
         if (itemStack == null || !itemStack.hasItemMeta()) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemmeta check failed");
             return false;
@@ -658,7 +654,7 @@ public class  Event implements Listener {
 
         for (String lore : itemMeta.getLore()) {
             pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore Zephyr check triggered, checking lore and foramtting");
-            if (lore != null && lore.contains("§6§lZephyr")) {
+            if (lore != null && lore.startsWith("§6§lZephyr")) {
                 pluginLogger.log(PluginLogger.LogLevel.ZEPHYR,"Event.hasZephyrLore itemInHand: "+itemStack.displayName());
                 if(player.getInventory().getChestplate()!=null){
                     ItemStack chestplate = player.getInventory().getChestplate();
