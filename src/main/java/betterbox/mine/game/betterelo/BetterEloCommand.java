@@ -490,6 +490,7 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " BetterElo config reloaded!");
             customMobsFileManager.loadSpawners();
             pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo spawners.yml reloaded");
+            customMobs.loadCustomMobs();
             return true;
         }else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: sender " + sender + " dont have permission to use /br tl");
@@ -810,7 +811,7 @@ public class BetterEloCommand implements CommandExecutor {
         firework.setItemMeta(meta);
         player.getInventory().addItem(firework);
     }
-    public void handleAddSpawnerCommand(CommandSender sender, String spawnerName, String mobName, int mobCount, int spawnerCooldown,int maxMobs) {
+    public void handleAddSpawnerCommand(CommandSender sender, String spawnerName, String mobName, int spawnerCooldown,int mobCount, int maxMobs) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
             if (player.isOp()) {

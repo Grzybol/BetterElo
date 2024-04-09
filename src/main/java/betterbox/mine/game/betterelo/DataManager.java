@@ -84,8 +84,9 @@ public class DataManager {
                 file.createNewFile();
 
             } catch (IOException e) {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: initializeFile: error: "+e);
-                e.printStackTrace();
+                pluginLogger.log(PluginLogger.LogLevel.ERROR,"DataManager: initializeFile: error: "+e.getMessage());
+
+                ;
             }
         }
     }

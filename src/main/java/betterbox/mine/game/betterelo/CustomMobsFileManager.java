@@ -293,7 +293,7 @@ public class CustomMobsFileManager {
 
             if (files != null) {
                 for (File file : files) {
-                    if (file.isFile() && file.getName().endsWith(".yml")) {
+                    if (file.isFile() && file.getName().endsWith(".yml") &&!file.getName().equalsIgnoreCase("spawners.yml")) {
                         customMobFiles.add(file);
                     }
                 }

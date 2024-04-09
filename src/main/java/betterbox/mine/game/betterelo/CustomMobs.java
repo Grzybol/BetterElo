@@ -124,7 +124,7 @@ public class CustomMobs {
         this.pluginLogger = pluginLogger;
         this.fileManager = fileManager;
         this.fileRewardManager = fileRewardManager;
-        loadCustomMobs(plugin, fileManager, fileRewardManager);
+        loadCustomMobs();
     }
     public void spawnModifiedZombie(Player player) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.spawnModifiedZombie called, player: "+player.getName());
@@ -362,7 +362,7 @@ public class CustomMobs {
     }
 
     // Metoda pomocnicza do zapisywania danych ItemStack, w tym zaklęć
-    private void loadCustomMobs(JavaPlugin plugin, CustomMobsFileManager fileManager, FileRewardManager fileRewardManager) {
+    public void loadCustomMobs() {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.loadCustomMobs called.");
         // Wczytaj customowe moby i przechowaj je w pamięci
         // Dla każdego pliku moba w folderze customMobs
@@ -394,7 +394,6 @@ public class CustomMobs {
             Location adjustedLocation = adjustLocationToAirAbove(location);
             CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
             newMob.customMetadata.put("SpawnerName", spawnerName);
-            // Nie potrzebujesz już wywoływać spawnMob tutaj, ponieważ jest ono wywoływane w cloneForSpawn
         } else {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }
