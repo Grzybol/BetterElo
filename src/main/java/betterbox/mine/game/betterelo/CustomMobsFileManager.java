@@ -248,6 +248,7 @@ public class CustomMobsFileManager {
             int hp = mobData.getInt("hp");
             double speed = mobData.getDouble("speed");
             double attackDamage = mobData.getDouble("attackDamage");
+            double EKMSchance = 0.0f;
             boolean dropEMKS = false;
 
 
@@ -255,11 +256,15 @@ public class CustomMobsFileManager {
                 dropEMKS = mobData.getBoolean("dropEMKS");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded dropEMKS:" + dropEMKS);
             }
+            if(mobData.contains("EMKSchance")){
+                EKMSchance = mobData.getDouble("EMKSchance");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded EKMSchance:" + EKMSchance);
+            }
             String entityTypeString = mobData.getString("type");
             String mobName = mobData.getString("mobName");
             String dropTableName = mobData.getString("dropTable");
 
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS+", dropTablename: "+dropTableName);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS+", EKMSchance: "+EKMSchance+", dropTablename: "+dropTableName);
             EntityType entityType = EntityType.valueOf(entityTypeString);
 
             // Wczytanie niestandardowych metadanych i ustawienie spawnerName
@@ -268,8 +273,7 @@ public class CustomMobsFileManager {
 
             // Utworzenie instancji CustomMob
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
-            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage, customMetadata, dropTableName);
-            customMob.dropEMKS = dropEMKS;
+            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage, customMetadata, dropTableName, dropEMKS, EKMSchance);
             pluginLogger.log(PluginLogger.LogLevel.DROP,"CustomMobsFileManager.loadCustomMob customMob.dropTablename: "+customMob.dropTableName);
 
             return customMob;
