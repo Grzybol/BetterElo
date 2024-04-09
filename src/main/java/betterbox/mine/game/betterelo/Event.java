@@ -981,7 +981,7 @@ public class  Event implements Listener {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
             }
-            double dropChance = 0.1;
+            double dropChance = 0.01;
             double randomValue = Math.random();
             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath EMKS drop chance: "+dropChance+", randomValue: "+randomValue);
             if (randomValue <= dropChance) {
@@ -1019,6 +1019,7 @@ public class  Event implements Listener {
             lore.add("§6§lMob Damage " + minDamage + "-" + maxDamage);
             lore.add(CustomMobs.dropAverageDamage());
             meta.setLore(lore);
+            meta.setUnbreakable(true);
             sword.setItemMeta(meta);
             return sword;
         }else{
