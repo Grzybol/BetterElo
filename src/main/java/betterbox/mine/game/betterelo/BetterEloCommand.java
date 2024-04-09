@@ -2,7 +2,6 @@ package betterbox.mine.game.betterelo;
 
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
-import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,7 +9,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -33,23 +31,26 @@ public class BetterEloCommand implements CommandExecutor {
     private final BetterElo betterElo;
     private final ExtendedConfigManager configManager;
     private final Event event;
+    private final CustomMobsFileManager customMobsFileManager;
     private final PlayerKillDatabase PKDB;
     private Hologram hologramMain;
     private Hologram hologramDaily;
     private Hologram hologramWeekly;
     private Hologram hologramMonthly;
     private Hologram hologramEvent;
+    private CustomMobs customMobs;
     private BukkitTask eventHoloTask;
 
-    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager,Event event, PlayerKillDatabase PKDB) {
+    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager, Event event, PlayerKillDatabase PKDB, CustomMobs customMobs, CustomMobsFileManager customMobsFileManager) {
         this.dataManager = dataManager;
         this.plugin = plugin;
-
+        this.customMobs = customMobs;
         this.guiManager = guiManager; // Inicjalizujemy referencję do GuiManager
         this.pluginLogger = pluginLogger;
         this.betterElo = betterElo; // Inicjalizujemy referencję do BetterElo
         this.configManager = configManager;
         this.event = event;
+        this.customMobsFileManager = customMobsFileManager;
         this.PKDB = PKDB;
 
 
@@ -72,6 +73,16 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "killallmobs":
+                        if(!sender.isOp()){
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                            break;
+                        }
+                        betterElo.killAllCustomMobs();
+                        break;
+                    case "zombietest":
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
+                        handleCustomMobsCommands(sender);
                     case "addelytra":
                         if (sender instanceof Player) {
                             Player player = (Player) sender;
@@ -244,6 +255,11 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 2:
                 switch (args[0].toLowerCase()) {
+                    case "droptable":
+                    if(sender.isOp()||sender.hasPermission("betterelo.droptable")){
+                        handleCreateDropTable(sender,args[1]);
+                    }
+                    break;
                     case "antyweb":
                         if ((sender.hasPermission("betterelo.antyweb") || sender.isOp()) && sender instanceof Player) {
                             Player player = ((Player) sender).getPlayer();
@@ -419,9 +435,27 @@ public class BetterEloCommand implements CommandExecutor {
                 }
                 break;
 
+            case 6:
+                if(args[0].equalsIgnoreCase("addspawner")) {
+                    try {
+                        handleAddSpawnerCommand(sender, args[1], args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]),Integer.parseInt(args[5]));
+                    } catch (Exception e) {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand.onCommand.addspawner exception " + e.getMessage());
+                    }
+                }
+
 
         }
         return true;
+    }
+    private void handleCustomMobsCommands(CommandSender sender){
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.handleCustomMobsCommands called, sender: "+sender.getName());
+        if(sender.isOp() && sender instanceof Player) {
+        customMobs.spawnModifiedZombie((Player) sender);
+    }else{
+        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+
+    }
     }
     private boolean handleAddPointsCommand(CommandSender sender, String player, Double points, String rankingType){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleAddPointsCommand called by "+sender.getName());
@@ -452,7 +486,10 @@ public class BetterEloCommand implements CommandExecutor {
     private boolean handleReloadCommand(CommandSender sender){
         if(sender.hasPermission("betterelo.reload")){
             configManager.ReloadConfig();
-            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " BetterRanks config reloaded!");
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo config.yml reloaded!");
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " BetterElo config reloaded!");
+            customMobsFileManager.loadSpawners();
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo spawners.yml reloaded");
             return true;
         }else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: sender " + sender + " dont have permission to use /br tl");
@@ -587,7 +624,7 @@ public class BetterEloCommand implements CommandExecutor {
         return formattedTime.toString().trim(); // Usunięcie ewentualnych spacji na końcu
     }
     private void HoloTop(Map playerPoints, Location location,HolographicDisplaysAPI api){
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.HoloTop called");
+        pluginLogger.log(PluginLogger.LogLevel.COMMAND, "BetterEloCommand.HoloTop called");
         if(eventHoloTask ==null||eventHoloTask.isCancelled()){
            eventHoloTask = new BukkitRunnable() {
 
@@ -637,6 +674,9 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be firework <power> " + ChatColor.GREEN + "- creates an Infinite Firework with given power");
             sender.sendMessage(ChatColor.AQUA + "/be flamethrower <distance> <range>" + ChatColor.GREEN + "- adds Flamethrower effect");
             sender.sendMessage(ChatColor.AQUA + "/be zephyr <power> " + ChatColor.GREEN + "- adds Zephyr effect");
+            sender.sendMessage(ChatColor.AQUA + "/be addspawner <spawnerName> <mobName> <cooldown(s)> <mobCountPerSpawn> <maxMobs>" + ChatColor.GREEN + "- creates custom mob spawner");
+            sender.sendMessage(ChatColor.AQUA + "/be droptable <name> - opens a GUI to create new drop table");
+            sender.sendMessage(ChatColor.AQUA + "/be killallmobs - kills all custom mobs");
         }
     }
     private void handleTimeLeft(CommandSender sender){
@@ -676,6 +716,22 @@ public class BetterEloCommand implements CommandExecutor {
 
         Player player = (Player) sender;
         guiManager.openMainGui(player); // Otwieramy główne menu GUI dla gracza
+    }
+    private void handleCreateDropTable(CommandSender sender,String dropTableName){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: Player " + sender.getName() + " issued command /be droptable "+dropTableName);
+        if (!sender.hasPermission("betterelo.droptable")||!sender.isOp()) {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand: Player " + sender.getName() + " was denied access to command /be droptable");
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+            return ;
+        }
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " was granted access to command /be droptable");
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " This command can only be used by online players.");
+            return ;
+        }
+
+        Player player = (Player) sender;
+        guiManager.openDroptableGui(player,dropTableName); // Otwieramy główne menu GUI dla gracza
     }
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
         ItemMeta itemMeta = itemStack.getItemMeta();
@@ -754,6 +810,18 @@ public class BetterEloCommand implements CommandExecutor {
         firework.setItemMeta(meta);
         player.getInventory().addItem(firework);
     }
-
+    public void handleAddSpawnerCommand(CommandSender sender, String spawnerName, String mobName, int mobCount, int spawnerCooldown,int maxMobs) {
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
+            if (player.isOp()) {
+                Location targetLocation = player.getTargetBlock(null, 100).getLocation();
+                customMobsFileManager.saveSpawner(targetLocation,spawnerName,mobName,spawnerCooldown,mobCount, maxMobs);
+            } else {
+                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission!");
+            }
+        } else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand:handleAddSpawnerCommand this is only-player command!");
+        }
+    }
 
 }

@@ -22,7 +22,7 @@ public class BetterRanksCheaters {
     }
 
     public void CheckCheatersFromBetterRanks() {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL3, "CheckCheatersFromBetterRanks called");
+        pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "CheckCheatersFromBetterRanks called");
         Plugin betterRanksPlugin = plugin.getServer().getPluginManager().getPlugin("BetterRanks");
         if (betterRanksPlugin == null || !betterRanksPlugin.isEnabled()) {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterRanks plugin is not found or is disabled.");

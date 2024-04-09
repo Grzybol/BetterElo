@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -20,6 +21,7 @@ public class GuiManager implements Listener {
     private final PluginLogger pluginLogger;
     public String periodType = null;
     private String rewardType;
+    private String dropTableName;
 
     private final DataManager dataManager;
     public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager) {
@@ -37,11 +39,18 @@ public class GuiManager implements Listener {
         player.openInventory(subInv);
     }
     public void openMainGui(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 9, "Set Rewards");
+        Inventory inv = Bukkit.createInventory(null, 18, "Set Rewards");
         createItem(inv, Material.APPLE, 1, "daily", "Daily Reward");
         createItem(inv, Material.BREAD, 3, "weekly", "Weekly Reward");
         createItem(inv, Material.DIAMOND, 5, "monthly", "Monthly Reward");
         createItem(inv, Material.EMERALD, 7, "event", "Event Reward");
+        //createItem(inv, Material.EMERALD, 14, "dropTable", "Create new Drop Table");
+        player.openInventory(inv);
+    }
+    public void openDroptableGui(Player player, String dropTable_Name) {
+        dropTableName= dropTable_Name;
+        Inventory inv = Bukkit.createInventory(null, 9, "Set Rewards");
+        createItem(inv, Material.EMERALD, 4, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
     }
     private void createItem(Inventory inv, Material material, int slot, String name, String description) {
@@ -52,7 +61,7 @@ public class GuiManager implements Listener {
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
 
 
@@ -72,6 +81,14 @@ public class GuiManager implements Listener {
             case "Set Rewards":
                 event.setCancelled(true);
                 periodType = currentItem.getItemMeta().getDisplayName();
+                if(periodType.equals("dropTable")){
+                    List<ItemStack> currentRewards = fileRewardManager.loadRewards();
+                    Inventory inv = Bukkit.createInventory(null, 36, "Add Items");
+                    currentRewards.forEach(inv::addItem);
+                    createItem(inv, Material.GREEN_WOOL, 35, "Save", "Save drop table");
+                    player.openInventory(inv);
+                    break;
+                }
                 openSubGui(player);
                 break;
             case "Select Top":
@@ -106,7 +123,12 @@ public class GuiManager implements Listener {
 
                     String fileName=periodType+"_"+rewardType;
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
-                    fileRewardManager.saveRewards(fileName,itemsToSave);
+                    if(periodType.equals("dropTable")){
+                        fileName=dropTableName;
+                        fileRewardManager.saveCustomDrops(fileName, itemsToSave);
+                    }else{
+                        fileRewardManager.saveRewards(fileName, itemsToSave);
+                    }
 
                 }
         }

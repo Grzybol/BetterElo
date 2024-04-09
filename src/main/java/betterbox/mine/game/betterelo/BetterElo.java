@@ -6,6 +6,9 @@ import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
@@ -26,13 +29,18 @@ import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import org.checkerframework.checker.units.qual.C;
+
 public final class BetterElo extends JavaPlugin {
     private PluginLogger pluginLogger;
     private DataManager dataManager;
+    public final Map<Entity, CustomMobs.CustomMob> customMobsMap = new HashMap<>();
     public int eventDuration;
     public boolean isEventEnabled;
     public String eventUnit;
     private Placeholders placeholders;
+    private CustomMobs customMobs;
+    private CustomMobsFileManager customMobsFileManager;
     private CheaterCheckScheduler cheaterCheckScheduler;
     private BetterRanksCheaters betterRanksCheaters;
     private GuiManager guiManager;
@@ -48,6 +56,7 @@ public final class BetterElo extends JavaPlugin {
     public boolean useHolographicDisplays;
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
+    private String folderPath;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -66,7 +75,8 @@ public final class BetterElo extends JavaPlugin {
     public void onEnable() {
         // Inicjalizacja PluginLoggera
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO,PluginLogger.LogLevel.DEBUG, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
-        pluginLogger = new PluginLogger(getDataFolder().getAbsolutePath(), defaultLogLevels,this);
+        folderPath = getDataFolder().getAbsolutePath();
+        pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
@@ -102,13 +112,24 @@ public final class BetterElo extends JavaPlugin {
         } else {
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"BetterElo: onEnable: Warning: PlaceholderAPI not found, placeholders will NOT be available.");
         }
+
+
+
+        customMobsFileManager = new CustomMobsFileManager(folderPath,this, pluginLogger);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling customMobsFileManager.loadSpawners()");
+        customMobsFileManager.loadSpawners();
+        customMobs = new CustomMobs(pluginLogger,this,customMobsFileManager, fileRewardManager);
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
+        customMobs.startSpawnerScheduler();
+
+
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager);
         getServer().getPluginManager().registerEvents(event, this);
-        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB));
+        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);
@@ -153,13 +174,21 @@ public final class BetterElo extends JavaPlugin {
         }else{
             pluginLogger.log(PluginLogger.LogLevel.WARNING,"HolographicDisplays not found! Some feature might not be available");
         }
+        killAllCustomMobs();
 
-
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                loadAndKillCustomMobsFromCache();
+            }
+        }.runTaskLater(this, 20);
 
     }
 
     @Override
     public void onDisable() {
+        saveCustomMobsToCache();
+        removeAndKillAllCustomMobs();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onDisable: Zapisywanie danych przed wyłączeniem pluginu...");
         dataManager.saveDataToFile();
         dataManager.saveDataToFileDaily();
@@ -171,7 +200,69 @@ public final class BetterElo extends JavaPlugin {
         if (dailyTask != null) dailyTask.cancel();
         if (weeklyTask != null) weeklyTask.cancel();
         if (monthlyTask != null) monthlyTask.cancel();
+
+        //customMobs.stopSpawnerScheduler();
     }
+    public void saveCustomMobsToCache() {
+        List<String> mobNames = new ArrayList<>();
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                if (entity.hasMetadata("CustomMob")) {
+                    String customName = entity.getName();
+                    if (!customName.isEmpty()) {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache saving entity "+customName);
+                        mobNames.add(customName);
+                    }
+                }
+            }
+        }
+
+        File cacheFile = new File(getDataFolder(), "customMobsCache.yml");
+        YamlConfiguration cacheConfig = YamlConfiguration.loadConfiguration(cacheFile);
+        cacheConfig.set("customMobNames", mobNames);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache data to save: " + mobNames);
+
+        try {
+            cacheConfig.save(cacheFile);
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.saveCustomMobsToCache IOException: " + e.getMessage());
+        }
+    }
+    public void loadAndKillCustomMobsFromCache() {
+        File cacheFile = new File(getDataFolder(), "customMobsCache.yml");
+        YamlConfiguration cacheConfig = YamlConfiguration.loadConfiguration(cacheFile);
+        List<String> mobNames = cacheConfig.getStringList("customMobNames");
+        int killedMobsCount = 0;
+
+        if (mobNames == null || mobNames.isEmpty()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache cache is empty!");
+            return;
+        } // Jeśli nie ma danych, zakończ metodę
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache mobs from cache: "+mobNames);
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache checking entity "+entity.getName());
+                //entity.getName();
+                if (mobNames.contains(entity.getName())) {
+                    entity.remove();
+                    killedMobsCount++;
+                }
+            }
+        }
+
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.loadAndKillCustomMobsFromCache killed " + killedMobsCount + " mobs");
+
+        // Opcjonalnie: wyczyść plik cache po wczytaniu
+        cacheConfig.set("customMobNames", new ArrayList<String>());
+        try {
+            cacheConfig.save(cacheFile);
+        } catch (IOException e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.loadAndKillCustomMobsFromCache IOException: " + e.getMessage());
+        }
+    }
+
+
+
     // Dodajemy nowe metody do uzyskania pozostałego czasu dla nagród
     public long getRemainingTimeForRewards(String period) {
         //pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: getRemainingTimeForRewards: period: "+period);
@@ -504,6 +595,37 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "Banned player "+bannedPlayer+" is offline - cannot send notification");
         }
 
+    }
+    public void killAllCustomMobs() {
+
+        int killedMobCount=0;
+        for (World world : Bukkit.getWorlds()) {
+            for (LivingEntity entity : world.getLivingEntities()) {
+                if (entity.hasMetadata("CustomMob")) {
+                    // Zabijamy niestandardowego zombiaka
+                    entity.remove();
+                    killedMobCount++;
+                }
+            }
+        }
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.killAllCustomMobs killed "+killedMobCount+" custom mobs.");
+    }
+    public void removeAndKillAllCustomMobs() {
+        for (CustomMobs.CustomMob customMob : customMobsMap.values()) {
+            // Sprawdzanie, czy encja jest nadal żywa przed próbą jej zabicia
+            if (customMob.entity != null && !customMob.entity.isDead()) {
+                customMob.entity.remove(); // Usuwa encję z świata
+
+            }
+        }
+        customMobsMap.clear(); // Czyści mapę po usunięciu wszystkich encji
+    }
+    public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
+        customMobsMap.put(entity, customMob);
+    }
+
+    public CustomMobs.CustomMob getCustomMobFromEntity(Entity entity) {
+        return customMobsMap.get(entity);
     }
 
 }

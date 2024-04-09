@@ -15,11 +15,11 @@ public class CheaterCheckScheduler {
             this.betterRanksCheaters = betterRanksCheaters;
             this.scheduler = scheduler;
             this.pluginLogger = pluginLogger;
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CheaterCheckScheduler called");
+            pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "CheaterCheckScheduler called");
         }
 
         public void startScheduler() {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "startScheduler called");
+            pluginLogger.log(PluginLogger.LogLevel.CHEATERS, "startScheduler called for betterRanksCheaters.CheckCheatersFromBetterRanks()");
             int delay = 0; // Opóźnienie początkowe (0 ticków)
             int period = 100; // Okres w tickach (20 ticków to 1 sekunda)
 
