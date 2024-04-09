@@ -227,7 +227,8 @@ public class CustomMobsFileManager {
         //File mobFile = new File(customMobsFolder, mobName + ".yml");
 
         if (!mobFile.exists()) {
-            plugin.getLogger().warning("Plik dla mobka " + mobFile.toString() + " nie istnieje!");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Mob file '" + mobFile.toString() + "' not found.");
+            //plugin.getLogger().warning("Plik dla mobka " + mobFile.toString() + " nie istnieje!");
             return null;
         }
 
@@ -239,15 +240,21 @@ public class CustomMobsFileManager {
             ItemStack chestplate = loadItemStack(mobData, "equipment.chestplate");
             ItemStack leggings = loadItemStack(mobData, "equipment.leggings");
             ItemStack boots = loadItemStack(mobData, "equipment.boots");
-
+            ItemStack weapon = loadItemStack(mobData, "equipment.weapon");
             // Wczytanie pozostałych danych
             double armor = mobData.getDouble("armor");
             int hp = mobData.getInt("hp");
             double speed = mobData.getDouble("speed");
             double attackDamage = mobData.getDouble("attackDamage");
+            boolean dropEMKS = false;
+            if(mobData.contains("dropEMKS")){
+                dropEMKS = mobData.getBoolean("dropEMKS");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded dropEMKS:" + dropEMKS);
+            }
+
             String mobName = mobData.getString("mobName");
             String entityTypeString = mobData.getString("type");
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS);
             EntityType entityType = EntityType.valueOf(entityTypeString);
 
             // Wczytanie niestandardowych metadanych i ustawienie spawnerName
@@ -256,7 +263,8 @@ public class CustomMobsFileManager {
 
             // Utworzenie instancji CustomMob
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
-            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, dropFileManager, mobName, entityType, helmet, chestplate, leggings, boots, armor, hp, speed, attackDamage, customMetadata);
+            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, dropFileManager, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage, customMetadata);
+            customMob.dropEMKS = dropEMKS;
             return customMob;
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"CustomMobsFileManager.loadCustomMob exception: " + e.getMessage());
