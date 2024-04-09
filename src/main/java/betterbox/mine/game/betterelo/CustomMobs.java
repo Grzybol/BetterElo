@@ -41,13 +41,13 @@ public class CustomMobs {
         LivingEntity entity;
         ItemStack helmet, chestplate, leggings, boots,weapon;
         HashMap< Double,ItemStack> dropTable;
-        double armor, speed, attackDamage, EMKSchance, attackSpeed;
-        int hp;
+        double armor, speed, attackDamage, EMKSchance;
+        int hp,attackSpeed;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin,CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, double attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance) {
+        CustomMob(JavaPlugin plugin,CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance) {
             this.plugin = plugin;
             this.dropEMKS = dropEMKS;
             this.EMKSchance = EMKSchance;
@@ -118,7 +118,9 @@ public class CustomMobs {
             entity.setHealth(hp);
             entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
             entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(attackDamage);
-            entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
+            //plugin.getLogger().info("attackSpeed: "+attackSpeed);
+            //entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
+
 
             entity.setCustomName(mobName);
             entity.setCustomNameVisible(true);

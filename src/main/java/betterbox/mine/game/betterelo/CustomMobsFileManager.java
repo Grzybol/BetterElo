@@ -248,9 +248,9 @@ public class CustomMobsFileManager {
             int hp = mobData.getInt("hp");
             double speed = mobData.getDouble("speed");
             double attackDamage = mobData.getDouble("attackDamage");
-            double EKMSchance = 0.0f;
+            double EKMSchance = 0.0d;
             boolean dropEMKS = false;
-            double attackSpeed = 1;
+            int attackSpeed = 1;
 
 
             if(mobData.contains("dropEMKS")){
@@ -262,7 +262,7 @@ public class CustomMobsFileManager {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded EKMSchance:" + EKMSchance);
             }
             if(mobData.contains("attackSpeed")){
-                attackSpeed = mobData.getDouble("AttackSpeed");
+                attackSpeed = mobData.getInt("attackSpeed");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
             }
             String entityTypeString = mobData.getString("type");
