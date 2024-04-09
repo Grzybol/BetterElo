@@ -250,6 +250,7 @@ public class CustomMobsFileManager {
             double attackDamage = mobData.getDouble("attackDamage");
             double EKMSchance = 0.0f;
             boolean dropEMKS = false;
+            double attackSpeed = 1;
 
 
             if(mobData.contains("dropEMKS")){
@@ -259,6 +260,10 @@ public class CustomMobsFileManager {
             if(mobData.contains("EMKSchance")){
                 EKMSchance = mobData.getDouble("EMKSchance");
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded EKMSchance:" + EKMSchance);
+            }
+            if(mobData.contains("attackSpeed")){
+                attackSpeed = mobData.getDouble("AttackSpeed");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
             }
             String entityTypeString = mobData.getString("type");
             String mobName = mobData.getString("mobName");
@@ -273,7 +278,7 @@ public class CustomMobsFileManager {
 
             // Utworzenie instancji CustomMob
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
-            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage, customMetadata, dropTableName, dropEMKS, EKMSchance);
+            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
             pluginLogger.log(PluginLogger.LogLevel.DROP,"CustomMobsFileManager.loadCustomMob customMob.dropTablename: "+customMob.dropTableName);
 
             return customMob;
