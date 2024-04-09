@@ -959,6 +959,7 @@ public class  Event implements Listener {
                 customMob =  betterElo.getCustomMobFromEntity(entity);
                 if(customMob!=null)
                 {
+                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath customMob.dropTable: "+customMob.dropTable);
                     HashMap<Double, ItemStack> dropTable = customMob.dropTable;
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: "+dropTable);
 
