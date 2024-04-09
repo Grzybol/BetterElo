@@ -941,13 +941,14 @@ public class  Event implements Listener {
     public void onMobDeath(EntityDeathEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
         LivingEntity entity = event.getEntity();
+        CustomMobs.CustomMob customMob = null;
         if (entity.hasMetadata("DeathHandled")) {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mobDeath already processed!");
             return; // Zdarzenie śmierci zostało już obsłużone, więc nic nie rób
         }
         //CustomMobs.CustomMob customMob = entity;
-        if (entity instanceof Zombie && entity.getCustomName() != null && entity.hasMetadata("CustomMob")) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mob check passed");
+        if (entity.hasMetadata("CustomMob")) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath CustomMob metadata check passed");
             List<ItemStack> drops = event.getDrops();
             drops.clear(); // Usuwa standardowy drop, jeśli chcesz
             // Tutaj zakładamy, że niestandardowa nazwa moba jest kluczem do dropTable
@@ -959,7 +960,7 @@ public class  Event implements Listener {
 
                 // Załadowanie dropTable dla tego moba
                 //HashMap<Double, ItemStack> dropTable = fileRewardManager.loadCustomDrops(mobName);
-                CustomMobs.CustomMob customMob =  betterElo.getCustomMobFromEntity(entity);
+                customMob =  betterElo.getCustomMobFromEntity(entity);
                 if(customMob!=null)
                 {
                     HashMap<Double, ItemStack> dropTable = customMob.dropTable;
@@ -976,6 +977,10 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }
                     }
+                    if(customMob.spawnerName!=null){
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath customMob.spawnerName: "+customMob.spawnerName);
+                        customMobs.decreaseMobCount(customMob.spawnerName);
+                    }
                 }else {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
@@ -987,7 +992,7 @@ public class  Event implements Listener {
             drops.add(dropMobKillerSword());
                 pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath EMKS sword added");
             }
-
+            /*
             if(entity.hasMetadata("SpawnerName")){
 
                 String spawnerName = entity.getMetadata("SpawnerName").get(0).asString();
@@ -995,6 +1000,9 @@ public class  Event implements Listener {
                 // Zmniejsz liczbę mobów w spawnerze
                 customMobs.decreaseMobCount(spawnerName);
             }
+             */
+
+
             entity.setMetadata("DeathHandled", new FixedMetadataValue(plugin, true));
         }
 
@@ -1043,7 +1051,7 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
             //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
-            Zombie zombie = (Zombie) entity;
+            //Zombie zombie = (Zombie) entity;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
             //customMobs.updateCustomMobName(zombie);
         }

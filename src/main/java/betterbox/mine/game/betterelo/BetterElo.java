@@ -179,7 +179,7 @@ public final class BetterElo extends JavaPlugin {
         new BukkitRunnable() {
             @Override
             public void run() {
-                loadAndKillCustomMobsFromCache();
+                //loadAndKillCustomMobsFromCache();
             }
         }.runTaskLater(this, 20);
 
@@ -246,6 +246,7 @@ public final class BetterElo extends JavaPlugin {
                 if (mobNames.contains(entity.getName())) {
                     entity.remove();
                     killedMobsCount++;
+                    //customMobs.decreaseMobCount();
                 }
             }
         }

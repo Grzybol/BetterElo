@@ -35,10 +35,11 @@ public class CustomMobs {
     private Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
 
     static class CustomMob {
-        String mobName, dropTablename;
+        String mobName, dropTablename, spawnerName;
+        boolean dropEMKS;
         EntityType entityType;
         LivingEntity entity;
-        ItemStack helmet, chestplate, leggings, boots;
+        ItemStack helmet, chestplate, leggings, boots,weapon;
         HashMap< Double,ItemStack> dropTable;
         double armor, speed, attackDamage;
         int hp;
@@ -46,11 +47,18 @@ public class CustomMobs {
         JavaPlugin plugin;
         FileRewardManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin,FileRewardManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, double armor, int hp, double speed, double attackDamage, Map<String, Object> customMetadata) {
+        CustomMob(JavaPlugin plugin,FileRewardManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, Map<String, Object> customMetadata) {
             this.plugin = plugin;
 
             this.mobName = mobName;
             this.entity = entity;
+            if(weapon!=null){
+                this.weapon = weapon;
+            }else{
+                plugin.getLogger().warning(mobName+" does not have weapon set. Setting AIR");
+                this.weapon = new ItemStack(Material.AIR);
+            }
+
             this.entityType = entityType;
             this.helmet = helmet;
             this.chestplate = chestplate;
@@ -79,7 +87,7 @@ public class CustomMobs {
         public CustomMob cloneForSpawn(Location spawnLocation) {
             CustomMob newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                     this.helmet.clone(), this.chestplate.clone(),
-                    this.leggings.clone(), this.boots.clone(),
+                    this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                     this.armor, this.hp, this.speed,
                     this.attackDamage, new HashMap<>(this.customMetadata));
             newMob.spawnMob(spawnLocation);
@@ -97,7 +105,12 @@ public class CustomMobs {
             entity.getEquipment().setChestplate(chestplate);
             entity.getEquipment().setLeggings(leggings);
             entity.getEquipment().setBoots(boots);
-
+            if(weapon!=null){
+                entity.getEquipment().setItemInMainHand(weapon);
+            }else{
+                plugin.getLogger().warning(mobName+" does not have weapon set. Setting AIR");
+                entity.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+            }
             entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);
             entity.setHealth(hp);
             entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
@@ -124,7 +137,7 @@ public class CustomMobs {
         this.pluginLogger = pluginLogger;
         this.fileManager = fileManager;
         this.fileRewardManager = fileRewardManager;
-        loadCustomMobs(plugin, fileManager, fileRewardManager);
+        loadCustomMobs();
     }
     public void spawnModifiedZombie(Player player) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.spawnModifiedZombie called, player: "+player.getName());
@@ -362,7 +375,7 @@ public class CustomMobs {
     }
 
     // Metoda pomocnicza do zapisywania danych ItemStack, w tym zaklęć
-    private void loadCustomMobs(JavaPlugin plugin, CustomMobsFileManager fileManager, FileRewardManager fileRewardManager) {
+    public void loadCustomMobs() {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.loadCustomMobs called.");
         // Wczytaj customowe moby i przechowaj je w pamięci
         // Dla każdego pliku moba w folderze customMobs
@@ -394,7 +407,7 @@ public class CustomMobs {
             Location adjustedLocation = adjustLocationToAirAbove(location);
             CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
             newMob.customMetadata.put("SpawnerName", spawnerName);
-            // Nie potrzebujesz już wywoływać spawnMob tutaj, ponieważ jest ono wywoływane w cloneForSpawn
+            newMob.spawnerName = spawnerName;
         } else {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }
