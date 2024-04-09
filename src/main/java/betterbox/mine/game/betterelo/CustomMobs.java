@@ -41,15 +41,16 @@ public class CustomMobs {
         LivingEntity entity;
         ItemStack helmet, chestplate, leggings, boots,weapon;
         HashMap< Double,ItemStack> dropTable;
-        double armor, speed, attackDamage;
+        double armor, speed, attackDamage, EMKSchance;
         int hp;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin,CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, Map<String, Object> customMetadata, String dropTableName) {
+        CustomMob(JavaPlugin plugin,CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,ItemStack weapon, double armor, int hp, double speed, double attackDamage, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance) {
             this.plugin = plugin;
-
+            this.dropEMKS = dropEMKS;
+            this.EMKSchance = EMKSchance;
             this.mobName = mobName;
             this.entity = entity;
             if(weapon!=null){
@@ -90,7 +91,7 @@ public class CustomMobs {
                     this.helmet.clone(), this.chestplate.clone(),
                     this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                     this.armor, this.hp, this.speed,
-                    this.attackDamage, new HashMap<>(this.customMetadata), this.dropTableName);
+                    this.attackDamage, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS,this.EMKSchance);
             newMob.spawnMob(spawnLocation);
             return newMob;
         }

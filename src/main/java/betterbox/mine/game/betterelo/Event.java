@@ -981,23 +981,17 @@ public class  Event implements Listener {
                 }else {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
+                if(customMob.dropEMKS) {
+                    double EMKSchance = 0.00;
+                    EMKSchance = customMob.EMKSchance;
+                    double randomValue = Math.random();
+                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS drop chance: " + EMKSchance + ", randomValue: " + randomValue);
+                    if (randomValue <= EMKSchance) {
+                        drops.add(dropMobKillerSword());
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS sword added");
+                    }
+                }
             }
-            double dropChance = 0.01;
-            double randomValue = Math.random();
-            pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath EMKS drop chance: "+dropChance+", randomValue: "+randomValue);
-            if (randomValue <= dropChance) {
-            drops.add(dropMobKillerSword());
-                pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath EMKS sword added");
-            }
-            /*
-            if(entity.hasMetadata("SpawnerName")){
-
-                String spawnerName = entity.getMetadata("SpawnerName").get(0).asString();
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath fromSpawner check passed. spawnerName: "+spawnerName);
-                // Zmniejsz liczbę mobów w spawnerze
-                customMobs.decreaseMobCount(spawnerName);
-            }
-             */
 
 
             entity.setMetadata("DeathHandled", new FixedMetadataValue(plugin, true));
