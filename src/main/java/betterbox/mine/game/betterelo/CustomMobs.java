@@ -237,16 +237,14 @@ public class CustomMobs {
                     int maxMobs = fileManager.getSpawnerMaxMobs(spawnerName);
                     int remainingSlots = Math.max(0, maxMobs - spawnerData.spawnedMobCount);
                     String mobName = fileManager.getSpawnerMobName(spawnerName);
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots);
+                    //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots);
                     if(remainingSlots==0){
                         //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "0 remaining slots for "+spawnerName);
                         continue;
                     }
                     int mobsToSpawn = Math.min(mobCount, remainingSlots);
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots+", mobsToSpawn: "+mobsToSpawn);
                     for (int i = 0; i < mobsToSpawn; i++) {
-                        //spawnModifiedZombie(location,spawnerName);
-                        //spawnModifiedZombieUsingCustomMob(location,spawnerName);
-                        // Increment the spawned mob count for this spawner
                         spawnCustomMob(location,spawnerName,mobName);
                         spawnerData.spawnedMobCount++;
                     }

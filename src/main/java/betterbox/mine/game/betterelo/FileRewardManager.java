@@ -170,7 +170,7 @@ public class FileRewardManager {
         HashMap<Double, ItemStack> drops = new HashMap<>();
         File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
         if (!dropTableFile.exists()) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Tabela dropów " + dropTableName + " nie istnieje.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!");
             return drops;
         }
 
