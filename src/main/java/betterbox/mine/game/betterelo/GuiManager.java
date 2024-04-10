@@ -21,7 +21,7 @@ public class GuiManager implements Listener {
     private final PluginLogger pluginLogger;
     public String periodType = null;
     private String rewardType;
-    private String dropTableName;
+    private String dropTable;
 
     private final DataManager dataManager;
     public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager) {
@@ -47,8 +47,10 @@ public class GuiManager implements Listener {
         //createItem(inv, Material.EMERALD, 14, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
     }
-    public void openDroptableGui(Player player, String dropTable_Name) {
-        dropTableName= dropTable_Name;
+    public void openDroptableGui(Player player, String dropTableName) {
+
+        dropTable= dropTableName;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.openDroptableGui called. dropTableName:"+dropTableName+", dropTable: "+dropTable);
         Inventory inv = Bukkit.createInventory(null, 9, "Set Rewards");
         createItem(inv, Material.EMERALD, 4, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
@@ -124,7 +126,8 @@ public class GuiManager implements Listener {
                     String fileName=periodType+"_"+rewardType;
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
                     if(periodType.equals("dropTable")){
-                        fileName=dropTableName;
+                        fileName=dropTable;
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick droptable: "+fileName);
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }else{
                         fileRewardManager.saveRewards(fileName, itemsToSave);

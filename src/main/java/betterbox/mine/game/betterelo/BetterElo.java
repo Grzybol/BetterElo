@@ -176,12 +176,7 @@ public final class BetterElo extends JavaPlugin {
         }
         killAllCustomMobs();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                //loadAndKillCustomMobsFromCache();
-            }
-        }.runTaskLater(this, 20);
+        checkMobsExistence();
 
     }
 
@@ -627,6 +622,26 @@ public final class BetterElo extends JavaPlugin {
 
     public CustomMobs.CustomMob getCustomMobFromEntity(Entity entity) {
         return customMobsMap.get(entity);
+    }
+    public void checkMobsExistence() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Użyj iteratora, aby uniknąć ConcurrentModificationException podczas usuwania
+                Iterator<Map.Entry<Entity, CustomMobs.CustomMob>> iterator = customMobsMap.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<Entity, CustomMobs.CustomMob> entry = iterator.next();
+                    if (entry.getKey().isDead() || !entry.getKey().isValid()) {
+                        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.  mob "+entry.getKey()+" is dead or does not exists, removing from the list and from the spawner "+entry.getValue().spawnerName);
+                        // Mob nie istnieje, więc możemy go usunąć z mapy
+                        customMobs.decreaseMobCount(entry.getValue().spawnerName);
+                        iterator.remove();
+
+                        // Tutaj możesz również zaimplementować logikę re-spawnu lub inne akcje
+                    }
+                }
+            }
+        }.runTaskTimer(this, 0L, 20L * 60); // Uruchom co 1 minutę (20 ticków = 1 sekunda)
     }
 
 }

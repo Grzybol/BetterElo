@@ -7,6 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -186,45 +187,6 @@ public class CustomMobsFileManager {
         }
     }
 
-
-    /*
-    public CustomMobs.CustomMob loadCustomMob(JavaPlugin plugin, FileRewardManager dropFileManager, String mobName) {
-        File customMobsFolder = new File(plugin.getDataFolder(), "customMobs");
-        File mobFile = new File(customMobsFolder, mobName + ".yml");
-
-        if (!mobFile.exists()) {
-            plugin.getLogger().warning("Plik dla mobka " + mobName + " nie istnieje!");
-            return null;
-        }
-
-        YamlConfiguration mobData = YamlConfiguration.loadConfiguration(mobFile);
-
-        // Wczytanie wyposażenia z pliku
-        ItemStack helmet = loadItemStack(mobData, "equipment.helmet");
-        ItemStack chestplate = loadItemStack(mobData, "equipment.chestplate");
-        ItemStack leggings = loadItemStack(mobData, "equipment.leggings");
-        ItemStack boots = loadItemStack(mobData, "equipment.boots");
-
-        // Wczytanie pozostałych danych
-        double armor = mobData.getDouble("armor");
-        int hp = mobData.getInt("hp");
-        double speed = mobData.getDouble("speed");
-        double attackDamage = mobData.getDouble("attackDamage");
-        String entityTypeString = mobData.getString("type");
-        EntityType entityType = EntityType.valueOf(entityTypeString);
-
-        // Wczytanie niestandardowych metadanych i ustawienie spawnerName
-        Map<String, Object> customMetadata = (Map<String, Object>) mobData.getConfigurationSection("customMetadata").getValues(false);
-        //customMetadata.put("SpawnerName", spawnerName); // Dopisanie nazwy spawnera
-
-        // Utworzenie instancji CustomMob
-        // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
-        CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, dropFileManager, mobName, entityType, helmet, chestplate, leggings, boots, armor, hp, speed, attackDamage, customMetadata);
-
-        return customMob;
-    }
-
-     */
     public CustomMobs.CustomMob loadCustomMob(JavaPlugin plugin, FileRewardManager dropFileManager, File mobFile) {
         //File customMobsFolder = new File(plugin.getDataFolder(), "customMobs");
         //File mobFile = new File(customMobsFolder, mobName + ".yml");
@@ -342,18 +304,27 @@ public class CustomMobsFileManager {
             return drops;
         }
 
-        FileConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
+        YamlConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
 
         dropTableConfig.getKeys(false).forEach(key -> {
             String itemPath = dropTableConfig.getString(key + ".itemPath");
             double dropChance = dropTableConfig.getDouble(key + ".dropChance");
-            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance);
+            boolean AvgDmgBonus = dropTableConfig.getBoolean(key + ".avgDmgBonus");
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance+", avgDmgBonus: "+AvgDmgBonus);
             File itemFile = new File(plugin.getDataFolder(), itemPath);
             if (itemFile.exists()) {
                 try {
                     FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
                     ItemStack itemStack = itemConfig.getItemStack("item");
                     if (itemStack != null) {
+                        if(AvgDmgBonus){
+                            ItemMeta meta = itemStack.getItemMeta();
+                            List<String> lore = new ArrayList<>();
+                            lore.add("AvgDmgBonus");
+                            meta.setLore(lore);
+                            itemStack.setItemMeta(meta);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops added  AvgDmgBonus lore ");
+                        }
                         drops.put(dropChance, itemStack);
                         pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops item: " + itemStack);
                     }

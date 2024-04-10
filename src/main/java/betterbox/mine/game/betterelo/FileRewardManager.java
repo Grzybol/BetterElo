@@ -125,6 +125,7 @@ public class FileRewardManager {
         }
     }
     public void saveCustomDrops(String fileName, List<ItemStack> rewards) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "FileRewardManager.saveCustomDrops called, fileName: "+fileName);
         File customDropsFolder = new File(plugin.getDataFolder() + File.separator + "customDrops");
         if (!customDropsFolder.exists()) {
             customDropsFolder.mkdirs();
@@ -152,7 +153,9 @@ public class FileRewardManager {
                 String itemPath = "customDrops/" + itemFileName;
                 dropTableConfig.set("Item" + index + ".itemPath", itemPath);
                 dropTableConfig.set("Item" + index + ".dropChance", 0.00); // Tutaj można ustawić faktyczną szansę na drop
-                dropTableConfig.set("Item" + index + ".itemName: ", item.displayName()); // Tutaj można ustawić faktyczną szansę na drop
+                String itemNameString = item.getType().toString();
+                dropTableConfig.set("Item" + index + ".itemName", itemNameString); // Tutaj można ustawić faktyczną szansę na drop
+                dropTableConfig.set("Item" + index + ".avgDmgBonus", false); // Tutaj można ustawić faktyczną szansę na drop
                 index++;
             } catch (IOException e) {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać przedmiotu: " + e.getMessage());
@@ -161,6 +164,7 @@ public class FileRewardManager {
 
         try {
             dropTableConfig.save(dropTableFile);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "dropTableConfig saved ");
         } catch (IOException e) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać tabeli dropów: " + e.getMessage());
         }
