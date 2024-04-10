@@ -74,7 +74,7 @@ public class CustomMobs {
             this.speed = speed;
             this.attackDamage = attackDamage;
             this.customMetadata = customMetadata;
-            setupMob();
+            //setupMob();
         }
 
         // Metoda do stworzenia i ustawienia encji moba
@@ -108,6 +108,7 @@ public class CustomMobs {
             entity.getEquipment().setChestplate(chestplate);
             entity.getEquipment().setLeggings(leggings);
             entity.getEquipment().setBoots(boots);
+            entity.setPersistent(true);
             if(weapon!=null){
                 entity.getEquipment().setItemInMainHand(weapon);
             }else{
@@ -145,55 +146,13 @@ public class CustomMobs {
         this.fileRewardManager = fileRewardManager;
         loadCustomMobs();
     }
-    public void spawnModifiedZombie(Player player) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.spawnModifiedZombie called, player: "+player.getName());
+    public void spawnModifiedZombie(Player player, String mobName, int mobCount) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.spawnModifiedZombie called, player: "+player.getName()+", mobName: "+mobName+", mobCount: "+mobCount);
         Location playerLocation = player.getLocation();
-        World world = player.getWorld();
-
-        // Tworzenie zombiaka
-        Zombie zombie = (Zombie) world.spawnEntity(playerLocation, EntityType.ZOMBIE);
-        zombie.setMetadata("CustomZombie", new FixedMetadataValue(plugin, true));
-
-        // Ubieranie zombiaka w zestaw
-        ItemStack helmet = new ItemStack(Material.DIAMOND_HELMET);
-        ItemStack chestplate = new ItemStack(Material.DIAMOND_CHESTPLATE);
-        ItemStack leggings = new ItemStack(Material.DIAMOND_LEGGINGS);
-        ItemStack boots = new ItemStack(Material.DIAMOND_BOOTS);
-
-        zombie.getEquipment().setHelmet(helmet);
-        zombie.getEquipment().setChestplate(chestplate);
-        zombie.getEquipment().setLeggings(leggings);
-        zombie.getEquipment().setBoots(boots);
-
-        // Modyfikowanie parametrów zombiaka
-        // Przykładowe zmiany - możesz dostosować według własnych preferencji
-        zombie.setMaxHealth(1000); // Zwiększenie maksymalnego zdrowia zombiaka
-        zombie.setHealth(1000); // Ustawienie aktualnego zdrowia na maksymalne
-        zombie.setBaby(false); // Upewnienie się, że zombiak nie jest dzieckiem
-        zombie.setCustomName("Modyfikowany Zombiak"); // Ustawienie niestandardowego nazwy
-        zombie.setCustomNameVisible(true); // Wyświetlanie niestandardowej nazwy nad zombiakiem
-
-        // Dodanie modyfikatora do siły ataku zombiaka
-        double attackDamage = 8.0; // Przykładowa wartość siły ataku
-        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "attack_damage", attackDamage, AttributeModifier.Operation.ADD_NUMBER);
-        zombie.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).addModifier(modifier);
-
-        // Modyfikacja dropu zombiaka
-        List<ItemStack> customDrops = new ArrayList<>();
-        ItemStack customDropItem = new ItemStack(Material.DIAMOND);
-        ItemMeta customDropItemMeta = customDropItem.getItemMeta();
-        if (customDropItemMeta != null) {
-            customDropItemMeta.setDisplayName("Niestandardowy Drop");
-            List<String> lore = new ArrayList<>();
-            lore.add("To jest niestandardowy drop zombiaka.");
-            customDropItemMeta.setLore(lore);
-            customDropItem.setItemMeta(customDropItemMeta);
+        //World world = player.getWorld();
+        for (int i=0;i<mobCount;i++) {
+            spawnCustomMob(playerLocation, mobName);
         }
-        customDrops.add(customDropItem);
-        //updateCustomMobName(zombie);
-
-        // Ustawienie niestandardowego dropu
-        //zombie.setCustomDropItems(customDrops);
     }
     public void updateCustomMobName(LivingEntity mob) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName called, mob.getName(): "+mob.getName());
@@ -417,6 +376,19 @@ public class CustomMobs {
             CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
             newMob.customMetadata.put("SpawnerName", spawnerName);
             newMob.spawnerName = spawnerName;
+            //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
+        }
+    }
+    public void spawnCustomMob(Location location, String mobName) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", location: "+location);
+        CustomMob templateMob = customMobsMap.get(mobName);
+        if (templateMob != null) {
+            Location adjustedLocation = adjustLocationToAirAbove(location);
+            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
             //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
             pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
