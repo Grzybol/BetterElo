@@ -983,6 +983,7 @@ public class  Event implements Listener {
 
                                     }
                                 }
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath lore to save: "+lore);
                                 // Zapisz zmodyfikowane lore z powrotem do metadanych przedmiotu
                                 meta.setLore(lore);
                                 item.setItemMeta(meta);

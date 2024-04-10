@@ -319,7 +319,9 @@ public class CustomMobsFileManager {
                     if (itemStack != null) {
                         if(AvgDmgBonus){
                             ItemMeta meta = itemStack.getItemMeta();
-                            List<String> lore = new ArrayList<>();
+                            List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+                            //List<String> lore = new ArrayList<>();
+                            assert lore != null;
                             lore.add("AvgDmgBonus");
                             meta.setLore(lore);
                             itemStack.setItemMeta(meta);
