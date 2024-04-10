@@ -152,7 +152,7 @@ public class FileRewardManager {
                 String itemPath = "customDrops/" + itemFileName;
                 dropTableConfig.set("Item" + index + ".itemPath", itemPath);
                 dropTableConfig.set("Item" + index + ".dropChance", 0.00); // Tutaj można ustawić faktyczną szansę na drop
-
+                dropTableConfig.set("Item" + index + ".itemName: ", item.displayName()); // Tutaj można ustawić faktyczną szansę na drop
                 index++;
             } catch (IOException e) {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać przedmiotu: " + e.getMessage());

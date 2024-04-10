@@ -227,7 +227,7 @@ public class CustomMobs {
 
     public void spawnCustomMobFromSpawner() {
         Map<String, CustomMobsFileManager.SpawnerData> spawnersData = fileManager.spawnersData;
-
+        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnCustomMobFromSpawner called. Loaded spawners: "+spawnersData);
         // Sprawdzenie, czy istnieją spawnerzy w pliku
         if (spawnersData.isEmpty()) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "No spawners found in spawners.yml.");
@@ -237,6 +237,7 @@ public class CustomMobs {
         long currentTime = System.currentTimeMillis();
 
         for (Map.Entry<String, CustomMobsFileManager.SpawnerData> entry : spawnersData.entrySet()) {
+            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner checking spawner: "+entry);
             String spawnerName = entry.getKey();
             CustomMobsFileManager.SpawnerData spawnerData = entry.getValue();
             Location location = getLocationFromString(spawnerData.location);
@@ -244,7 +245,7 @@ public class CustomMobs {
             // Sprawdzenie cooldownu
             if (!canSpawnMobs(spawnerName, fileManager.getSpawnerCooldown(spawnerName))) {
                 pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner " + spawnerName + " is on cooldown. Current spawnedMobCount: "+spawnerData.spawnedMobCount);
-                continue; // Skip spawning if on cooldown
+                return; // Skip spawning if on cooldown
             }
 
             // Spawnowanie zombiaków na podanej lokalizacji
@@ -258,16 +259,18 @@ public class CustomMobs {
                     String mobName = fileManager.getSpawnerMobName(spawnerName);
                     //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots);
                     if(remainingSlots==0){
-                        //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "0 remaining slots for "+spawnerName);
+                        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner 0 remaining slots for "+spawnerName);
                         continue;
                     }
                     int mobsToSpawn = Math.min(mobCount, remainingSlots);
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots+", mobsToSpawn: "+mobsToSpawn);
+                    int spawnedMobs = 0;
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots+", mobsToSpawn: "+mobsToSpawn+", spawnerData.spawnedMobCount: "+spawnerData.spawnedMobCount);
                     for (int i = 0; i < mobsToSpawn; i++) {
                         spawnCustomMob(location,spawnerName,mobName);
                         spawnerData.spawnedMobCount++;
+                        spawnedMobs++;
                     }
-
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner spawnedMobs: "+spawnedMobs);
                     // Ustawianie czasu ostatniego respa mobów z tego spawnera
                     spawnerLastSpawnTimes.put(spawnerName, currentTime);
                 } else {
@@ -287,7 +290,7 @@ public class CustomMobs {
                 double x = Double.parseDouble(parts[1]);
                 double y = Double.parseDouble(parts[2]);
                 double z = Double.parseDouble(parts[3]);
-                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.getLocationFromString locationString: "+locationString+", ");
+                //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.getLocationFromString locationString: "+locationString+", ");
                 return new Location(world, x, y, z);
             } else {
                 return null;
@@ -304,7 +307,7 @@ public class CustomMobs {
             public void run() {
                 spawnCustomMobFromSpawner();
             }
-        }.runTaskTimer(plugin, 0, 100); // Interval converted to ticks (1 second)
+        }.runTaskTimer(plugin, 0, 300); // Interval converted to ticks (1 second)
     }
 
     public void stopSpawnerScheduler() {
@@ -316,11 +319,11 @@ public class CustomMobs {
         pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs " + spawnerName + " cooldown: "+cooldown);
         if (!spawnerLastSpawnTimes.containsKey(spawnerName)) {
             pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs check passed, spawner not on the list, return true");
-            return true; // Gracz jeszcze nie używał fajerwerka
+            return true;
         }
         long lastUsage = spawnerLastSpawnTimes.get(spawnerName);
         long currentTime = System.currentTimeMillis();
-        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs spawnerName: "+spawnerName+", lastUsage: "+lastUsage+", currentTime: "+currentTime);
+        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs spawnerName: "+spawnerName+", lastUsage: "+lastUsage+", currentTime: "+currentTime+", timeleft: "+(cooldown-((currentTime-lastUsage)/1000)));
         return (currentTime - lastUsage) >= (cooldown*1000L);
     }
     public void decreaseMobCount(String spawnerName) {
@@ -415,7 +418,8 @@ public class CustomMobs {
             newMob.customMetadata.put("SpawnerName", spawnerName);
             newMob.spawnerName = spawnerName;
             //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
         } else {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }
