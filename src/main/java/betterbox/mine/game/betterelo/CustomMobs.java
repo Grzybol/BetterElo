@@ -245,7 +245,7 @@ public class CustomMobs {
             // Sprawdzenie cooldownu
             if (!canSpawnMobs(spawnerName, fileManager.getSpawnerCooldown(spawnerName))) {
                 pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner " + spawnerName + " is on cooldown. Current spawnedMobCount: "+spawnerData.spawnedMobCount);
-                return; // Skip spawning if on cooldown
+                continue; // Skip spawning if on cooldown
             }
 
             // Spawnowanie zombiaków na podanej lokalizacji
