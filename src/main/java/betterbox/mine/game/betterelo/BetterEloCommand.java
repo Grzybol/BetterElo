@@ -496,6 +496,7 @@ public class BetterEloCommand implements CommandExecutor {
             customMobsFileManager.loadSpawners();
             pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo spawners.yml reloaded");
             customMobs.loadCustomMobs();
+            //customMobsFileManager.loadCustomDrops();
             return true;
         }else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: sender " + sender + " dont have permission to use /br tl");
@@ -682,7 +683,7 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be zephyr <power> " + ChatColor.GREEN + "- adds Zephyr effect");
             sender.sendMessage(ChatColor.AQUA + "/be addspawner <spawnerName> <mobName> <cooldown(s)> <mobCountPerSpawn> <maxMobs>" + ChatColor.GREEN + "- creates custom mob spawner");
             sender.sendMessage(ChatColor.AQUA + "/be droptable <name> - opens a GUI to create new drop table");
-            sender.sendMessage(ChatColor.AQUA + "/be killallmobs - kills all custom mobs");
+            sender.sendMessage(ChatColor.AQUA + "/be spawnmob <mobname> <amount> - spawn given custom mob");
         }
     }
     private void handleTimeLeft(CommandSender sender){

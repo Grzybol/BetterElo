@@ -968,6 +968,25 @@ public class  Event implements Listener {
                         double rolledCance = Math.random();
                         double dropChance = entry.getKey()/100;
                         if ( rolledCance< dropChance) { // entry.getKey() to szansa na drop
+                            ItemStack item = entry.getValue();
+                            ItemMeta meta = entry.getValue().getItemMeta();
+                            if (meta.hasLore()) {
+                                List<String> lore = meta.getLore();
+                                for (int i = 0; i < lore.size(); i++) {
+                                    // Sprawdź, czy linia zawiera szukany tekst
+                                    if (lore.get(i).contains("AvgDmgBonus")) {
+                                        // Zastąp znalezioną linię nowym tekstem
+                                        String AvgDmgBonus = CustomMobs.dropAverageDamage();
+                                        lore.set(i, AvgDmgBonus);
+                                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added AvgDmgBonus: "+AvgDmgBonus);
+                                        break; // Przerwij pętlę, jeśli chcesz zastąpić tylko pierwsze wystąpienie
+
+                                    }
+                                }
+                                // Zapisz zmodyfikowane lore z powrotem do metadanych przedmiotu
+                                meta.setLore(lore);
+                                item.setItemMeta(meta);
+                            }
                             drops.add(entry.getValue());
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }else{
