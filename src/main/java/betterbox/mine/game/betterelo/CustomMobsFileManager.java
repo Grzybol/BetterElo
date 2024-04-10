@@ -116,6 +116,7 @@ public class CustomMobsFileManager {
                 int maxMobs = spawnerSection.getInt("maxMobs");
                 // Zapisywanie danych spawnera do struktury w pamięci
                 spawnersData.put(key, new SpawnerData(key,location, mobName, cooldown,mobCount, maxMobs));
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "Spawner "+key+" with mobName: "+mobName+", location: ("+location+"), cooldown: "+cooldown+", mobsPerSpawn: "+mobCount+", maxMobs: "+maxMobs+" loaded!");
             }
         }
         pluginLogger.log(PluginLogger.LogLevel.INFO, "Loaded spawners data from file.");
@@ -299,9 +300,15 @@ public class CustomMobsFileManager {
         if (mobData.contains(path + ".enchants")) {
             ConfigurationSection enchantsSection = mobData.getConfigurationSection(path + ".enchants");
             for (String key : enchantsSection.getKeys(false)) {
+                try {
                 Enchantment enchantment = Enchantment.getByKey(org.bukkit.NamespacedKey.minecraft(key.toLowerCase()));
                 if (enchantment != null) {
-                    itemStack.addEnchantment(enchantment, enchantsSection.getInt(key));
+
+                        itemStack.addEnchantment(enchantment, enchantsSection.getInt(key));
+
+                }
+                }catch (Exception e){
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid enchant "+key.toLowerCase()+" in "+mobData.getString("mobName"));
                 }
             }
         }

@@ -974,8 +974,10 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }
                     }
+
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath customMob.mobName: "+customMob.mobName+", customMob.spawnerName: "+customMob.spawnerName);
                     if(customMob.spawnerName!=null){
-                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath customMob.spawnerName: "+customMob.spawnerName);
+
                         customMobs.decreaseMobCount(customMob.spawnerName);
                     }
                 }else {

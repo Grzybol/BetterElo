@@ -80,9 +80,6 @@ public class BetterEloCommand implements CommandExecutor {
                         }
                         betterElo.killAllCustomMobs();
                         break;
-                    case "zombietest":
-                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
-                        handleCustomMobsCommands(sender);
                     case "addelytra":
                         if (sender instanceof Player) {
                             Player player = (Player) sender;
@@ -366,7 +363,15 @@ public class BetterEloCommand implements CommandExecutor {
                 }
 
             case 3:
+                if (sender.isOp()&& Objects.equals(args[0], "spawnmob")){
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
+                    try{
+                        handleCustomMobsCommands(sender, args[1], Integer.parseInt(args[2]));
+                    }catch (Exception e){
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterEloCommand.OnCommand spawnmob command generated exception: "+e);
+                    }
 
+                }
                 if ((sender.hasPermission("betterelo.flamethrower") || sender.isOp()) && sender instanceof Player && Objects.equals(args[0], "flamethrower")) {
                     Player player = ((Player) sender).getPlayer();
                     assert player != null;
@@ -448,10 +453,10 @@ public class BetterEloCommand implements CommandExecutor {
         }
         return true;
     }
-    private void handleCustomMobsCommands(CommandSender sender){
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.handleCustomMobsCommands called, sender: "+sender.getName());
+    private void handleCustomMobsCommands(CommandSender sender, String mobName, int mobCount){
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.handleCustomMobsCommands called, sender: "+sender.getName()+", mobName: "+mobName+", mobCount: "+mobCount);
         if(sender.isOp() && sender instanceof Player) {
-        customMobs.spawnModifiedZombie((Player) sender);
+        customMobs.spawnModifiedZombie((Player) sender,mobName,mobCount);
     }else{
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
 
