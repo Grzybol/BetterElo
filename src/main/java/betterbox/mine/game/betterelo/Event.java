@@ -28,6 +28,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -1117,17 +1118,21 @@ public class  Event implements Listener {
         if (event.getDamager() instanceof Player) {
             Player player = (Player) event.getDamager();
             ItemStack itemInHand = player.getInventory().getItemInMainHand();
+            List<ItemStack> equippedItems = getPlayerEquippedItems(player);
 
             if (itemInHand.hasItemMeta()) {
                 ItemMeta meta = itemInHand.getItemMeta();
                 if (meta != null && meta.hasLore()) {
                     List<String> lore = meta.getLore();
                     if (lore != null) {
-                        int averageDamageBonusPercent = 0;
+                        double averageDamageBonusPercent = 0;
                         int minDamage = 0;
                         int maxDamage = 0;
+
                         boolean validDamageLoreFound = false;
                         boolean validAverageDamage = false;
+
+                        averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems);
                         for (String line : lore) {
                             if (line.startsWith("§6§lMob Damage") || line.startsWith("Mob Damage")) {
                                 try {
@@ -1138,29 +1143,18 @@ public class  Event implements Listener {
                                 } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
                                     pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing damage range from lore: " + line);
                                 }
-                            }else if (line.startsWith("§6§lAverage Damage +")) {
-                                try {
-                                    String percentString = line.replace("§6§lAverage Damage +", "").replace("%", "");
-                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent percentString: " + percentString);
-                                    averageDamageBonusPercent = Integer.parseInt(percentString);
-                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent averageDamageBonusPercent: " + averageDamageBonusPercent);
-                                    validAverageDamage = true;
-                                } catch (NumberFormatException e) {
-                                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
-                                }
                             }
 
                         }
-                        // Jeśli znaleziono lore z obrażeniami, oblicz i zastosuj obrażenia
-                        if (validDamageLoreFound) {
-                            int averageDamage = (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
+
+                            double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
                             int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
-                            int totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
+                            double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
                             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", bonusAverageDamage: "+bonusDamage);
                             event.setDamage(totalDamage);
                             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage);
                             return;
-                        }
+
                     }
                 }
             }
@@ -1170,6 +1164,74 @@ public class  Event implements Listener {
         event.setCancelled(true);
 
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
+    }
+    public List<ItemStack> getPlayerEquippedItems(Player player) {
+        EntityEquipment equipment = player.getEquipment();
+        List<ItemStack> equippedItems = new ArrayList<>();
+
+        if (equipment != null) {
+            // Dodawanie przedmiotu trzymanego w głównej ręce
+            if (equipment.getItemInMainHand() != null) {
+                equippedItems.add(equipment.getItemInMainHand());
+            }
+            // Dodawanie przedmiotu trzymanego w pomocniczej ręce
+            if (equipment.getItemInOffHand() != null) {
+                equippedItems.add(equipment.getItemInOffHand());
+            }
+            // Dodawanie elementów zbroi
+            for (ItemStack item : equipment.getArmorContents()) {
+                if (item != null) {
+                    equippedItems.add(item);
+                }
+            }
+
+        }
+        return equippedItems;
+    }
+    public double getTotalAvgDmgBonus(List<ItemStack> equippedItems){
+        double averageDamageBonusPercent = 0;
+        if(equippedItems==null){
+            return averageDamageBonusPercent;
+        }
+            for (ItemStack item : equippedItems){
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.hasLore()) {
+                    List<String> lore = meta.getLore();
+                    for (String line : lore) {
+                        if (line.startsWith("§6§lAverage Damage +")) {
+                            try {
+                                String percentString = line.replace("§6§lAverage Damage +", "").replace("%", "");
+                                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus percentString: " + percentString);
+                                averageDamageBonusPercent += Integer.parseInt(percentString);
+                                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus added averageDamageBonusPercent: " + averageDamageBonusPercent);
+                            } catch (NumberFormatException e) {
+                                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
+                            }
+                        }
+
+                    }
+                }
+            }
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus  total averageDamageBonusPercent: " + averageDamageBonusPercent);
+            return averageDamageBonusPercent;
+    }
+    public boolean isValidAverageDamage (ArrayList<ItemStack> equippedItems){
+        boolean isValidAverageDamage = false;
+            for (ItemStack item : equippedItems){
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.hasLore()) {
+                    List<String> lore = meta.getLore();
+                    for (String line : lore) {
+                        if (line.startsWith("§6§lAverage Damage +")) {
+                            isValidAverageDamage = true;pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus  total isValidAverageDamage: " + isValidAverageDamage);
+                            return isValidAverageDamage;
+                        }
+
+                    }
+                }
+            }
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus  total isValidAverageDamage: " + isValidAverageDamage);
+        return isValidAverageDamage;
     }
 
 }
