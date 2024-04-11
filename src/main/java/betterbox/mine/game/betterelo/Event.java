@@ -1022,8 +1022,8 @@ public class  Event implements Listener {
 
     }
     private ItemStack dropMobKillerSword(){
-        int minDamage = 10 + (int) (Math.random() * 65); // Losuje wartość od 10 do 100
-        int maxDamage = minDamage + (int) (Math.random() * (101 - minDamage)); // Losuje wartość od minDamage do 100
+        int minDamage = 25 + (int) (Math.random() * 40); // Losuje wartość od 10 do 100
+        int maxDamage = minDamage + (int) (Math.random() * (131 - minDamage)); // Losuje wartość od minDamage do 100
 
         // Dodaj swój niestandardowy drop
         ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
