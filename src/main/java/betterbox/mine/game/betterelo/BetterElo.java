@@ -102,8 +102,7 @@ public final class BetterElo extends JavaPlugin {
         fileRewardManager = new FileRewardManager(this, pluginLogger);
         // Jeśli FileRewardManager wymaga inicjalizacji, dodaj tutaj
         // Inicjalizacja GuiManager
-        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager);
-        getServer().getPluginManager().registerEvents(guiManager, this);
+
         // Inicjalizacja Placeholders
         placeholders = new Placeholders(dataManager, this);
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -122,7 +121,8 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
         customMobs.startSpawnerScheduler();
 
-
+        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager);
+        getServer().getPluginManager().registerEvents(guiManager, this);
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
