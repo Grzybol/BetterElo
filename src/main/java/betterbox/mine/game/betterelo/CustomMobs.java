@@ -40,7 +40,8 @@ public class CustomMobs {
         EntityType entityType;
         LivingEntity entity;
         ItemStack helmet, chestplate, leggings, boots,weapon;
-        HashMap< Double,ItemStack> dropTable;
+        //HashMap< Double,ItemStack> dropTable;
+        List<CustomMobsFileManager.DropItem> dropTable;
         double armor, speed, attackDamage, EMKSchance;
         int hp,attackSpeed;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
@@ -67,7 +68,8 @@ public class CustomMobs {
             this.boots = boots;
             this.dropFileManager = dropFileManager;
             this.dropTableName = dropTableName;
-            this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
+            //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
+            this.dropTable = dropFileManager.loadCustomDropsv2(dropTableName);
             this.armor = armor;
             this.hp = hp;
             this.attackSpeed = attackSpeed;

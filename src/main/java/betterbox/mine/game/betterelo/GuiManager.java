@@ -72,10 +72,18 @@ public class GuiManager implements Listener {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.openDroptableGui called. dropTableName:" + dropTableName + ", dropTable: " + dropTable);
 
         Inventory inv = Bukkit.createInventory(null, 54, "Add Items"); // Zwiększ rozmiar inwentarza, aby pomieścić więcej przedmiotów
+        /*
         HashMap<Double, ItemStack> drops = mobsFileManager.loadCustomDrops(dropTableName); // Wczytaj przedmioty z tabeli dropów
 
         // Umieść przedmioty w oknie GUI
         drops.values().forEach(inv::addItem);
+
+         */
+
+        List<CustomMobsFileManager.DropItem> drops = mobsFileManager.loadCustomDropsv2(dropTableName); // Wczytaj przedmioty z tabeli dropów
+
+        // Umieść przedmioty w oknie GUI
+        drops.stream().map(CustomMobsFileManager.DropItem::getItemStack).forEach(inv::addItem);
 
         // Dodaj przycisk do zapisania tabeli dropów
         createItem(inv, Material.GREEN_WOOL, 53, "Save", "Save drop table");
