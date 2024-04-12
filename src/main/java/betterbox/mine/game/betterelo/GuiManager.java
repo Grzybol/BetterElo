@@ -13,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 public class GuiManager implements Listener {
@@ -22,13 +23,15 @@ public class GuiManager implements Listener {
     public String periodType = null;
     private String rewardType;
     private String dropTable;
+    private final CustomMobsFileManager mobsFileManager;
 
     private final DataManager dataManager;
-    public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager) {
+    public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager, CustomMobsFileManager mobsFileManager) {
         this.fileRewardManager = fileRewardManager;
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
         this.mainClass = mainClass;
+        this.mobsFileManager=mobsFileManager;
     }
     public void openSubGui(Player player) {
         Inventory subInv = Bukkit.createInventory(null, 9, "Select Top");
@@ -47,7 +50,7 @@ public class GuiManager implements Listener {
         //createItem(inv, Material.EMERALD, 14, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
     }
-    public void openDroptableGui(Player player, String dropTableName) {
+    public void openDroptableGuiOld(Player player, String dropTableName) {
 
         dropTable= dropTableName;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.openDroptableGui called. dropTableName:"+dropTableName+", dropTable: "+dropTable);
@@ -63,15 +66,40 @@ public class GuiManager implements Listener {
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
+    public void openDroptableGui(Player player, String dropTableName) {
+        dropTable = dropTableName;
+        periodType = "dropTable";
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.openDroptableGui called. dropTableName:" + dropTableName + ", dropTable: " + dropTable);
+
+        Inventory inv = Bukkit.createInventory(null, 54, "Add Items"); // Zwiększ rozmiar inwentarza, aby pomieścić więcej przedmiotów
+        /*
+        HashMap<Double, ItemStack> drops = mobsFileManager.loadCustomDrops(dropTableName); // Wczytaj przedmioty z tabeli dropów
+
+        // Umieść przedmioty w oknie GUI
+        drops.values().forEach(inv::addItem);
+
+         */
+
+        List<CustomMobsFileManager.DropItem> drops = mobsFileManager.loadCustomDropsv2(dropTableName); // Wczytaj przedmioty z tabeli dropów
+
+        // Umieść przedmioty w oknie GUI
+        drops.stream().map(CustomMobsFileManager.DropItem::getItemStack).forEach(inv::addItem);
+
+        // Dodaj przycisk do zapisania tabeli dropów
+        createItem(inv, Material.GREEN_WOOL, 53, "Save", "Save drop table");
+
+        player.openInventory(inv);
+    }
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
 
 
         String title = event.getView().getTitle();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick called. title:"+title);
         if (!Arrays.asList("Set Rewards", "Add Items", "Select Top").contains(title)) {
             return;
         }
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick called. title:"+title);
+
 
         Player player = (Player) event.getWhoClicked();
         ItemStack currentItem = event.getCurrentItem();
@@ -109,18 +137,23 @@ public class GuiManager implements Listener {
             case "Add Items":
                 //save button check
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items");
-                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 35) {
+                if (currentItem.getType() == Material.GREEN_WOOL && (event.getSlot() == 35 || event.getSlot() == 53)) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items - save called.");
                     event.setCancelled(true);
                     Inventory inventory = event.getInventory();
                     List<ItemStack> itemsToSave = new ArrayList<>();
                     for (int i = 0; i < inventory.getSize(); i++) {
-                        if (i != 35) { // Pomijamy slot przycisku "Save"
-                            ItemStack item = inventory.getItem(i);
-                            if (item != null && item.getType() != Material.AIR) {
+                        if (i == 35 || i == 53) { // Pomijamy slot przycisku "Save"
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick save button, skipping.");
+                            continue;
+                        }
+                        ItemStack item = inventory.getItem(i);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick save: item: "+item);
+                        if (item != null && item.getType() != Material.AIR) {
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick no air save: item: "+item);
                                 itemsToSave.add(item);
                             }
-                        }
+
                     }
 
                     String fileName=periodType+"_"+rewardType;

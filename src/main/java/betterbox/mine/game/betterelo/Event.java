@@ -961,16 +961,17 @@ public class  Event implements Listener {
                 if(customMob!=null)
                 {
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath customMob.dropTable: "+customMob.dropTable);
-                    HashMap<Double, ItemStack> dropTable = customMob.dropTable;
+                    //HashMap<Double, ItemStack> dropTable = customMob.dropTable;
+                    List<CustomMobsFileManager.DropItem> dropTable = customMob.dropTable;
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: "+dropTable);
 
                     // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
-                    for (Map.Entry<Double, ItemStack> entry : dropTable.entrySet()) {
+                    for (CustomMobsFileManager.DropItem dropItem : dropTable) {
                         double rolledCance = Math.random();
-                        double dropChance = entry.getKey()/100;
+                        double dropChance = dropItem.getDropChance()/100;
                         if ( rolledCance< dropChance) { // entry.getKey() to szansa na drop
-                            ItemStack item = entry.getValue();
-                            ItemMeta meta = entry.getValue().getItemMeta();
+                            ItemStack item = dropItem.getItemStack();
+                            ItemMeta meta = item.getItemMeta();
                             if (meta.hasLore()) {
                                 List<String> lore = meta.getLore();
                                 for (int i = 0; i < lore.size(); i++) {
@@ -989,7 +990,7 @@ public class  Event implements Listener {
                                 meta.setLore(lore);
                                 item.setItemMeta(meta);
                             }
-                            drops.add(entry.getValue());
+                            drops.add(item);
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }else{
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);

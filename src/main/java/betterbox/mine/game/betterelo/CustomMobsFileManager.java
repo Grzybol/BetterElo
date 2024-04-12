@@ -1,5 +1,6 @@
 package betterbox.mine.game.betterelo;
 
+import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -53,6 +54,42 @@ public class CustomMobsFileManager {
             this.spawnedMobCount = 0; // Initialize the spawned mob counter to 0
         }
     }
+    public class DropItem {
+        private double dropChance;
+        private ItemStack itemStack;
+        private boolean avgDmgBonus;
+
+        public DropItem(double dropChance, ItemStack itemStack, boolean avgDmgBonus) {
+            this.dropChance = dropChance;
+            this.itemStack = itemStack;
+            this.avgDmgBonus = avgDmgBonus;
+        }
+
+        public double getDropChance() {
+            return dropChance;
+        }
+
+        public void setDropChance(double dropChance) {
+            this.dropChance = dropChance;
+        }
+
+        public ItemStack getItemStack() {
+            return itemStack;
+        }
+
+        public void setItemStack(ItemStack itemStack) {
+            this.itemStack = itemStack;
+        }
+
+        public boolean isAvgDmgBonus() {
+            return avgDmgBonus;
+        }
+
+        public void setAvgDmgBonus(boolean avgDmgBonus) {
+            this.avgDmgBonus = avgDmgBonus;
+        }
+    }
+
 
     private void CreateCustomMobsFolder(String folderPath) {
         try {
@@ -338,5 +375,41 @@ public class CustomMobsFileManager {
         pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops drops: " + drops);
         return drops;
     }
+
+    public List<DropItem> loadCustomDropsv2(String dropTableName) {
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops called, dropTableName: " + dropTableName);
+        List<DropItem> drops = new ArrayList<>();
+        File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
+        if (!dropTableFile.exists()) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!");
+            return drops;
+        }
+
+        YamlConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
+
+        dropTableConfig.getKeys(false).forEach(key -> {
+            String itemPath = dropTableConfig.getString(key + ".itemPath");
+            double dropChance = dropTableConfig.getDouble(key + ".dropChance");
+            boolean avgDmgBonus = dropTableConfig.getBoolean(key + ".avgDmgBonus");
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance+", avgDmgBonus: "+avgDmgBonus);
+            File itemFile = new File(plugin.getDataFolder(), itemPath);
+            if (itemFile.exists()) {
+                try {
+                    FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
+                    ItemStack itemStack = itemConfig.getItemStack("item");
+                    if (itemStack != null) {
+                        DropItem dropItem = new DropItem(dropChance, itemStack, avgDmgBonus);
+                        drops.add(dropItem);
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops item: " + itemStack);
+                    }
+                } catch (Exception e) {
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage());
+                }
+            }
+        });
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops drops: " + drops);
+        return drops;
+    }
+
 
 }
