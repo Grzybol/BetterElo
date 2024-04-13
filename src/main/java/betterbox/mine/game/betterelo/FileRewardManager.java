@@ -61,6 +61,21 @@ public class FileRewardManager {
         }
         return rewards;
     }
+    public List<ItemStack> loadReRollCost() {
+        File rewardsFile = new File(plugin.getDataFolder(), "reroll.yml");
+        if (!rewardsFile.exists()) {
+            return new ArrayList<>(); // return empty list if the file does not exist
+        }
+        FileConfiguration config = YamlConfiguration.loadConfiguration(rewardsFile);
+        List<ItemStack> rewards = new ArrayList<>();
+        for (String key : config.getConfigurationSection("items").getKeys(false)) {
+            ItemStack item = config.getItemStack("items." + key);
+            if (item != null && item.getType() != Material.AIR) {
+                rewards.add(item);
+            }
+        }
+        return rewards;
+    }
     public List<ItemStack> loadRewards(Player player) {
         File rewardsFile = new File(plugin.getDataFolder(), rewardType + ".yml");
         if (!rewardsFile.exists()) {

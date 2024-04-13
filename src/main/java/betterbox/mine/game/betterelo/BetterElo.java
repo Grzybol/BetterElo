@@ -121,7 +121,7 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
         customMobs.startSpawnerScheduler();
 
-        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager);
+        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager, customMobs, this);
         getServer().getPluginManager().registerEvents(guiManager, this);
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
@@ -637,7 +637,7 @@ public final class BetterElo extends JavaPlugin {
                 while (iterator.hasNext()) {
                     Map.Entry<Entity, CustomMobs.CustomMob> entry = iterator.next();
                     if (entry.getKey().isDead() || !entry.getKey().isValid()) {
-                        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.  mob "+entry.getKey()+" is dead or does not exists, removing from the list and from the spawner "+entry.getValue().spawnerName);
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.  mob "+entry.getKey()+" is dead or does not exists, removing from the list and from the spawner "+entry.getValue().spawnerName);
                         // Mob nie istnieje, więc możemy go usunąć z mapy
                         customMobs.decreaseMobCount(entry.getValue().spawnerName);
                         iterator.remove();

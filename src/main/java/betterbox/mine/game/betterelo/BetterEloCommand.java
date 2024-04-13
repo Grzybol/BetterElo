@@ -73,6 +73,9 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "reroll":
+                        handleRerollCommand(sender);
+                        break;
                     case "killallmobs":
                         if(!sender.isOp()){
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
@@ -666,6 +669,7 @@ public class BetterEloCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.AQUA + "/be weekly " + ChatColor.GREEN + "- Returns top10 weekly ranking/Zwraca info o top10 rankingu tygodniowego");
         sender.sendMessage(ChatColor.AQUA + "/be monthly " + ChatColor.GREEN + "- Returns top10 monthly ranking/Zwraca info o top10 rankingu miesięcznego");
         sender.sendMessage(ChatColor.AQUA + "/be event " + ChatColor.GREEN + "- Returns event info/Zwraca info o evencie");
+        sender.sendMessage(ChatColor.AQUA + "/be reroll " + ChatColor.GREEN + "- Open Re-Roll GUI for AvgDmg bonus items");
         if(sender.isOp()){
             sender.sendMessage(ChatColor.AQUA + "/be setrewards " + ChatColor.GREEN + "- Opens a GUI for changing the rewards");
             sender.sendMessage(ChatColor.AQUA + "/be reload " + ChatColor.GREEN + "- Reloads the config file ");
@@ -739,6 +743,13 @@ public class BetterEloCommand implements CommandExecutor {
 
         Player player = (Player) sender;
         guiManager.openDroptableGui(player,dropTableName); // Otwieramy główne menu GUI dla gracza
+    }
+    public void handleRerollCommand (CommandSender sender){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.handleRerollCommand called, sender: "+sender);
+        if(sender instanceof Player){
+            Player player = (Player) sender;
+            guiManager.openReRollGui(player);
+        }
     }
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
         ItemMeta itemMeta = itemStack.getItemMeta();
