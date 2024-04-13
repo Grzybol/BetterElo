@@ -976,7 +976,8 @@ public class  Event implements Listener {
                                 List<String> lore = meta.getLore();
                                 for (int i = 0; i < lore.size(); i++) {
                                     // Sprawdź, czy linia zawiera szukany tekst
-                                    if (lore.get(i).contains("AvgDmgBonus")) {
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
+                                    if (dropItem.isAvgDmgBonus()) {
                                         // Zastąp znalezioną linię nowym tekstem
                                         String AvgDmgBonus = CustomMobs.dropAverageDamage();
                                         lore.set(i, AvgDmgBonus);
