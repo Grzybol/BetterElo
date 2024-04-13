@@ -617,7 +617,12 @@ public final class BetterElo extends JavaPlugin {
         customMobsMap.clear(); // Czyści mapę po usunięciu wszystkich encji
     }
     public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
         customMobsMap.put(entity, customMob);
+    }
+    public void unregisterCustomMob(Entity entity) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
+        customMobsMap.remove(entity);
     }
 
     public CustomMobs.CustomMob getCustomMobFromEntity(Entity entity) {
@@ -636,6 +641,22 @@ public final class BetterElo extends JavaPlugin {
                         // Mob nie istnieje, więc możemy go usunąć z mapy
                         customMobs.decreaseMobCount(entry.getValue().spawnerName);
                         iterator.remove();
+                        String spawnerName = entry.getValue().spawnerName;
+
+
+                        if(!entry.getKey().isValid()){
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.checkMobsExistence  mob "+entry.getKey()+" does not exists! SpawnerName: "+spawnerName);
+                            if (spawnerName != null) {
+
+                                Map<String, CustomMobsFileManager.SpawnerData> spawnersData = customMobsFileManager.spawnersData;
+                                CustomMobsFileManager.SpawnerData spawnerData = spawnersData.get(spawnerName);
+                                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.checkMobsExistence  mob "+entry.getKey()+" does not exists! spawnerData.spawnedMobCount: "+spawnerData.spawnedMobCount);
+                                if (spawnerData.spawnedMobCount == 0) {
+                                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.checkMobsExistence  resetting cooldown on spawner: "+spawnerName);
+                                    customMobs.spawnerLastSpawnTimes.put(spawnerName, System.currentTimeMillis() - spawnerData.cooldown * 1000L);
+                                }
+                            }
+                        }
 
                         // Tutaj możesz również zaimplementować logikę re-spawnu lub inne akcje
                     }
