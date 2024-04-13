@@ -53,6 +53,9 @@ public class CustomMobsFileManager {
             this.maxMobs = maxMobs;
             this.spawnedMobCount = 0; // Initialize the spawned mob counter to 0
         }
+        public int getSpawnedMobCount() {
+            return this.spawnedMobCount;
+        }
     }
     public class DropItem {
         private double dropChance;

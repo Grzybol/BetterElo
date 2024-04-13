@@ -972,20 +972,20 @@ public class  Event implements Listener {
                         if ( rolledCance< dropChance) { // entry.getKey() to szansa na drop
                             ItemStack item = dropItem.getItemStack();
                             ItemMeta meta = item.getItemMeta();
-                            if (meta.hasLore()) {
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
+                            int i=0;
+                            if (dropItem.isAvgDmgBonus()) {
                                 List<String> lore = meta.getLore();
-                                for (int i = 0; i < lore.size(); i++) {
-                                    // Sprawdź, czy linia zawiera szukany tekst
-                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
-                                    if (dropItem.isAvgDmgBonus()) {
-                                        // Zastąp znalezioną linię nowym tekstem
-                                        String AvgDmgBonus = CustomMobs.dropAverageDamage();
-                                        lore.set(i, AvgDmgBonus);
-                                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added AvgDmgBonus: "+AvgDmgBonus);
-                                        break; // Przerwij pętlę, jeśli chcesz zastąpić tylko pierwsze wystąpienie
-
+                                    // Zastąp znalezioną linię nowym tekstem
+                                    String AvgDmgBonus = CustomMobs.dropAverageDamage();
+                                    if(lore!=null) {
+                                        lore.add(AvgDmgBonus);
+                                    }else{
+                                        lore.set(0,AvgDmgBonus);
                                     }
-                                }
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added AvgDmgBonus: "+AvgDmgBonus);
+
+
                                 pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath lore to save: "+lore);
                                 // Zapisz zmodyfikowane lore z powrotem do metadanych przedmiotu
                                 meta.setLore(lore);
@@ -1003,6 +1003,7 @@ public class  Event implements Listener {
 
                         customMobs.decreaseMobCount(customMob.spawnerName);
                     }
+                    betterElo.unregisterCustomMob(entity);
                 }else {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }

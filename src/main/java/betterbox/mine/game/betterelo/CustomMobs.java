@@ -32,7 +32,7 @@ public class CustomMobs {
     private final CustomMobsFileManager fileManager;
     private static final Random random = new Random();
     private BukkitTask spawnerTask;
-    private Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
+    public Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
 
     static class CustomMob {
         String mobName, dropTableName, spawnerName;
