@@ -99,7 +99,15 @@ public class GuiManager implements Listener {
     }
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
+        if(event.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE || event.getCurrentItem().getType() == Material.GREEN_WOOL){
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick green wool or blank pane clicked, cancelling..");
+            event.setCancelled(true);
 
+        }
+        Player player = (Player) event.getWhoClicked();
+        ItemStack currentItem = event.getCurrentItem();
+        Inventory playerInventory = player.getInventory();
+        ItemStack[] savedInventory = playerInventory.getContents();
 
         String title = event.getView().getTitle();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick called. title:"+title);
@@ -108,8 +116,8 @@ public class GuiManager implements Listener {
         }
 
 
-        Player player = (Player) event.getWhoClicked();
-        ItemStack currentItem = event.getCurrentItem();
+
+
         if (currentItem == null || currentItem.getType() == Material.AIR) {
             return;
         }
@@ -178,12 +186,9 @@ public class GuiManager implements Listener {
                 break;
             case "AvgDmg bonus change":
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Average Damage bonus re-roll");
-                if(event.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE){
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick re-roll, blank slot manipulated, cancelling..");
-                    event.setCancelled(true);
-                    return;
-                }
+
                 if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5){
+                    playerInventory.setContents(savedInventory);
                     event.setCancelled(true);
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Average Damage bonus re-roll clicked");
                     Inventory inventory = event.getInventory();
@@ -220,9 +225,8 @@ public class GuiManager implements Listener {
                     }
                 }
                 break;
+            }
 
-
-        }
     }
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
@@ -341,7 +345,7 @@ public class GuiManager implements Listener {
     private ItemStack getBetterCoinStack() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getBetterCoinStack called");
         Material material = Material.HONEYCOMB;
-        int amount = 1;
+        int amount = 64;
 
         ItemStack stack = new ItemStack(material, amount);
         ItemMeta meta = stack.getItemMeta();
