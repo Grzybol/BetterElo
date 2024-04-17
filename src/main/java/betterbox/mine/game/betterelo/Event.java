@@ -1060,7 +1060,7 @@ public class  Event implements Listener {
             ItemStack itemInHand = damager.getInventory().getItemInMainHand();
             List<ItemStack> equippedItems = getPlayerEquippedItems(damager);
             double averageDamageBonusPercent =0;
-            averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems);
+            averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems)/100;
             double totalDamage = event.getDamage() + event.getDamage()*averageDamageBonusPercent;
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage);
 
