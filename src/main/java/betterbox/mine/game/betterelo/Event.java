@@ -1049,7 +1049,6 @@ public class  Event implements Listener {
             return null;
         }
     }
-
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
@@ -1057,6 +1056,15 @@ public class  Event implements Listener {
 
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
+
+            ItemStack itemInHand = damager.getInventory().getItemInMainHand();
+            List<ItemStack> equippedItems = getPlayerEquippedItems(damager);
+            double averageDamageBonusPercent =0;
+            averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems);
+            double totalDamage = event.getDamage() + event.getDamage()*averageDamageBonusPercent;
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage);
+
+            event.setDamage(totalDamage);
             //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
 
             // Aktualizacja czasu ostatniego uderzenia
@@ -1076,45 +1084,7 @@ public class  Event implements Listener {
 
 
     }
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onDamageUpdateCustomMobHealth(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof LivingEntity) {
-            LivingEntity entity = (LivingEntity) event.getEntity();
-            if (entity.hasMetadata("CustomMob")) {
-                // Opóźnienie wykonania aktualizacji nazwy, aby zdążyć na aktualizację zdrowia
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    // Sprawdzenie, czy mob nadal żyje przed aktualizacją nazwy
-                    if (!entity.isDead()) {
-                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected. Updating name.");
-                        customMobs.updateCustomMobName(entity);
-                    }
-                }, 1L); // Opóźnienie o 1 tick
-            }
-        }
-    }
 
-    /*
-    @EventHandler
-    public void EntityDamageEvent(EntityDamageEvent event) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.EntityDamageEvent  called");
-        Entity entity = event.getEntity();
-        if (entity instanceof LivingEntity) {
-            LivingEntity livingEntity  = (LivingEntity) event.getEntity();
-            if (entity.hasMetadata("CustomZombie")) {
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent custom mob detected");
-                try {
-                    //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) livingEntity;
-                    //Zombie zombie = (Zombie) entity;
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-                    customMobs.updateCustomMobName(livingEntity);
-                }catch (Exception e){
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.EntityDamageEvent exception "+e.getMessage());
-                }
-            }
-        }
-    }
-
-     */
     public void customEntityDamageEvent(EntityDamageByEntityEvent event){
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
 
@@ -1168,6 +1138,23 @@ public class  Event implements Listener {
 
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
     }
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDamageUpdateCustomMobHealth(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof LivingEntity) {
+            LivingEntity entity = (LivingEntity) event.getEntity();
+            if (entity.hasMetadata("CustomMob")) {
+                // Opóźnienie wykonania aktualizacji nazwy, aby zdążyć na aktualizację zdrowia
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    // Sprawdzenie, czy mob nadal żyje przed aktualizacją nazwy
+                    if (!entity.isDead()) {
+                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected. Updating name.");
+                        customMobs.updateCustomMobName(entity);
+                    }
+                }, 1L); // Opóźnienie o 1 tick
+            }
+        }
+    }
+
     public List<ItemStack> getPlayerEquippedItems(Player player) {
         EntityEquipment equipment = player.getEquipment();
         List<ItemStack> equippedItems = new ArrayList<>();

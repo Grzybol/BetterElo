@@ -178,6 +178,7 @@ public class CustomMobs {
     public static String dropAverageDamage() {
         // Używamy funkcji wykładniczej do zmniejszenia prawdopodobieństwa wyższych wartości
         double x = -Math.log(random.nextDouble()) / 10.0; // Dostosuj parametr 10.0, aby zmienić rozkład
+       //double y = random.
         int bonus = (int) Math.round(x * 100); // Skalowanie wyniku
 
         // Ograniczamy wartość bonusu do maksymalnie 60%
