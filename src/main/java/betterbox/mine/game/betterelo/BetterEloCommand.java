@@ -74,7 +74,9 @@ public class BetterEloCommand implements CommandExecutor {
             case 1:
                 switch (args[0].toLowerCase()) {
                     case "reroll":
-                        handleRerollCommand(sender);
+                        if(sender.isOp()) {
+                            handleRerollCommand(sender);
+                        }
                         break;
                     case "killallmobs":
                         if(!sender.isOp()){
