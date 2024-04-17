@@ -6,7 +6,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -19,13 +18,13 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
-public class GuiManager implements Listener {
+public class GuiManager{
     private final FileRewardManager fileRewardManager;
     private final BetterElo mainClass;
     private final PluginLogger pluginLogger;
     public String periodType = null;
-    private String rewardType;
-    private String dropTable;
+    public String rewardType;
+    public String dropTable;
     private final CustomMobsFileManager mobsFileManager;
     private CustomMobs customMobs;
     private JavaPlugin plugin;
@@ -65,7 +64,7 @@ public class GuiManager implements Listener {
         createItem(inv, Material.EMERALD, 4, "dropTable", "Create new Drop Table");
         player.openInventory(inv);
     }
-    private void createItem(Inventory inv, Material material, int slot, String name, String description) {
+    public void createItem(Inventory inv, Material material, int slot, String name, String description) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
@@ -97,167 +96,7 @@ public class GuiManager implements Listener {
 
         player.openInventory(inv);
     }
-    @EventHandler(priority = EventPriority.LOW)
-    public void onInventoryClick(InventoryClickEvent event) {
-        if(event.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE || event.getCurrentItem().getType() == Material.GREEN_WOOL){
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick green wool or blank pane clicked, cancelling..");
-            event.setCancelled(true);
 
-        }
-        Player player = (Player) event.getWhoClicked();
-        ItemStack currentItem = event.getCurrentItem();
-        Inventory playerInventory = player.getInventory();
-        ItemStack[] savedInventory = playerInventory.getContents();
-
-        String title = event.getView().getTitle();
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick called. title:"+title);
-        if (!Arrays.asList("Set Rewards", "Add Items", "Select Top", "AvgDmg bonus change").contains(title)) {
-            return;
-        }
-
-
-
-
-        if (currentItem == null || currentItem.getType() == Material.AIR) {
-            return;
-        }
-        Inventory inv;
-        //String rewardTypeTemp = currentItem.getItemMeta().getDisplayName();
-        switch (title) {
-            case "Set Rewards":
-                event.setCancelled(true);
-                periodType = currentItem.getItemMeta().getDisplayName();
-                if(periodType.equals("dropTable")){
-                    List<ItemStack> currentRewards = fileRewardManager.loadRewards();
-                    inv = Bukkit.createInventory(null, 36, "Add Items");
-                    currentRewards.forEach(inv::addItem);
-                    createItem(inv, Material.GREEN_WOOL, 35, "Save", "Save drop table");
-                    player.openInventory(inv);
-                    break;
-                }
-                openSubGui(player);
-                break;
-            case "Select Top":
-                event.setCancelled(true);
-                rewardType = currentItem.getItemMeta().getDisplayName();
-                pluginLogger.log("GuiManager.onInventoryClick: rewardType:" + rewardType + " periodType:" + periodType);
-                fileRewardManager.setRewardType(periodType, rewardType);
-                List<ItemStack> currentRewards = fileRewardManager.loadRewards();
-                inv = Bukkit.createInventory(null, 36, "Add Items");
-                currentRewards.forEach(inv::addItem);
-                createItem(inv, Material.GREEN_WOOL, 35, "Save", "Save rewards");
-                //createItem(inv, Material.ORANGE_WOOL, 34, "Reset", "Resetuj czas");
-                //createItem(inv, Material.YELLOW_WOOL, 33, "Reedem", "Rozdaj nagrody");
-                player.openInventory(inv);
-                break;
-            case "Add Items":
-                //save button check
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items");
-                if (currentItem.getType() == Material.GREEN_WOOL && (event.getSlot() == 35 || event.getSlot() == 53)) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items - save called.");
-                    event.setCancelled(true);
-                    Inventory inventory = event.getInventory();
-                    List<ItemStack> itemsToSave = new ArrayList<>();
-                    for (int i = 0; i < inventory.getSize(); i++) {
-                        if (i == 35 || i == 53) { // Pomijamy slot przycisku "Save"
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick save button, skipping.");
-                            continue;
-                        }
-                        ItemStack item = inventory.getItem(i);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick save: item: "+item);
-                        if (item != null && item.getType() != Material.AIR) {
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick no air save: item: "+item);
-                                itemsToSave.add(item);
-                            }
-
-                    }
-
-                    String fileName=periodType+"_"+rewardType;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
-                    if(periodType.equals("dropTable")){
-                        fileName=dropTable;
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick droptable: "+fileName);
-                        fileRewardManager.saveCustomDrops(fileName, itemsToSave);
-                    }else{
-                        fileRewardManager.saveRewards(fileName, itemsToSave);
-                    }
-
-                }
-                break;
-            case "AvgDmg bonus change":
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Average Damage bonus re-roll");
-
-                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5){
-                    playerInventory.setContents(savedInventory);
-                    event.setCancelled(true);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Average Damage bonus re-roll clicked");
-                    Inventory inventory = event.getInventory();
-                    ItemStack item0 = inventory.getItem(3);
-                    if (item0 != null && item0.hasItemMeta()) {
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, item0: "+item0+", item0.hasItemMeta(): "+item0.hasItemMeta());
-                        ItemMeta meta0 = item0.getItemMeta();
-                        boolean slot0Condition = meta0.getLore().stream().anyMatch(line -> line.contains("Average Damage"));
-                        ItemMeta meta  = item0.getItemMeta();
-                        //List<String> lore = meta.getLore();
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, slot0Condition: "+slot0Condition);
-
-                        if (slot0Condition) {
-                            ItemStack result = item0.clone();
-                            ItemMeta resultMeta = result.getItemMeta();
-                            List<String> lore = new ArrayList<>(resultMeta.getLore());
-                            for (int i = 0; i < lore.size(); i++) {
-                                if (lore.get(i).contains("Average Damage")) {
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, Average Damage lore line found i: " + i);
-                                    if(checkAndRemoveBetterCoins(player)) {
-                                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
-                                        lore.set(i, customMobs.dropAverageDamage());
-                                        break;
-                                    }
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player has no money for the re-roll." );
-                                }
-                            }
-                            resultMeta.setLore(lore);
-                            result.setItemMeta(resultMeta);
-                            inventory.setItem(3, result);
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick result placed back in slot 3");
-
-                        }
-                    }
-                }
-                break;
-            }
-
-    }
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        Player player = (Player) event.getPlayer();
-        Inventory closedInventory = event.getInventory();
-
-        // Check if the closed inventory is the same one we're interested in
-        if (event.getView().getTitle().equalsIgnoreCase("AvgDmg bonus change")) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Checking items in closed GUI");
-
-            ItemStack itemInSlot0 = closedInventory.getItem(3);
-            if (itemInSlot0 != null && itemInSlot0.hasItemMeta()) {
-                ItemMeta meta = itemInSlot0.getItemMeta();
-                if (meta.getLore().stream().anyMatch(line -> line.contains("Average Damage"))) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Item with 'Average damage' found in slot 0");
-
-                    // Optional: Directly give back the item to the player's inventory
-                    if (player.getInventory().addItem(itemInSlot0).size() == 0) {
-                        // Item successfully added to player's inventory
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Item returned to player inventory");
-                        closedInventory.clear(3);  // Clear the slot after returning item
-                    } else {
-                        // Inventory full, drop item at player's location
-                        player.getWorld().dropItem(player.getLocation(), itemInSlot0);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Inventory full, item dropped at player's location");
-                        closedInventory.clear(3);  // Clear the slot
-                    }
-                }
-            }
-        }
-    }
 
     private void handleReRollEvent(InventoryClickEvent event, Inventory inv) {
         if (event.getSlot() == 2) { // Zapobieganie interakcji z wynikowym slotem

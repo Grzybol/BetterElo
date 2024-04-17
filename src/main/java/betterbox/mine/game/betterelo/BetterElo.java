@@ -122,12 +122,11 @@ public final class BetterElo extends JavaPlugin {
         customMobs.startSpawnerScheduler();
 
         guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager, customMobs, this);
-        getServer().getPluginManager().registerEvents(guiManager, this);
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
