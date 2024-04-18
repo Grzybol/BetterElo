@@ -74,7 +74,7 @@ public class BetterEloCommand implements CommandExecutor {
             case 1:
                 switch (args[0].toLowerCase()) {
                     case "reroll":
-                        if(sender.isOp()) {
+                        if(sender.isOp() || sender.hasPermission("betterelo.reroll")) {
                             handleRerollCommand(sender);
                         }
                         break;
