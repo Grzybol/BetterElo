@@ -1242,6 +1242,11 @@ public class  Event implements Listener {
     }
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        if (player.hasMetadata("avgDmgRerolled")) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick avgDmgRerolled event already handled!");
+            return;
+        }
         if(event.getCurrentItem()==null){
             return;
         }
@@ -1250,7 +1255,7 @@ public class  Event implements Listener {
             event.setCancelled(true);
 
         }
-        Player player = (Player) event.getWhoClicked();
+
         ItemStack currentItem = event.getCurrentItem();
         Inventory playerInventory = player.getInventory();
         ItemStack[] savedInventory = playerInventory.getContents();
@@ -1357,6 +1362,13 @@ public class  Event implements Listener {
                                     if( guiManager.checkAndRemoveBetterCoins(player)) {
                                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
                                         lore.set(i, customMobs.dropAverageDamage());
+                                        player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
+                                        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                player.removeMetadata("avgDmgRerolled", plugin);
+                                            }
+                                        }, 1L);
                                         break;
                                     }
                                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player has no money for the re-roll." );
