@@ -136,11 +136,11 @@ public final class BetterElo extends JavaPlugin {
         rewardStates.put("monthly", true);
         // Inicjalizacja nagród i ich harmonogramów (kod z metody onEnable z klasy RewardManager)
         loadRewards();
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Planowanie nagród dziennych...");
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Scheduling daily ranking rewards...");
         scheduleRewards("daily", TimeUnit.DAYS.toMillis(1), false);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Planowanie nagród tygodniowych...");
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Scheduling weekly ranking rewards...");
         scheduleRewards("weekly", TimeUnit.DAYS.toMillis(7), false);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Planowanie nagród miesięcznych...");
+        pluginLogger.log(PluginLogger.LogLevel.INFO,"Scheduling monthly ranking rewards...");
         scheduleRewards("monthly", 0, true);
 
         File dataFolder = this.getDataFolder();
@@ -346,35 +346,39 @@ public final class BetterElo extends JavaPlugin {
         FileConfiguration config = getConfig();
         long lastScheduledTime = config.getLong(period + "LastScheduledTime", System.currentTimeMillis());
         long delay;
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: period: "+period+" periodMillis: "+periodMillis+" LastScheduledTime: "+lastScheduledTime);
-        if (useNextMonthTime) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(lastScheduledTime);
-            calendar.add(Calendar.MONTH, 1);
-            delay = (calendar.getTimeInMillis() - System.currentTimeMillis()) / 1000 * 20;
-        } else {
-            delay = (periodMillis - (System.currentTimeMillis() - lastScheduledTime)) / 1000 * 20;
-        }
-
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: period: "+period+" periodMillis: "+periodMillis+" Computed delay: " + delay);
-
-        if (delay < 0) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: Negative delay detected, starting rewardAndReschedule");
-            rewardAndReschedule(period, periodMillis, useNextMonthTime);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: BukkitRunnable: rewardAndReschedule done");
-            return;
-        }
-        //saveConfig();
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (rewardStates.get(period)) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: BukkitRunnable: starting rewardAndReschedule");
-                    rewardAndReschedule(period, periodMillis, useNextMonthTime);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: scheduleRewards: BukkitRunnable: rewardAndReschedule done");
-                }
+        try{
+            pluginLogger.log(PluginLogger.LogLevel.RANKING_REWARDS, "BetterElo: scheduleRewards: period: " + period + " periodMillis: " + periodMillis + " LastScheduledTime: " + lastScheduledTime);
+            if (useNextMonthTime) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(lastScheduledTime);
+                calendar.add(Calendar.MONTH, 1);
+                delay = (calendar.getTimeInMillis() - System.currentTimeMillis()) / 1000 * 20;
+            } else {
+                delay = (periodMillis - (System.currentTimeMillis() - lastScheduledTime)) / 1000 * 20;
             }
-        }.runTaskLater(this, delay);
+
+            pluginLogger.log(PluginLogger.LogLevel.RANKING_REWARDS, "BetterElo: scheduleRewards: period: " + period + " periodMillis: " + periodMillis + " Computed delay: " + delay);
+
+            if (delay < 0) {
+                pluginLogger.log(PluginLogger.LogLevel.RANKING_REWARDS, "BetterElo: scheduleRewards: Negative delay detected, starting rewardAndReschedule");
+                rewardAndReschedule(period, periodMillis, useNextMonthTime);
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "Ranking "+period+" has finished!");
+                return;
+            }
+            //saveConfig();
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (rewardStates.get(period)) {
+                        pluginLogger.log(PluginLogger.LogLevel.RANKING_REWARDS, "BetterElo: scheduleRewards: BukkitRunnable: starting rewardAndReschedule");
+                        rewardAndReschedule(period, periodMillis, useNextMonthTime);
+                        pluginLogger.log(PluginLogger.LogLevel.RANKING_REWARDS, "BetterElo: scheduleRewards: BukkitRunnable: rewardAndReschedule done");
+                    }
+                }
+            }.runTaskLater(this, delay);
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo: scheduleRewards exception: "+e.getMessage());
+        }
     }
     public void stopEvent(){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.stopEvent called");

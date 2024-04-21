@@ -94,5 +94,9 @@ permissions:
   betterelo.flamethrower:
     description: flamethrower
     default: op
+  betterelo.reroll:
+    description: Grants access to /be reroll
+    default: op
+
 
 

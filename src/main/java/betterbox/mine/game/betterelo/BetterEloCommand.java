@@ -76,6 +76,8 @@ public class BetterEloCommand implements CommandExecutor {
                     case "reroll":
                         if(sender.isOp() || sender.hasPermission("betterelo.reroll")) {
                             handleRerollCommand(sender);
+                        }else{
+                            noPermission(sender);
                         }
                         break;
                     case "killallmobs":
@@ -842,6 +844,9 @@ public class BetterEloCommand implements CommandExecutor {
         } else{
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand:handleAddSpawnerCommand this is only-player command!");
         }
+    }
+    private void noPermission(CommandSender sender){
+        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command");
     }
 
 }
