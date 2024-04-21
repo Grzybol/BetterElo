@@ -1345,6 +1345,7 @@ public class  Event implements Listener {
                     Inventory inventory = event.getInventory();
                     ItemStack item0 = inventory.getItem(3);
                     if (item0 != null && item0.hasItemMeta()) {
+
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, item0: "+item0+", item0.hasItemMeta(): "+item0.hasItemMeta());
                         ItemMeta meta0 = item0.getItemMeta();
                         boolean slot0Condition = meta0.getLore().stream().anyMatch(line -> line.contains("Average Damage"));
@@ -1396,9 +1397,9 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Checking items in closed GUI");
 
             ItemStack itemInSlot0 = closedInventory.getItem(3);
-            if (itemInSlot0 != null && itemInSlot0.hasItemMeta()) {
+            if (itemInSlot0 != null) {
                 ItemMeta meta = itemInSlot0.getItemMeta();
-                if (meta.getLore().stream().anyMatch(line -> line.contains("Average Damage"))) {
+                //if (meta.getLore().stream().anyMatch(line -> line.contains("Average Damage"))) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Item with 'Average damage' found in slot 0");
 
                     // Optional: Directly give back the item to the player's inventory
@@ -1412,7 +1413,7 @@ public class  Event implements Listener {
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Inventory full, item dropped at player's location");
                         closedInventory.clear(3);  // Clear the slot
                     }
-                }
+                //}
             }
         }
     }
