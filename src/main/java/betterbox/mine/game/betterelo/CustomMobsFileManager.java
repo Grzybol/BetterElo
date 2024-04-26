@@ -258,21 +258,21 @@ public class CustomMobsFileManager {
 
             if(mobData.contains("dropEMKS")){
                 dropEMKS = mobData.getBoolean("dropEMKS");
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded dropEMKS:" + dropEMKS);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded dropEMKS:" + dropEMKS);
             }
             if(mobData.contains("EMKSchance")){
                 EKMSchance = mobData.getDouble("EMKSchance");
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded EKMSchance:" + EKMSchance);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded EKMSchance:" + EKMSchance);
             }
             if(mobData.contains("attackSpeed")){
                 attackSpeed = mobData.getInt("attackSpeed");
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
             }
             String entityTypeString = mobData.getString("type");
             String mobName = mobData.getString("mobName");
             String dropTableName = mobData.getString("dropTable");
 
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS+", EKMSchance: "+EKMSchance+", dropTablename: "+dropTableName);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropEMKS: "+dropEMKS+", EKMSchance: "+EKMSchance+", dropTablename: "+dropTableName);
             EntityType entityType = EntityType.valueOf(entityTypeString);
 
             // Wczytanie niestandardowych metadanych i ustawienie spawnerName

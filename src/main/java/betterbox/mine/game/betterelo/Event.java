@@ -1360,7 +1360,7 @@ public class  Event implements Listener {
                             for (int i = 0; i < lore.size(); i++) {
                                 if (lore.get(i).contains("Average Damage")) {
                                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, Average Damage lore line found i: " + i);
-                                    if( guiManager.checkAndRemoveBetterCoins(player)) {
+                                    if( guiManager.checkAndRemoveBetterCoins(player) || guiManager.checkAndRemoveEnchantItem(player)) {
                                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
                                         lore.set(i, customMobs.dropAverageDamage());
                                         player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
