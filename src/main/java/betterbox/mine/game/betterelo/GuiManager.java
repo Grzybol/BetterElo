@@ -159,7 +159,7 @@ public class GuiManager{
         createItem(inv, blank, 1, "", "");
         createItem(inv, blank, 2, "", "");
         createItem(inv, blank, 4, "", "");
-        createItem(inv, Material.GREEN_WOOL, 5, "Re-Roll Average Damage bonus", "Cost: 64x BetterCoin");
+        createItem(inv, Material.GREEN_WOOL, 5, "Re-Roll Average Damage bonus", "Cost: 1x "+ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Enchant Item");
         createItem(inv, blank, 6, "", "");
         createItem(inv, blank, 7, "", "");
         createItem(inv, blank, 8, "", "");

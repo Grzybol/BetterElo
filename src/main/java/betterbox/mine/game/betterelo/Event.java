@@ -416,7 +416,11 @@ public class  Event implements Listener {
                 Player player = event.getPlayer();
                 String uuid = player.getUniqueId().toString();
                 double base = configManager.blockBase;
-
+                if(!isEloAllowed(player,player.getLocation())){
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "Event: onPlayerDeath noElo zone!");
+                    player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
+                    return;
+                }
                 double playerElo = dataManager.getPoints(uuid,"main");
                 double pointsEarnedMain = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
                 addPoints(uuid,pointsEarnedMain,"main");
@@ -1360,7 +1364,7 @@ public class  Event implements Listener {
                             for (int i = 0; i < lore.size(); i++) {
                                 if (lore.get(i).contains("Average Damage")) {
                                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, Average Damage lore line found i: " + i);
-                                    if( guiManager.checkAndRemoveBetterCoins(player) || guiManager.checkAndRemoveEnchantItem(player)) {
+                                    if( guiManager.checkAndRemoveEnchantItem(player)) {
                                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
                                         lore.set(i, customMobs.dropAverageDamage());
                                         player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
