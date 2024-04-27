@@ -416,7 +416,11 @@ public class  Event implements Listener {
                 Player player = event.getPlayer();
                 String uuid = player.getUniqueId().toString();
                 double base = configManager.blockBase;
-
+                if(!isEloAllowed(player,player.getLocation())){
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "Event: onPlayerDeath noElo zone!");
+                    player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
+                    return;
+                }
                 double playerElo = dataManager.getPoints(uuid,"main");
                 double pointsEarnedMain = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
                 addPoints(uuid,pointsEarnedMain,"main");
@@ -1357,10 +1361,13 @@ public class  Event implements Listener {
                             ItemStack result = item0.clone();
                             ItemMeta resultMeta = result.getItemMeta();
                             List<String> lore = new ArrayList<>(resultMeta.getLore());
+                            boolean mobDamage=false;
                             for (int i = 0; i < lore.size(); i++) {
-                                if (lore.get(i).contains("Average Damage")) {
+                                if(lore.get(i).contains("Mob Damage"))
+                                    mobDamage=true;
+                                if (lore.get(i).contains("Average Damage") && mobDamage) {
                                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, Average Damage lore line found i: " + i);
-                                    if( guiManager.checkAndRemoveBetterCoins(player)) {
+                                    if( guiManager.checkAndRemoveEnchantItem(player)) {
                                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
                                         lore.set(i, customMobs.dropAverageDamage());
                                         player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));

@@ -62,10 +62,18 @@ public class CustomMobs {
             }
 
             this.entityType = entityType;
-            this.helmet = helmet;
-            this.chestplate = chestplate;
-            this.leggings = leggings;
-            this.boots = boots;
+            if(helmet!=null) {
+                this.helmet = helmet;
+            }
+            if(chestplate!=null) {
+                this.chestplate = chestplate;
+            }
+            if(leggings!=null) {
+                this.leggings = leggings;
+            }
+            if(boots!=null) {
+                this.boots = boots;
+            }
             this.dropFileManager = dropFileManager;
             this.dropTableName = dropTableName;
             //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
@@ -357,6 +365,9 @@ public class CustomMobs {
                     CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile);
                     if (customMob != null) {
                         customMobsMap.put(customMob.getMobName(), customMob);
+                    }else
+                    {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs could not load custom mob "+customMob);
                     }
                 } catch (Exception e) {
                     pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs exception: " + e.getMessage());

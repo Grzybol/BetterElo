@@ -73,6 +73,14 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "enchantitem":
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.onCommand enchantitem called, sender: "+sender);
+                        if(!sender.isOp()){
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                            break;
+                        }
+                        createEncahntItem(sender);
+                        break;
                     case "reroll":
                         if(sender.isOp() || sender.hasPermission("betterelo.reroll")) {
                             handleRerollCommand(sender);
@@ -754,6 +762,17 @@ public class BetterEloCommand implements CommandExecutor {
             Player player = (Player) sender;
             guiManager.openReRollGui(player);
         }
+    }
+
+    private void createEncahntItem(CommandSender sender){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.createEncahntItem called, sender: "+sender);
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " This command can only be used by online players.");
+            return ;
+        }
+        Player player = (Player) sender;
+        ItemStack enchantItem = guiManager.getEnchantItem();
+        player.getInventory().addItem(enchantItem);
     }
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
         ItemMeta itemMeta = itemStack.getItemMeta();

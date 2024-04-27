@@ -3,6 +3,7 @@ package betterbox.mine.game.betterelo;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -10,6 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -120,8 +122,11 @@ public class GuiManager{
                 ItemStack result = item0.clone();
                 ItemMeta resultMeta = result.getItemMeta();
                 List<String> lore = new ArrayList<>(resultMeta.getLore());
+                boolean mobDamage = false;
                 for (int i = 0; i < lore.size(); i++) {
-                    if (lore.get(i).contains("Average Damage")) {
+                    if(lore.get(i).contains("Mob Damage"))
+                        mobDamage=true;
+                    if (lore.get(i).contains("Average Damage")&& mobDamage) {
                         lore.set(i, customMobs.dropAverageDamage());
                         break;
                     }
@@ -157,7 +162,7 @@ public class GuiManager{
         createItem(inv, blank, 1, "", "");
         createItem(inv, blank, 2, "", "");
         createItem(inv, blank, 4, "", "");
-        createItem(inv, Material.GREEN_WOOL, 5, "Re-Roll Average Damage bonus", "Cost: 64x BetterCoin");
+        createItem(inv, Material.GREEN_WOOL, 5, "Re-Roll Average Damage bonus", "Cost: 1x "+ChatColor.DARK_PURPLE+""+ChatColor.BOLD+"Enchant Item");
         createItem(inv, blank, 6, "", "");
         createItem(inv, blank, 7, "", "");
         createItem(inv, blank, 8, "", "");
@@ -179,6 +184,44 @@ public class GuiManager{
         }
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveBetterCoins 64 BetterCoin not found");
         return false;
+    }
+    public boolean checkAndRemoveEnchantItem(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem called, player : "+player);
+        Inventory inventory = player.getInventory();
+        ItemStack enchantItemStack = getEnchantItem();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem betterCoinStack: "+enchantItemStack);
+        // Sprawdź, czy gracz ma co najmniej 64 BetterCoin w ekwipunku
+        if (inventory.containsAtLeast(enchantItemStack, 1)) {
+            // Usuń 64 sztuki BetterCoin z ekwipunku gracza
+            inventory.removeItem(enchantItemStack);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item found, removing : "+enchantItemStack);
+            return true;
+        }
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item not found");
+        return false;
+    }
+    public ItemStack getEnchantItem(){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getEnchantItem called");
+        Material material = Material.GHAST_TEAR;
+        int amount = 1;
+
+        ItemStack stack = new ItemStack(material, amount);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.DARK_PURPLE+""+ ChatColor.BOLD+"Enchant Item");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getEnchantItem meta.getDisplayName(): "+meta.getDisplayName());
+            //Component displayNameComponent = new Component("BetterCoin");
+            List<String> lore = List.of(ChatColor.GRAY+ "Removes current the Average Damage bonus",ChatColor.GRAY+ " from the item and adds new one.");
+            meta.setLore(lore);
+            // Dodajemy niestandardowy enchant, który nie wpływa na działanie itemu
+            meta.addEnchant(Enchantment.LUCK, 1, true);
+
+            // Ukrywamy wszystkie informacje o zaklęciach na itemie
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+            stack.setItemMeta(meta);
+        }
+        return stack;
     }
 
     private ItemStack getBetterCoinStack() {
