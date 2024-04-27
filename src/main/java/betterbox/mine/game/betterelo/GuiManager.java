@@ -122,8 +122,11 @@ public class GuiManager{
                 ItemStack result = item0.clone();
                 ItemMeta resultMeta = result.getItemMeta();
                 List<String> lore = new ArrayList<>(resultMeta.getLore());
+                boolean mobDamage = false;
                 for (int i = 0; i < lore.size(); i++) {
-                    if (lore.get(i).contains("Average Damage")) {
+                    if(lore.get(i).contains("Mob Damage"))
+                        mobDamage=true;
+                    if (lore.get(i).contains("Average Damage")&& mobDamage) {
                         lore.set(i, customMobs.dropAverageDamage());
                         break;
                     }

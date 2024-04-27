@@ -1361,8 +1361,11 @@ public class  Event implements Listener {
                             ItemStack result = item0.clone();
                             ItemMeta resultMeta = result.getItemMeta();
                             List<String> lore = new ArrayList<>(resultMeta.getLore());
+                            boolean mobDamage=false;
                             for (int i = 0; i < lore.size(); i++) {
-                                if (lore.get(i).contains("Average Damage")) {
+                                if(lore.get(i).contains("Mob Damage"))
+                                    mobDamage=true;
+                                if (lore.get(i).contains("Average Damage") && mobDamage) {
                                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, Average Damage lore line found i: " + i);
                                     if( guiManager.checkAndRemoveEnchantItem(player)) {
                                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
