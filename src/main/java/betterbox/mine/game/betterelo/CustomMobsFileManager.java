@@ -247,6 +247,7 @@ public class CustomMobsFileManager {
             ItemStack weapon=null;
 
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")) {// Wczytanie wyposażenia z pliku
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
                  helmet = loadItemStack(mobData, "equipment.helmet");
                  chestplate = loadItemStack(mobData, "equipment.chestplate");
                  leggings = loadItemStack(mobData, "equipment.leggings");
@@ -290,6 +291,7 @@ public class CustomMobsFileManager {
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
             CustomMobs.CustomMob customMob=null;
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")){
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
 
             }else{

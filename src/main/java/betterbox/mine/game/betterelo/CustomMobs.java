@@ -116,13 +116,22 @@ public class CustomMobs {
             setupMob(); // Teraz wywołujemy setupMob() po stworzeniu encji
             ((BetterElo) plugin).registerCustomMob(this.entity, this);
         }
-        public CustomMob cloneForSpawn(Location spawnLocation) {
-            CustomMob newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
-                    this.helmet.clone(), this.chestplate.clone(),
-                    this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
-                    this.armor, this.hp, this.speed,
-                    this.attackDamage,this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS,this.EMKSchance);
-            newMob.spawnMob(spawnLocation);
+        public CustomMob cloneForSpawn(Location spawnLocation, String mobType) {
+
+            CustomMob newMob = null;
+            if (mobType.equals("SKELETON")|| mobType.equals("ZOMBIE")) {
+                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
+                        this.helmet.clone(), this.chestplate.clone(),
+                        this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
+                        this.armor, this.hp, this.speed,
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance);
+                newMob.spawnMob(spawnLocation);
+            }else{
+                newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
+                        this.armor, this.hp, this.speed,
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance);
+                newMob.spawnMob(spawnLocation);
+            }
             return newMob;
         }
 
@@ -406,7 +415,7 @@ public class CustomMobs {
         CustomMob templateMob = customMobsMap.get(mobName);
         if (templateMob != null) {
             Location adjustedLocation = adjustLocationToAirAbove(location);
-            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
+            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation, templateMob.entityType.toString());
             newMob.customMetadata.put("SpawnerName", spawnerName);
             newMob.spawnerName = spawnerName;
             //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
@@ -417,11 +426,12 @@ public class CustomMobs {
         }
     }
     public void spawnCustomMob(Location location, String mobName) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", location: "+location);
+
         CustomMob templateMob = customMobsMap.get(mobName);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", location: "+location+", mobtype: "+templateMob.entityType.toString());
         if (templateMob != null) {
             Location adjustedLocation = adjustLocationToAirAbove(location);
-            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation);
+            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation, templateMob.entityType.toString());
             //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
             pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
