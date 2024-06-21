@@ -239,13 +239,20 @@ public class CustomMobsFileManager {
 
         try{
             YamlConfiguration mobData = YamlConfiguration.loadConfiguration(mobFile);
+            String entityTypeString = mobData.getString("type");
+            ItemStack helmet=null;
+            ItemStack chestplate=null;
+            ItemStack leggings=null;
+            ItemStack boots=null;
+            ItemStack weapon=null;
 
-            // Wczytanie wyposażenia z pliku
-            ItemStack helmet = loadItemStack(mobData, "equipment.helmet");
-            ItemStack chestplate = loadItemStack(mobData, "equipment.chestplate");
-            ItemStack leggings = loadItemStack(mobData, "equipment.leggings");
-            ItemStack boots = loadItemStack(mobData, "equipment.boots");
-            ItemStack weapon = loadItemStack(mobData, "equipment.weapon");
+            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")) {// Wczytanie wyposażenia z pliku
+                 helmet = loadItemStack(mobData, "equipment.helmet");
+                 chestplate = loadItemStack(mobData, "equipment.chestplate");
+                 leggings = loadItemStack(mobData, "equipment.leggings");
+                 boots = loadItemStack(mobData, "equipment.boots");
+                 weapon = loadItemStack(mobData, "equipment.weapon");
+            }
             // Wczytanie pozostałych danych
             double armor = mobData.getDouble("armor");
             int hp = mobData.getInt("hp");
@@ -268,7 +275,7 @@ public class CustomMobsFileManager {
                 attackSpeed = mobData.getInt("attackSpeed");
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
             }
-            String entityTypeString = mobData.getString("type");
+
             String mobName = mobData.getString("mobName");
             String dropTableName = mobData.getString("dropTable");
 
@@ -281,7 +288,15 @@ public class CustomMobsFileManager {
 
             // Utworzenie instancji CustomMob
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
-            CustomMobs.CustomMob customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
+            CustomMobs.CustomMob customMob=null;
+            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")){
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
+
+            }else{
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
+
+            }
+
             pluginLogger.log(PluginLogger.LogLevel.DROP,"CustomMobsFileManager.loadCustomMob customMob.dropTablename: "+customMob.dropTableName);
 
             return customMob;
