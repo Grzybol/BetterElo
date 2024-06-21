@@ -86,6 +86,25 @@ public class CustomMobs {
             this.customMetadata = customMetadata;
             //setupMob();
         }
+        CustomMob(JavaPlugin plugin,CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance) {
+            this.plugin = plugin;
+            this.dropEMKS = dropEMKS;
+            this.EMKSchance = EMKSchance;
+            this.mobName = mobName;
+            this.entity = entity;
+            this.entityType = entityType;
+            this.dropFileManager = dropFileManager;
+            this.dropTableName = dropTableName;
+            //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
+            this.dropTable = dropFileManager.loadCustomDropsv2(dropTableName);
+            this.armor = armor;
+            this.hp = hp;
+            this.attackSpeed = attackSpeed;
+            this.speed = speed;
+            this.attackDamage = attackDamage;
+            this.customMetadata = customMetadata;
+            //setupMob();
+        }
 
         // Metoda do stworzenia i ustawienia encji moba
         public void spawnMob(Location location) {
