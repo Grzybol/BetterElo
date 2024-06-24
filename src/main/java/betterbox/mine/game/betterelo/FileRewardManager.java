@@ -171,9 +171,10 @@ public class FileRewardManager {
                 String itemNameString = item.getType().toString();
                 dropTableConfig.set("Item" + index + ".itemName", itemNameString); // Tutaj można ustawić faktyczną szansę na drop
                 dropTableConfig.set("Item" + index + ".avgDmgBonus", false); // Tutaj można ustawić faktyczną szansę na drop
+                dropTableConfig.set("Item" + index + ".description", item.getItemMeta().lore().toString()); // Tutaj można ustawić faktyczną szansę na drop
                 index++;
             } catch (IOException e) {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać przedmiotu: " + e.getMessage());
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Cannot save the item : "+index +", error: "+ e.getMessage());
             }
         }
 
