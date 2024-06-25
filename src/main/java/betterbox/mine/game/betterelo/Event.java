@@ -1105,7 +1105,7 @@ public class  Event implements Listener {
         }
         if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage());
-            event.setDamage(event.getFinalDamage()*(1-(0.04*customArmorBonus((Player) victimEntity))));
+            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus((Player) victimEntity))));
 
         }
 
