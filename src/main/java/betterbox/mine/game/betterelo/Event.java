@@ -1059,11 +1059,12 @@ public class  Event implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
-
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player && !event.isCancelled()) {
-
+        Entity damagerEntity = event.getDamager();
+        Entity victimEntity = event.getEntity();
+        if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
+
             if (damager.hasMetadata("handledDamage")) {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
                 return;
@@ -1090,20 +1091,52 @@ public class  Event implements Listener {
                     damager.removeMetadata("handledDamage", plugin);
                 }
             }, 1L);
+            return;
         }
         LivingEntity entity = (LivingEntity) event.getEntity();
-        if (entity.hasMetadata("CustomMob")){
+        if (victimEntity.hasMetadata("CustomMob")){
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
             //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
             //Zombie zombie = (Zombie) entity;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
             //customMobs.updateCustomMobName(zombie);
+            return;
+        }
+        if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage());
+            event.setDamage(event.getFinalDamage()*(1-(0.04*customArmorBonus((Player) victimEntity))));
+
         }
 
-
     }
+    public int customArmorBonus (Player player){
+        int CustomArmorBonus=0;
+        List<ItemStack> equippedItems = getPlayerEquippedItems(player);
+        if(equippedItems==null){
+            return CustomArmorBonus;
+        }
+        for (ItemStack item : equippedItems){
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null && meta.hasLore()) {
+                List<String> lore = meta.getLore();
+                for (String line : lore) {
+                    if (line.startsWith("§6§lMob Defense ")) {
+                        try {
+                            String percentString = line.replace("§6§lMob Defense ", "").replace("%", "");
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customArmorBonus percentString: " + percentString);
+                            CustomArmorBonus += Integer.parseInt(percentString);
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customArmorBonus added CustomArmorBonus: " + CustomArmorBonus);
+                        } catch (NumberFormatException e) {
+                            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
+                        }
+                    }
 
+                }
+            }
+        }
+        return CustomArmorBonus;
+    }
     public void customEntityDamageEvent(EntityDamageByEntityEvent event){
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
 
@@ -1422,6 +1455,7 @@ public class  Event implements Listener {
             }
         }
     }
+
 
     @EventHandler
     public void onEntityMove(EntityMoveEvent event) {
