@@ -1191,8 +1191,11 @@ public class  Event implements Listener {
                                 defense=0;
                             }
                         }
+                            double finalDamage =((totalDamage-armor)*(1-(0.01*defense)));
+                            if(finalDamage<=0)
+                                finalDamage=0;
 
-                            event.setDamage((totalDamage-armor)*(1-(0.01*defense)));
+                            event.setDamage(finalDamage);
                             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage);
                             return;
 
