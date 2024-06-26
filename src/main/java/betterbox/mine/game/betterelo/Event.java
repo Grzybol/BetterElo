@@ -1176,7 +1176,16 @@ public class  Event implements Listener {
                             int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
                             double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
                             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", bonusAverageDamage: "+bonusDamage);
-                            event.setDamage(totalDamage);
+                            double armor=1;
+                            if (event.getEntity().hasMetadata("armor")) {
+                                List<MetadataValue> values = event.getEntity().getMetadata("armor");
+                                armor = values.get(0).asDouble();  // Uzyskanie wartości armor
+                                if(armor==0){
+                                    armor=1;
+                                }
+                            }
+
+                            event.setDamage(totalDamage-armor);
                             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage);
                             return;
 

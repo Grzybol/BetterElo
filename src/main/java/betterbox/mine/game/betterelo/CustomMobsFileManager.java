@@ -255,13 +255,14 @@ public class CustomMobsFileManager {
                  weapon = loadItemStack(mobData, "equipment.weapon");
             }
             // Wczytanie pozostałych danych
-            double armor = mobData.getDouble("armor");
+            double armor = 1;
             int hp = mobData.getInt("hp");
             double speed = mobData.getDouble("speed");
             double attackDamage = mobData.getDouble("attackDamage");
             double EKMSchance = 0.0d;
             boolean dropEMKS = false;
             int attackSpeed = 1;
+            int defense = 0;
 
 
             if(mobData.contains("dropEMKS")){
@@ -275,6 +276,14 @@ public class CustomMobsFileManager {
             if(mobData.contains("attackSpeed")){
                 attackSpeed = mobData.getInt("attackSpeed");
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
+            }
+            if(mobData.contains("defense")){
+                defense = mobData.getInt("defense");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded defense:" + defense);
+            }
+            if(mobData.contains("armor")){
+                armor = mobData.getDouble("armor");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded armor:" + armor);
             }
 
             String mobName = mobData.getString("mobName");
@@ -292,10 +301,10 @@ public class CustomMobsFileManager {
             CustomMobs.CustomMob customMob=null;
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")){
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
-                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense);
 
             }else{
-                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance);
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense);
 
             }
 
