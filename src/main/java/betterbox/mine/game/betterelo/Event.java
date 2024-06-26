@@ -1187,6 +1187,9 @@ public class  Event implements Listener {
                         if (event.getEntity().hasMetadata("defense")) {
                             List<MetadataValue> values = event.getEntity().getMetadata("defense");
                             defense = values.get(0).asDouble();  // Uzyskanie wartości defense
+                            if (defense>=100){
+                                defense=0;
+                            }
                         }
 
                             event.setDamage((totalDamage-armor)*(1-(0.01*defense)));
