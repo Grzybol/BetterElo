@@ -8,6 +8,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import io.papermc.paper.event.entity.EntityMoveEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
@@ -22,10 +23,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -1061,11 +1059,12 @@ public class  Event implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
-
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player && !event.isCancelled()) {
-
+        Entity damagerEntity = event.getDamager();
+        Entity victimEntity = event.getEntity();
+        if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
+
             if (damager.hasMetadata("handledDamage")) {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
                 return;
@@ -1092,20 +1091,52 @@ public class  Event implements Listener {
                     damager.removeMetadata("handledDamage", plugin);
                 }
             }, 1L);
+            return;
         }
         LivingEntity entity = (LivingEntity) event.getEntity();
-        if (entity.hasMetadata("CustomMob")){
+        if (victimEntity.hasMetadata("CustomMob")){
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
             //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
             //Zombie zombie = (Zombie) entity;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
             //customMobs.updateCustomMobName(zombie);
+            return;
+        }
+        if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage());
+            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus((Player) victimEntity))));
+
         }
 
-
     }
+    public int customArmorBonus (Player player){
+        int CustomArmorBonus=0;
+        List<ItemStack> equippedItems = getPlayerEquippedItems(player);
+        if(equippedItems==null){
+            return CustomArmorBonus;
+        }
+        for (ItemStack item : equippedItems){
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null && meta.hasLore()) {
+                List<String> lore = meta.getLore();
+                for (String line : lore) {
+                    if (line.startsWith("§6§lMob Defense ")) {
+                        try {
+                            String percentString = line.replace("§6§lMob Defense ", "").replace("%", "");
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customArmorBonus percentString: " + percentString);
+                            CustomArmorBonus += Integer.parseInt(percentString);
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customArmorBonus added CustomArmorBonus: " + CustomArmorBonus);
+                        } catch (NumberFormatException e) {
+                            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
+                        }
+                    }
 
+                }
+            }
+        }
+        return CustomArmorBonus;
+    }
     public void customEntityDamageEvent(EntityDamageByEntityEvent event){
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
 
@@ -1145,8 +1176,39 @@ public class  Event implements Listener {
                             int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
                             double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
                             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", bonusAverageDamage: "+bonusDamage);
-                            event.setDamage(totalDamage);
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage);
+                            double armor=1, defense=0;
+                            if (event.getEntity().hasMetadata("armor")) {
+                                List<MetadataValue> values = event.getEntity().getMetadata("armor");
+                                armor = values.get(0).asDouble();  // Uzyskanie wartości armor
+                                if(armor==0){
+                                    armor=1;
+                                }
+                            }
+                        if (event.getEntity().hasMetadata("defense")) {
+                            List<MetadataValue> values = event.getEntity().getMetadata("defense");
+                            defense = values.get(0).asDouble();  // Uzyskanie wartości defense
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense from metadata: "+defense);
+                            if (defense>=100){
+                                pluginLogger.log(PluginLogger.LogLevel.WARNING, "Damage event: Mob has defense higher than 100! setting def=0:");
+                                defense=0;
+                            }
+                        }else{
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense metadata not found for mob: "+event.getEntity().getMetadata("MobName"));
+                        }
+                        CustomMobs.CustomMob customMob = null;
+                        customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
+                        if(customMob!=null)
+                        {
+                            defense = customMob.defense;
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense from customMob object: "+defense);
+                        }
+                            double defDmgReduction= (1-(0.01*defense));
+                            double finalDamage =((totalDamage-armor)*defDmgReduction);
+                            if(finalDamage<=0)
+                                finalDamage=0;
+
+                            event.setDamage(finalDamage);
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor);
                             return;
 
                     }
@@ -1295,7 +1357,7 @@ public class  Event implements Listener {
             case "Select Top":
                 event.setCancelled(true);
                 guiManager.rewardType = currentItem.getItemMeta().getDisplayName();
-                pluginLogger.log("GuiManager.onInventoryClick: rewardType:" + guiManager.rewardType + " periodType:" + guiManager.periodType);
+                pluginLogger.log("Event.onInventoryClick: rewardType:" + guiManager.rewardType + " periodType:" + guiManager.periodType);
                 fileRewardManager.setRewardType(guiManager.periodType, guiManager.rewardType);
                 List<ItemStack> currentRewards = fileRewardManager.loadRewards();
                 inv = Bukkit.createInventory(null, 36, "Add Items");
@@ -1307,31 +1369,31 @@ public class  Event implements Listener {
                 break;
             case "Add Items":
                 //save button check
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items");
                 if (currentItem.getType() == Material.GREEN_WOOL && (event.getSlot() == 35 || event.getSlot() == 53)) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Add Items - save called.");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.");
                     event.setCancelled(true);
                     Inventory inventory = event.getInventory();
                     List<ItemStack> itemsToSave = new ArrayList<>();
                     for (int i = 0; i < inventory.getSize(); i++) {
                         if (i == 35 || i == 53) { // Pomijamy slot przycisku "Save"
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick save button, skipping.");
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save button, skipping.");
                             continue;
                         }
                         ItemStack item = inventory.getItem(i);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick save: item: "+item);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: "+item);
                         if (item != null && item.getType() != Material.AIR) {
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick no air save: item: "+item);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: "+item);
                             itemsToSave.add(item);
                         }
 
                     }
 
                     String fileName=guiManager.periodType+"_"+guiManager.rewardType;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
                     if(guiManager.periodType.equals("dropTable")){
                         fileName=guiManager.dropTable;
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick droptable: "+fileName);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: "+fileName);
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }else{
                         fileRewardManager.saveRewards(fileName, itemsToSave);
@@ -1340,22 +1402,22 @@ public class  Event implements Listener {
                 }
                 break;
             case "AvgDmg bonus change":
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Average Damage bonus re-roll");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll");
 
                 if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5){
                     playerInventory.setContents(savedInventory);
                     event.setCancelled(true);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick Average Damage bonus re-roll clicked");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll clicked");
                     Inventory inventory = event.getInventory();
                     ItemStack item0 = inventory.getItem(3);
                     if (item0 != null && item0.hasItemMeta()) {
 
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, item0: "+item0+", item0.hasItemMeta(): "+item0.hasItemMeta());
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, item0: "+item0+", item0.hasItemMeta(): "+item0.hasItemMeta());
                         ItemMeta meta0 = item0.getItemMeta();
                         boolean slot0Condition = meta0.getLore().stream().anyMatch(line -> line.contains("Average Damage"));
                         ItemMeta meta  = item0.getItemMeta();
                         //List<String> lore = meta.getLore();
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, slot0Condition: "+slot0Condition);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, slot0Condition: "+slot0Condition);
 
                         if (slot0Condition) {
                             ItemStack result = item0.clone();
@@ -1366,9 +1428,9 @@ public class  Event implements Listener {
                                 if(lore.get(i).contains("Mob Damage"))
                                     mobDamage=true;
                                 if (lore.get(i).contains("Average Damage") && mobDamage) {
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, Average Damage lore line found i: " + i);
+                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, Average Damage lore line found i: " + i);
                                     if( guiManager.checkAndRemoveEnchantItem(player)) {
-                                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player paid, re-rolling..." );
+                                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, player paid, re-rolling..." );
                                         lore.set(i, customMobs.dropAverageDamage());
                                         player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
                                         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
@@ -1379,13 +1441,13 @@ public class  Event implements Listener {
                                         }, 1L);
                                         break;
                                     }
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick reroll, player has no money for the re-roll." );
+                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, player has no money for the re-roll." );
                                 }
                             }
                             resultMeta.setLore(lore);
                             result.setItemMeta(resultMeta);
                             inventory.setItem(3, result);
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick result placed back in slot 3");
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick result placed back in slot 3");
 
                         }
                     }
@@ -1401,27 +1463,53 @@ public class  Event implements Listener {
 
         // Check if the closed inventory is the same one we're interested in
         if (event.getView().getTitle().equalsIgnoreCase("AvgDmg bonus change")) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Checking items in closed GUI");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClose: Checking items in closed GUI");
 
             ItemStack itemInSlot0 = closedInventory.getItem(3);
             if (itemInSlot0 != null) {
                 ItemMeta meta = itemInSlot0.getItemMeta();
                 //if (meta.getLore().stream().anyMatch(line -> line.contains("Average Damage"))) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Item with 'Average damage' found in slot 0");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClose: Item with 'Average damage' found in slot 0");
 
                     // Optional: Directly give back the item to the player's inventory
                     if (player.getInventory().addItem(itemInSlot0).size() == 0) {
                         // Item successfully added to player's inventory
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Item returned to player inventory");
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClose: Item returned to player inventory");
                         closedInventory.clear(3);  // Clear the slot after returning item
                     } else {
                         // Inventory full, drop item at player's location
                         player.getWorld().dropItem(player.getLocation(), itemInSlot0);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClose: Inventory full, item dropped at player's location");
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClose: Inventory full, item dropped at player's location");
                         closedInventory.clear(3);  // Clear the slot
                     }
                 //}
             }
+        }
+    }
+
+
+    @EventHandler
+    public void onEntityMove(EntityMoveEvent event) {
+
+        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract called");
+        if (!event.getEntity().hasMetadata("CustomMob")){
+            return;
+        }
+        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: CustomMob CHECK PASSED");
+
+        // Pobieranie bloku, z którym wchodzi w interakcję mob
+        Block block = event.getTo().getBlock();
+        if(!block.hasMetadata("placed_by_player")){
+            return;
+        }
+        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: COMWEB placed_by_player CHECK PASSED");
+        // Sprawdzanie, czy blok to pajęczyna
+        if (block.getType() == Material.COBWEB) {
+            // Usunięcie pajęczyny, gdy mob wejdzie w nią
+            block.setType(Material.AIR);
+
+            // Można tutaj dodać dodatkowe działania, np. wysłanie informacji do logów serwera
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: Mob is removing player-placed cobweb");
         }
     }
 
