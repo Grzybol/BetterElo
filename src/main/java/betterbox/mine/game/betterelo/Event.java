@@ -1187,16 +1187,28 @@ public class  Event implements Listener {
                         if (event.getEntity().hasMetadata("defense")) {
                             List<MetadataValue> values = event.getEntity().getMetadata("defense");
                             defense = values.get(0).asDouble();  // Uzyskanie wartości defense
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense from metadata: "+defense);
                             if (defense>=100){
+                                pluginLogger.log(PluginLogger.LogLevel.WARNING, "Damage event: Mob has defense higher than 100! setting def=0:");
                                 defense=0;
                             }
+                        }else{
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense metadata not found for mob: "+event.getEntity().getMetadata("MobName"));
                         }
-                            double finalDamage =((totalDamage-armor)*(1-(0.01*defense)));
+                        CustomMobs.CustomMob customMob = null;
+                        customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
+                        if(customMob!=null)
+                        {
+                            defense = customMob.defense;
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense from customMob object: "+defense);
+                        }
+                            double defDmgReduction= (1-(0.01*defense));
+                            double finalDamage =((totalDamage-armor)*defDmgReduction);
                             if(finalDamage<=0)
                                 finalDamage=0;
 
                             event.setDamage(finalDamage);
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage);
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor);
                             return;
 
                     }
