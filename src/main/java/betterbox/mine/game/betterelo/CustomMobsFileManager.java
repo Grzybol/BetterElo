@@ -340,6 +340,15 @@ public class CustomMobsFileManager {
                 }
             }
         }
+        try {// Ustawienie przedmiotu jako niezniszczalnego
+            if (mobData.contains(path + ".unbreakable") && mobData.getBoolean(path + ".unbreakable")) {
+                ItemMeta meta = itemStack.getItemMeta();
+                meta.setUnbreakable(true);
+                itemStack.setItemMeta(meta);
+            }
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "cannot read unbreakable from file. Exception: "+e.getMessage());
+        }
 
         return itemStack;
     }
