@@ -1317,7 +1317,7 @@ public class  Event implements Listener {
             return;
         }
         if(event.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE || event.getCurrentItem().getType() == Material.GREEN_WOOL){
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick green wool or blank pane clicked, cancelling..");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick green wool or blank pane clicked, cancelling..");
             event.setCancelled(true);
 
         }
@@ -1327,7 +1327,7 @@ public class  Event implements Listener {
         ItemStack[] savedInventory = playerInventory.getContents();
 
         String title = event.getView().getTitle();
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.onInventoryClick called. title:"+title);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick called. title:"+title);
         if (!Arrays.asList("Set Rewards", "Add Items", "Select Top", "AvgDmg bonus change").contains(title)) {
             return;
         }
@@ -1370,13 +1370,13 @@ public class  Event implements Listener {
             case "Add Items":
                 //save button check
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items");
-                if (currentItem.getType() == Material.GREEN_WOOL && (event.getSlot() == 35 || event.getSlot() == 53)) {
+                if (currentItem.getType() == Material.GREEN_WOOL && (event.getSlot() == 53)) {
                     pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.");
                     event.setCancelled(true);
                     Inventory inventory = event.getInventory();
                     List<ItemStack> itemsToSave = new ArrayList<>();
                     for (int i = 0; i < inventory.getSize(); i++) {
-                        if (i == 35 || i == 53) { // Pomijamy slot przycisku "Save"
+                        if (i == 53) { // Pomijamy slot przycisku "Save"
                             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save button, skipping.");
                             continue;
                         }
@@ -1389,14 +1389,16 @@ public class  Event implements Listener {
 
                     }
 
-                    String fileName=guiManager.periodType+"_"+guiManager.rewardType;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
+                    String fileName=guiManager.periodType+"_"+guiManager.dropTable;
+
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType="+guiManager.periodType);
                     if(guiManager.periodType.equals("dropTable")){
                         fileName=guiManager.dropTable;
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: "+fileName);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops("+fileName+",itemsToSave)");
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }else{
-                        fileRewardManager.saveRewards(fileName, itemsToSave);
+                        fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }
 
                 }
