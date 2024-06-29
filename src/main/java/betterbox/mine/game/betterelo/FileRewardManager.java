@@ -184,6 +184,8 @@ public class FileRewardManager {
                 if(item.getItemMeta().hasLore()) {
                     dropTableConfig.set("Item" + index + ".description", item.getItemMeta().lore().toString()); // Tutaj można ustawić faktyczną szansę na drop
                 }
+                dropTableConfig.set("Item" + index + ".itemName", item.displayName().toString());
+
                 index++;
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "dropTableConfig with index "+index+" saved");
 

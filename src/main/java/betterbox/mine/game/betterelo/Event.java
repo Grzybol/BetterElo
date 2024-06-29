@@ -1451,6 +1451,41 @@ public class  Event implements Listener {
                             inventory.setItem(3, result);
                             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick result placed back in slot 3");
 
+
+                            ItemStack greenWoolItem = inventory.getItem(5);
+                            if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
+                                ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
+                                List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
+                                String avgDmgLine = lore.stream().filter(line -> line.contains("Average Damage")).findFirst().orElse("Average Damage +0%");
+
+                                // Ustalanie indeksów dla "current bonus:" i wartości
+                                int bonusIndex = -1;
+                                for (int i = 0; i < greenWoolLore.size(); i++) {
+                                    if (greenWoolLore.get(i).equals("current bonus:")) {
+                                        bonusIndex = i;
+                                        break;
+                                    }
+                                }
+
+                                if (bonusIndex != -1 && bonusIndex + 1 < greenWoolLore.size()) {
+                                    // Aktualizujemy istniejącą wartość jeśli jest miejsce w lore
+                                    greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
+                                } else if (bonusIndex == -1) {
+                                    // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
+                                    greenWoolLore.add("current bonus:");
+                                    greenWoolLore.add("<" + avgDmgLine + ">");
+                                } else {
+                                    // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość
+                                    greenWoolLore.add("<" + avgDmgLine + ">");
+                                }
+
+                                greenWoolMeta.setLore(greenWoolLore);
+                                greenWoolItem.setItemMeta(greenWoolMeta);
+                                inventory.setItem(5, greenWoolItem);
+
+
+                        }
+
                         }
                     }
                 }
