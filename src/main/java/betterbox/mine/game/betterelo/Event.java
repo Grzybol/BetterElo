@@ -13,6 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -1547,6 +1548,12 @@ public class  Event implements Listener {
 
             // Można tutaj dodać dodatkowe działania, np. wysłanie informacji do logów serwera
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: Mob is removing player-placed cobweb");
+        }
+        Block blockAbove = block.getRelative(BlockFace.UP);
+
+        if (blockAbove.hasMetadata("placed_by_player") && blockAbove.getType() == Material.COBWEB) {
+            blockAbove.setType(Material.AIR);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: Mob is removing player-placed cobweb above");
         }
     }
 
