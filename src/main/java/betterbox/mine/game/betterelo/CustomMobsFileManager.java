@@ -2,20 +2,21 @@ package betterbox.mine.game.betterelo;
 
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.bukkit.Location;
 
 public class CustomMobsFileManager {
@@ -348,6 +349,20 @@ public class CustomMobsFileManager {
             }
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "cannot read unbreakable from file. Exception: "+e.getMessage());
+        }
+
+        // Wczytanie atrybutów armor i damage
+        try {
+            ItemMeta meta = itemStack.getItemMeta();
+            if (mobData.contains(path + ".attributes.damage")) {
+                meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, new AttributeModifier(UUID.randomUUID(), "generic.attackDamage", mobData.getDouble(path + ".attributes.damage"), AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND));
+            }
+            if (mobData.contains(path + ".attributes.armor")) {
+                meta.addAttributeModifier(Attribute.GENERIC_ARMOR, new AttributeModifier(UUID.randomUUID(), "generic.armor", mobData.getDouble(path + ".attributes.armor"), AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.CHEST));
+            }
+            itemStack.setItemMeta(meta);
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error reading attributes from file. Exception: " + e.getMessage());
         }
 
         return itemStack;
