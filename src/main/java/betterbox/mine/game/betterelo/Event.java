@@ -192,9 +192,14 @@ public class  Event implements Listener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
+        Player victim = event.getEntity();
+        if (victim.hasMetadata("handledDeath")) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
+            return;
+        }
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
         try {
-            Player victim = event.getEntity();
+
             Player killer = victim.getKiller();
             if (!cheaters.getCheatersList().contains(victim.getName()) && !cheaters.getCheatersList().contains(killer.getName())) {
                 pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
@@ -276,6 +281,13 @@ public class  Event implements Listener {
                         killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Event ranking is too big! No reward for this one.");
                     }
                 }
+                victim.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
+                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        victim.removeMetadata("handledDamage", plugin);
+                    }
+                }, 1L);
 
 
             } else {
