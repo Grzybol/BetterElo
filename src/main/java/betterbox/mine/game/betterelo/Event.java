@@ -281,11 +281,11 @@ public class  Event implements Listener {
                         killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Event ranking is too big! No reward for this one.");
                     }
                 }
-                victim.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
+                victim.setMetadata("handledDeath", new FixedMetadataValue(plugin, true));
                 Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
                     @Override
                     public void run() {
-                        victim.removeMetadata("handledDamage", plugin);
+                        victim.removeMetadata("handledDeath", plugin);
                     }
                 }, 1L);
 
