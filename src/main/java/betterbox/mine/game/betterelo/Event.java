@@ -57,6 +57,7 @@ public class  Event implements Listener {
     private CustomMobs customMobs;
     private GuiManager guiManager;
     private FileRewardManager fileRewardManager;
+    private int deathEventCounter;
     private final Random random = new Random();
     //public final long cooldownMillis = 1500; // 1.5s
 
@@ -190,17 +191,26 @@ public class  Event implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        Player victim = event.getEntity();
-        if (victim.hasMetadata("handledDeath")) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
+        if(deathEventCounter==1){
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled!");
             return;
         }
+        deathEventCounter=1;
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
         try {
 
+
+            Player victim = event.getEntity();
             Player killer = victim.getKiller();
+            if (killer.hasMetadata("handledDeath")) {
+                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled! killer: "+victim.getName());
+                return;
+            }
+            deathEventCounter=0;
+
             if (!cheaters.getCheatersList().contains(victim.getName()) && !cheaters.getCheatersList().contains(killer.getName())) {
                 pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
                 pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling deathDueToCombat(victim)");
@@ -211,6 +221,8 @@ public class  Event implements Listener {
                     pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling getLastAttacker(victim)");
                     Player lastAttacker = getLastAttacker(victim);
                     pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: lastAttacker " + lastAttacker);
+
+
 
                     if (lastAttacker == null) {
                         /*
@@ -281,13 +293,9 @@ public class  Event implements Listener {
                         killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Event ranking is too big! No reward for this one.");
                     }
                 }
-                victim.setMetadata("handledDeath", new FixedMetadataValue(plugin, true));
-                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        victim.removeMetadata("handledDeath", plugin);
-                    }
-                }, 1L);
+                killer.setMetadata("handledDeath", new FixedMetadataValue(plugin, true));
+                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> killer.removeMetadata("handledDeath", plugin), 2L);
+                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleKillEvent added handledDeath metadata to "+killer.getName());
 
 
             } else {
@@ -1114,6 +1122,10 @@ public class  Event implements Listener {
             //Zombie zombie = (Zombie) entity;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
             //customMobs.updateCustomMobName(zombie);
+            if (!event.getEntity().hasMetadata("CustomMob")) {
+                return;
+            }
+            removePlayerPlacedBlocksAsync(victimEntity);
             return;
         }
         if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
@@ -1122,6 +1134,32 @@ public class  Event implements Listener {
 
         }
 
+    }
+    public void removePlayerPlacedBlocksAsync(Entity entity) {
+        // Asynchronicznie przygotowujesz dane
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            List<Block> blocksToRemove = new ArrayList<>();
+            Block baseBlock = entity.getLocation().getBlock();
+
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 2; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        Block relBlock = baseBlock.getRelative(x, y, z);
+                        if (relBlock.hasMetadata("placed_by_player")) {
+                            blocksToRemove.add(relBlock);
+                        }
+                    }
+                }
+            }
+
+            // Synchroniczne usuwanie bloków w głównym wątku
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                for (Block block : blocksToRemove) {
+                    block.setType(Material.AIR);
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Removing player-placed block at " + block.getLocation());
+                }
+            });
+        });
     }
     public int customArmorBonus (Player player){
         int CustomArmorBonus=0;
@@ -1538,36 +1576,6 @@ public class  Event implements Listener {
     }
 
 
-    @EventHandler
-    public void onEntityMove(EntityMoveEvent event) {
-
-        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract called");
-        if (!event.getEntity().hasMetadata("CustomMob")){
-            return;
-        }
-        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: CustomMob CHECK PASSED");
-
-        // Pobieranie bloku, z którym wchodzi w interakcję mob
-        Block block = event.getTo().getBlock();
-        if(!block.hasMetadata("placed_by_player")){
-            return;
-        }
-        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: COMWEB placed_by_player CHECK PASSED");
-        // Sprawdzanie, czy blok to pajęczyna
-        if (block.getType() == Material.COBWEB) {
-            // Usunięcie pajęczyny, gdy mob wejdzie w nią
-            block.setType(Material.AIR);
-
-            // Można tutaj dodać dodatkowe działania, np. wysłanie informacji do logów serwera
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: Mob is removing player-placed cobweb");
-        }
-        Block blockAbove = block.getRelative(BlockFace.UP);
-
-        if (blockAbove.hasMetadata("placed_by_player") && blockAbove.getType() == Material.COBWEB) {
-            blockAbove.setType(Material.AIR);
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityInteract: Mob is removing player-placed cobweb above");
-        }
-    }
 
 }
 
