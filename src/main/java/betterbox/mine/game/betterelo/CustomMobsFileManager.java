@@ -57,6 +57,15 @@ public class CustomMobsFileManager {
         public int getSpawnedMobCount() {
             return this.spawnedMobCount;
         }
+        public int getMaxMobs() {
+            return this.maxMobs;
+        }
+        public int getMobsPerSpawn() {
+            return this.mobCount;
+        }
+        public int getCooldown() {
+            return this.cooldown;
+        }
     }
     public class DropItem {
         private double dropChance;

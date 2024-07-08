@@ -267,6 +267,11 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 2:
                 switch (args[0].toLowerCase()) {
+                    case "forcespawn":
+                        if(sender.isOp()||sender.hasPermission("betterelo.forcespawn")){
+                            customMobs.spawnerForceSpawn(args[1]);
+                        }
+                        break;
                     case "droptable":
                     if(sender.isOp()||sender.hasPermission("betterelo.droptable")){
                         handleCreateDropTable(sender,args[1]);
