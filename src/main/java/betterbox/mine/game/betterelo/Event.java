@@ -193,23 +193,23 @@ public class  Event implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if(deathEventCounter==1){
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled!");
+        Player victim = event.getEntity();
+
+        if (victim.hasMetadata("handledDeath")) {
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled! killer: "+victim.getName());
             return;
         }
-        deathEventCounter=1;
+        victim.setMetadata("handledDeath", new FixedMetadataValue(plugin, true));
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> victim.removeMetadata("handledDeath", plugin), 1L);
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleKillEvent added handledDeath metadata to "+victim.getName());
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
         try {
 
 
-            Player victim = event.getEntity();
+
             Player killer = victim.getKiller();
-            if (killer.hasMetadata("handledDeath")) {
-                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled! killer: "+victim.getName());
-                return;
-            }
-            deathEventCounter=0;
+
 
             if (!cheaters.getCheatersList().contains(victim.getName()) && !cheaters.getCheatersList().contains(killer.getName())) {
                 pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
@@ -293,9 +293,7 @@ public class  Event implements Listener {
                         killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Event ranking is too big! No reward for this one.");
                     }
                 }
-                killer.setMetadata("handledDeath", new FixedMetadataValue(plugin, true));
-                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> killer.removeMetadata("handledDeath", plugin), 2L);
-                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleKillEvent added handledDeath metadata to "+killer.getName());
+
 
 
             } else {
@@ -324,7 +322,7 @@ public class  Event implements Listener {
         victim.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.RED +  "You have lost "+ChatColor.DARK_RED + "" + ChatColor.BOLD +df.format(pointsEarned)+" Elo");
     }
     private void notifyPlayerAboutPoints(Player player, double pointsEarned, Double blockReward) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: notifyPlayersAboutPoints called with parameters: "+player+" "+pointsEarned);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+player+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
 
         Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
