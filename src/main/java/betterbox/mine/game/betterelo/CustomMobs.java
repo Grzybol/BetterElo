@@ -29,11 +29,13 @@ public class CustomMobs {
     private Map<String, CustomMob> customMobsMap = new HashMap<>();
     private final PluginLogger pluginLogger;
     private final JavaPlugin plugin;
+    private final BetterElo betterElo;
     private final FileRewardManager fileRewardManager;
     private final CustomMobsFileManager fileManager;
     private static final Random random = new Random();
     private BukkitTask spawnerTask;
     public Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
+    public Map<UUID,String> spawnedMobsMap = new HashMap<>();
 
     static class CustomMob {
         String mobName, dropTableName, spawnerName;
@@ -183,8 +185,9 @@ public class CustomMobs {
     }
 
 
-    public CustomMobs(PluginLogger pluginLogger, JavaPlugin plugin, CustomMobsFileManager fileManager, FileRewardManager fileRewardManager) {
+    public CustomMobs(PluginLogger pluginLogger, JavaPlugin plugin, CustomMobsFileManager fileManager, FileRewardManager fileRewardManager, BetterElo betterElo) {
         this.plugin = plugin;
+        this.betterElo = betterElo;
         this.pluginLogger = pluginLogger;
         this.fileManager = fileManager;
         this.fileRewardManager = fileRewardManager;
@@ -289,7 +292,34 @@ public class CustomMobs {
     }
 
     public void spawnerForceSpawn(String spawnerName) {
+        //pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn called with " + spawnerName+" spawnedMobsMap"+spawnedMobsMap.toString());
+
         Map<String, CustomMobsFileManager.SpawnerData> spawnersData = fileManager.spawnersData;
+        if (spawnedMobsMap == null || spawnedMobsMap.isEmpty()) {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "CustomMobs.spawnerForceSpawn. The spawnedMobsMap is empty or null.");
+        }else {
+            try {
+
+                Iterator<Map.Entry<UUID, String>> iterator = spawnedMobsMap.entrySet().iterator();
+                //CustomMob customMob = betterElo.getCustomMobFromEntity(entity) ;
+                while (iterator.hasNext()) {
+                    Map.Entry<UUID, String> entry = iterator.next();
+                    pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn. Checking key " + entry.getKey() + " with value " + entry.getValue());
+                    if (spawnerName.equals(entry.getValue())) {
+                        pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn.  " + spawnerName + " matching key " + entry.getKey() + ", value " + entry.getValue());
+                        Entity entity = Bukkit.getServer().getEntity(entry.getKey());
+                        if (entity != null && !entity.isDead()) {
+                            entity.remove(); // Usuwa encję z świata
+
+                            iterator.remove();  // Bezpieczne usuwanie wpisu podczas iteracji
+                            pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn. Removing living mob from spawner" + spawnerName);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnerForceSpawn exception: " + e.getMessage());
+            }
+        }
         pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn called. Loaded spawners: " + spawnersData);
         // Sprawdzenie, czy istnieją spawnerzy w pliku
         if (spawnersData.isEmpty()) {
@@ -333,10 +363,11 @@ public class CustomMobs {
             } else {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid location specified for spawner " + spawnerName);
             }
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn spawnedMobsMap"+spawnedMobsMap.toString());
         }
     }
 
-    private Location getLocationFromString(String locationString) {
+    public Location getLocationFromString(String locationString) {
         try {
             String[] parts = locationString.split(",");
             if (parts.length == 4) {
@@ -465,6 +496,14 @@ public class CustomMobs {
         // Zwróć customowego moba na podstawie nazwy
         return customMobsMap.get(mobName);
     }
+    public Entity getEntityForCustomMob(CustomMob customMob) {
+        // Sprawdzenie, czy przypisana encja do moba istnieje
+        if (customMob != null && customMob.entity != null) {
+            return customMob.entity;  // Zwróć encję, jeśli jest już przypisana
+        }
+        // W przypadku braku encji, możemy zwrócić null lub rozważyć inne działanie, np. logowanie
+        return null;  // Zwróć null, jeśli encja nie jest ustawiona
+    }
 
     public void spawnCustomMob(Location location, String spawnerName, String mobName) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", spawnerName: "+spawnerName+", location: "+location);
@@ -477,6 +516,12 @@ public class CustomMobs {
             //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
             pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
+            try{
+                spawnedMobsMap.put(newMob.entity.getUniqueId(), spawnerName);
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "Mob spawned with UUID: " + newMob.entity.getUniqueId() + ", spawnerName:" + newMob.spawnerName);
+            }catch (Exception e){
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob  exception: "+e.getMessage());
+            }
         } else {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }

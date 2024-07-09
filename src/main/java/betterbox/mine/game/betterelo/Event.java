@@ -55,13 +55,14 @@ public class  Event implements Listener {
     private HashMap<Player, Long> lastZephyrUsage = new HashMap<>();
     private HashMap<Player, Long> lastFlameUsage = new HashMap<>();
     private CustomMobs customMobs;
+    private CustomMobsFileManager customMobsFileManager;
     private GuiManager guiManager;
     private FileRewardManager fileRewardManager;
     private int deathEventCounter;
     private final Random random = new Random();
     //public final long cooldownMillis = 1500; // 1.5s
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager) {
         this.dataManager = dataManager;
         this.fileRewardManager = fileRewardManager;
         this.pluginLogger = pluginLogger;
@@ -70,6 +71,7 @@ public class  Event implements Listener {
         this.cheaters = cheaters;
         this.configManager = configManager;
         this.customMobs = customMobs;
+        this.customMobsFileManager = customMobsFileManager;
         this.guiManager = guiManager;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -1570,6 +1572,33 @@ public class  Event implements Listener {
                     }
                 //}
             }
+        }
+    }
+    @EventHandler
+    public void onEntityMove(EntityMoveEvent event) {
+        Entity entity = event.getEntity();
+        CustomMobs.CustomMob customMob = null;
+        customMob = betterElo.getCustomMobFromEntity(entity);
+
+        if (customMob != null) {
+            Location entityLocation = entity.getLocation();
+            String spawnerLocationString = customMobsFileManager.getSpawnerLocation(customMob.spawnerName);
+            Location  spawnerLocation = customMobs.getLocationFromString(spawnerLocationString);
+
+            int maxDistance = customMobsFileManager.getMaxDistance(customMob.spawnerName);
+            if(maxDistance==0){
+                maxDistance=20;
+            }
+            if (spawnerLocation==null){
+                return;
+            }
+            if (entityLocation.distance(spawnerLocation) > maxDistance) {
+                // Teleportacja entity z powrotem do spawnerLocation
+                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Event.onEntityMove teleporting mob: "+customMob.mobName);
+                entity.teleport(spawnerLocation);
+            }
+
+
         }
     }
 

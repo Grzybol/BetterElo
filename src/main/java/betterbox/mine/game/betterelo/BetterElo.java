@@ -117,7 +117,7 @@ public final class BetterElo extends JavaPlugin {
         customMobsFileManager = new CustomMobsFileManager(folderPath,this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: calling customMobsFileManager.loadSpawners()");
         customMobsFileManager.loadSpawners();
-        customMobs = new CustomMobs(pluginLogger,this,customMobsFileManager, fileRewardManager);
+        customMobs = new CustomMobs(pluginLogger,this,customMobsFileManager, fileRewardManager,this );
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
         customMobs.startSpawnerScheduler();
 
@@ -126,7 +126,7 @@ public final class BetterElo extends JavaPlugin {
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
@@ -617,6 +617,13 @@ public final class BetterElo extends JavaPlugin {
 
             }
         }
+        for (CustomMobs.CustomMob customMob : customMobsMap.values()) {
+            // Sprawdzanie, czy encja jest nadal żywa przed próbą jej zabicia
+            if (customMob.entity != null && !customMob.entity.isDead()) {
+                customMob.entity.remove(); // Usuwa encję z świata
+
+            }
+        }
         customMobsMap.clear(); // Czyści mapę po usunięciu wszystkich encji
     }
     public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
@@ -645,6 +652,7 @@ public final class BetterElo extends JavaPlugin {
                         customMobs.decreaseMobCount(entry.getValue().spawnerName);
                         iterator.remove();
                         String spawnerName = entry.getValue().spawnerName;
+                        customMobs.spawnedMobsMap.remove(entry.getKey().getUniqueId());
 
 
                         if(!entry.getKey().isValid()){
@@ -665,7 +673,7 @@ public final class BetterElo extends JavaPlugin {
                     }
                 }
             }
-        }.runTaskTimer(this, 0L, 20L * 60); // Uruchom co 1 minutę (20 ticków = 1 sekunda)
+        }.runTaskTimer(this, 0L, 20L * 10); // Uruchom co 1 minutę (20 ticków = 1 sekunda)
     }
 
 }
