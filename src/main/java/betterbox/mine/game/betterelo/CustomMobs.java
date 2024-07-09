@@ -304,15 +304,15 @@ public class CustomMobs {
                 //CustomMob customMob = betterElo.getCustomMobFromEntity(entity) ;
                 while (iterator.hasNext()) {
                     Map.Entry<UUID, String> entry = iterator.next();
-                    pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn. Checking key " + entry.getKey() + " with value " + entry.getValue());
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn. Checking key " + entry.getKey() + " with value " + entry.getValue());
                     if (spawnerName.equals(entry.getValue())) {
-                        pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn.  " + spawnerName + " matching key " + entry.getKey() + ", value " + entry.getValue());
+                        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn.  " + spawnerName + " matching key " + entry.getKey() + ", value " + entry.getValue());
                         Entity entity = Bukkit.getServer().getEntity(entry.getKey());
                         if (entity != null && !entity.isDead()) {
                             entity.remove(); // Usuwa encję z świata
 
                             iterator.remove();  // Bezpieczne usuwanie wpisu podczas iteracji
-                            pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn. Removing living mob from spawner" + spawnerName);
+                            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn. Removing living mob from spawner" + spawnerName);
                         }
                     }
                 }
@@ -363,7 +363,7 @@ public class CustomMobs {
             } else {
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid location specified for spawner " + spawnerName);
             }
-            pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn spawnedMobsMap"+spawnedMobsMap.toString());
+            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawnedMobsMap"+spawnedMobsMap.toString());
         }
     }
 
@@ -518,7 +518,7 @@ public class CustomMobs {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
             try{
                 spawnedMobsMap.put(newMob.entity.getUniqueId(), spawnerName);
-                pluginLogger.log(PluginLogger.LogLevel.INFO, "Mob spawned with UUID: " + newMob.entity.getUniqueId() + ", spawnerName:" + newMob.spawnerName);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Mob spawned with UUID: " + newMob.entity.getUniqueId() + ", spawnerName:" + newMob.spawnerName);
             }catch (Exception e){
                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob  exception: "+e.getMessage());
             }
