@@ -251,6 +251,16 @@ public class CustomMobs {
             CustomMobsFileManager.SpawnerData spawnerData = entry.getValue();
             Location location = getLocationFromString(spawnerData.location);
 
+            while (location.getBlock().getType() != Material.AIR) {
+                location.add(0, 1, 0); // Zwiększ y o 1
+                if (location.getBlockY() > location.getWorld().getMaxHeight()) {
+                    // Jeśli przekraczamy maksymalną wysokość, przerwij pętlę, aby uniknąć pętli nieskończonej
+                    System.out.println("Reached the top of the world without finding an AIR block.");
+                    break;
+                }
+            }
+            location.add(0, 1, 0);
+
             // Sprawdzenie cooldownu
             if (!canSpawnMobs(spawnerName, fileManager.getSpawnerCooldown(spawnerName))) {
                 pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner " + spawnerName + " is on cooldown. Current spawnedMobCount: " + spawnerData.spawnedMobCount);
@@ -271,6 +281,7 @@ public class CustomMobs {
                         pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner 0 remaining slots for " + spawnerName);
                         continue;
                     }
+
                     int mobsToSpawn = Math.min(mobCount, remainingSlots);
                     int spawnedMobs = 0;
                     pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner " + spawnerName + ", maxMobs: " + maxMobs + ", remaining slots: " + remainingSlots + ", mobsToSpawn: " + mobsToSpawn + ", spawnerData.spawnedMobCount: " + spawnerData.spawnedMobCount);
