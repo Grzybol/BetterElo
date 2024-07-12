@@ -202,7 +202,7 @@ public class CustomMobsFileManager {
             // Retrieve the SpawnerData object corresponding to the spawnerName
             SpawnerData spawnerData = spawnersData.get(spawnerName);
             // Return the cooldown value
-            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner '" + spawnerName + "' spawnerData.maxDistance: "+spawnerData.maxDistance);
+            //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner '" + spawnerName + "' spawnerData.maxDistance: "+spawnerData.maxDistance);
             return spawnerData.maxDistance;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
