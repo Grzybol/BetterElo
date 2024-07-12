@@ -8,83 +8,83 @@ Minecraft version 1.18.2+
 
 Dependencies: PlaceholderAPI, BetterRanks
 
-## Player Commands
 
-There are no special permissions required to use the following Player commands.
+## Plugin Commands
 
-### BetterElo commands:
+### Player Commands
+- **/be** - Returns your ranking information.
+- **/be `<player>`** - Returns ranking information about the specified player.
+- **/be info** - Returns information about the plugin.
+- **/be top `<n>`** - Returns ranking information about the player at the specified position.
+- **/be top10** - Returns information about the top 10 players in the ranking.
+- **/be claim** - Claim your rewards! Remember to empty your equipment before claiming!!
+- **/be timeleft** - Returns the remaining time until the giveaway.
+- **/be daily** - Returns information about the top 10 daily ranking.
+- **/be weekly** - Returns information about the top 10 weekly ranking.
+- **/be monthly** - Returns information about the top 10 monthly ranking.
+- **/be event** - Returns information about the event.
+- **/be reroll** - Opens the Re-Roll GUI for AvgDmg bonus items.
 
-- `/be`
-  - [ENG] Returns your ranking info.
-  - [PL] Zwraca info o Twoim rankingu
+### Administrator Commands
+- **/be setrewards** - Opens a GUI for changing the rewards.
+- **/be reload** - Reloads the config file.
+- **/be ban `<player>`** - Resets the player's ranking to 1000 and redistributes remaining points to victims.
+- **/be add `<player> <points> <rankingtype>`** - Adds points to the specified player in a specific ranking (main, daily, weekly, monthly).
+- **/be sub `<player> <points> <rankingtype>`** - Subtracts points from the specified player in a specific ranking.
+- **/be startevent `<duration> <timeUnit>`** - Sets up the duration and time unit for an event.
+- **/be stopevent** - Stops the current event (if active).
+- **/be holo `<event/main/daily/weekly/monthly>`** - Creates a hologram at your position.
+- **/be holo delete `<event/main/daily/weekly/monthly>`** - Deletes the specified hologram.
+- **/be antyweb `<radius>`** - Creates an anti-web effect with the given radius.
+- **/be firework `<power>`** - Creates an Infinite Firework with the given power.
+- **/be flamethrower `<distance> <range>`** - Adds a Flamethrower effect.
+- **/be zephyr `<power>`** - Adds a Zephyr effect.
+- **/be addspawner `<spawnerName> <mobName> <cooldown(s)> <mobCountPerSpawn> <maxMobs>`** - Creates a custom mob spawner.
+- **/be droptable `<name>`** - Opens a GUI to create a new drop table.
+- **/be spawnmob `<mobname> <amount>`** - Spawns the specified custom mob.
+- **/be enchantitem** - Gives you 1x Enchant Item.
+- **/be forcespawn `<spawnerName>`** - Forces a respawn of the specified spawner.
 
-- `/be <player>`
-  - [ENG] Returns ranking info about the given player.
-  - [PL] Zwraca info rankingu danego gracza.
+## PlaceholderAPI Integration
 
-- `/be info`
-  - [ENG] Returns plugin info.
-  - [PL] Zwraca info o pluginie.
+This plugin integrates with PlaceholderAPI to provide various placeholders that can be used in other plugins or parts of your server setup. Here's a list of available placeholders and their descriptions:
 
-- `/be top<n>`
-  - [ENG] Returns ranking info about the player at the given position.
-  - [PL] Zwraca info o graczu na danym miejscu w rankingu.
+### General Placeholders
+- **%be_player%** - Returns the main ranking points of the player.
+- **%be_rank%** - Returns the main rank of the player.
 
-- `/be top10`
-  - [ENG] Returns top 10 players from the ranking.
-  - [PL] Zwraca info o top 10 graczy rankingu.
+### Time Left Placeholders
+- **%be_daily_tl%** - Returns the remaining time for daily rewards.
+- **%be_weekly_tl%** - Returns the remaining time for weekly rewards.
+- **%be_monthly_tl%** - Returns the remaining time for monthly rewards.
+- **%be_event_tl%** - Returns the remaining time for the current event, if active.
 
-- `/be claim`
-  - [ENG] Claim your rewards! Remember to empty your inventory!!
-  - [PL] Odbierz swoje nagrody! Pamiętaj wyczyścić ekwipunek przed!!
+### Player Specific Ranking Points
+- **%be_player_daily%** - Returns the daily ranking points of the player.
+- **%be_player_weekly%** - Returns the weekly ranking points of the player.
+- **%be_player_monthly%** - Returns the monthly ranking points of the player.
+- **%be_player_event%** - Returns the event ranking points of the player, if an event is active.
 
-- `/be timeleft`
-  - [ENG] Returns time left to the giveaway.
-  - [PL] Zwraca pozostały czas do rozdania nagród.
+### Player Specific Ranks
+- **%be_rank_daily%** - Returns the daily rank of the player.
+- **%be_rank_weekly%** - Returns the weekly rank of the player.
+- **%be_rank_monthly%** - Returns the monthly rank of the player.
+- **%be_rank_event%** - Returns the event rank of the player, if an event is active.
 
-- `/be daily`
-  - [ENG] Returns top 10 daily ranking.
-  - [PL] Zwraca info o top 10 rankingu dziennego.
+### Top Player Placeholders
+- **%be_points_top{n}%** - Returns the points of the player at the nth position in the main ranking.
+- **%be_player_top{n}%** - Returns the name of the player at the nth position in the main ranking.
 
-- `/be weekly`
-  - [ENG] Returns top 10 weekly ranking.
-  - [PL] Zwraca info o top 10 rankingu tygodniowego.
+### Daily, Weekly, Monthly, and Event Specific
+- **%be_daily_points_top{n}%** - Returns the points of the player at the nth position in the daily ranking.
+- **%be_weekly_points_top{n}%** - Returns the points of the player at the nth position in the weekly ranking.
+- **%be_monthly_points_top{n}%** - Returns the points of the player at the nth position in the monthly ranking.
+- **%be_event_points_top{n}%** - Returns the points of the player at the nth position in the event ranking, if an event is active.
 
-- `/be monthly`
-  - [ENG] Returns top 10 monthly ranking.
-  - [PL] Zwraca info o top 10 rankingu miesięcznego.
+### Miscellaneous
+- **%be_daily_player_top{n}%** - Returns the name of the player at the nth position in the daily ranking.
+- **%be_weekly_player_top{n}%** - Returns the name of the player at the nth position in the weekly ranking.
+- **%be_monthly_player_top{n}%** - Returns the name of the player at the nth position in the monthly ranking.
+- **%be_event_player_top{n}%** - Returns the name of the player at the nth position in the event ranking, if an event is active.
 
-- `/be event`
-   - return info about your postiion in evnet (if active)
-
-## Only for OP
-
-- `/be setrewards`
-  - Opens rewards GUI configuration for all timed rankings (daily, weekly, monthly) and positions (top1, top2, top3, top4-10). IMPORTANT! "Reset" button is resetting the specified ranking type timer without handing out prizes. "Redeem" is both resetting the timer and handing out prizes.
-
-- `/be ban <player>`
-- `/be add <player> <points> <main/daily/weekly/monthly>`
-- `/be sub <player> <points> <main/daily/weekly/monthly>`
-- `/be startevent <duration> <timeunit>`
-- `/be stopevent`
-
-## Placeholders
-
-**IMPORTANT!! I hardcoded 10s interval for checking placeholders - lemme know if you want it to be configurable in config file**
-
-- `%be_player%` returns the player's main ranking points
-- `%be_player_daily%` returns the player's daily ranking points
-- `%be_player_weekly%` returns the player's weekly ranking points
-- `%be_player_monthly%` returns the player's monthly ranking points
-- `%be_rank%` returns the player's main ranking
-- `%be_rank_daily%` returns the player's daily ranking
-- `%be_rank_weekly%` returns the player's weekly ranking
-- `%be_rank_monthly%` returns the player's monthly ranking
-- `%be_player_top<n>%` returns the player's nickname at position `<n>` in ranking
-- `%be_points_top<n>%` returns the player's points at position `<n>` in ranking
-- `%be_daily_tl%` returns time left on daily rewards timer - automatically converts to D-M-S format
-- `%be_weekly_tl%` returns time left on weekly rewards timer - automatically converts to D-M-S format
-- `%be_monthly_tl%` returns time left on monthly rewards timer - automatically converts to D-M-S format
-- `%be_event_tl%` returns time left on event rewards timer - automatically converts to D-M-S format
-- `%be_event_daily%` returns the player's event ranking
-- `%be_event_monthly%` returns the player's event ranking points
+These placeholders can be used to display dynamic content related to rankings and events within your server. Ensure that PlaceholderAPI is installed and configured properly to utilize these placeholders.
