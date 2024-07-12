@@ -1453,6 +1453,25 @@ public class  Event implements Listener {
                     }
 
                 }
+                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 35) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.");
+                    event.setCancelled(true);
+                    Inventory inventory = event.getInventory();
+                    List<ItemStack> itemsToSave = new ArrayList<>();
+                    for (int i = 0; i < inventory.getSize(); i++) {
+                        if (i != 35) { // Pomijamy slot przycisku "Save"
+                            ItemStack item = inventory.getItem(i);
+                            if (item != null && item.getType() != Material.AIR) {
+                                itemsToSave.add(item);
+                            }
+                        }
+                    }
+
+                    String fileName=guiManager.periodType+"_"+guiManager.rewardType;
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
+                    fileRewardManager.saveRewards(fileName,itemsToSave);
+
+                }
                 break;
             case "AvgDmg bonus change":
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll");

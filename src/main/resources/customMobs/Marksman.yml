@@ -1,0 +1,39 @@
+type: SKELETON # ENTITY TYPE
+mobName: Marksman # Mob Name used in the plugin
+armor: 5.0 # x points of dmg reduction
+hp: 300
+speed: 0.4 # movement speed
+attackDamage: 10
+dropTable: ExampleDropTable # tbh I don't remember which one is used in the plugin - unnecessary fields will be removed in the future releases
+defense: 30 # x% damage reduction
+customMetadata:
+  CustomMob: true # leave this always as true!!
+  MobName: EXAMPLE BOSS - Panda # displayname COLORS/FORMATTING NOT SUPPORTED YET
+  DropTable: ExampleDropTable # tbh I don't remember which one is used in the plugin - unnecessary fields will be removed in the future releases
+equipment:
+  helmet:
+    type: LEATHER_HELMET
+    unbreakable: true
+    attributes:
+      armor: 0
+  chestplate:
+    type: LEATHER_CHESTPLATE
+    unbreakable: true
+    attributes:
+      armor: 0
+  leggings:
+    type: LEATHER_LEGGINGS
+    unbreakable: true
+    attributes:
+      armor: 0
+  boots:
+    type: LEATHER_BOOTS
+    unbreakable: true
+    attributes:
+      armor: 0
+  weapon:
+    type: BOW
+    enchants:
+      power: 5
+    attributes:
+      damage: 10

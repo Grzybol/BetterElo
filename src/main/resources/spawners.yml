@@ -1,0 +1,8 @@
+spawners:
+ # t1_1:
+ #   location: world,x,y,z
+ #   mobName: NameOfTheMob
+ #   cooldown: 60 
+ #   mobsPerSpawn: 1
+ #   maxMobs: 3
+ #   maxDistance: 20

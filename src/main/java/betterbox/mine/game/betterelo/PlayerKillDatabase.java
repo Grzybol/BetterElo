@@ -24,7 +24,7 @@ public class PlayerKillDatabase {
 
     private void createDatabaseIfNeeded() {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"PlayerKillDatabase: createDatabaseIfNeeded called");
-        File databaseFile = new File("plugins/BetterElo/player_kill_database.db");
+        File databaseFile = new File("plugins/BetterElo/data/player_kill_database.db");
         if (!databaseFile.exists()) {
             createNewDatabase();
         }

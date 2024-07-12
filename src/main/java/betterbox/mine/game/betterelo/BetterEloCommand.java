@@ -189,7 +189,6 @@ public class BetterEloCommand implements CommandExecutor {
                         if (rewardItems != null && !rewardItems.isEmpty()) {
                             for (ItemStack item : rewardItems) {
                                 player.getInventory().addItem(item);
-                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Rewards claimed!");
                                 pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: claim: player: " + player.getName() + " reward: " + item);
                             }
                             rewardsConfig.set(playerName, null); // Usuń przyznane nagrody z pliku
@@ -199,9 +198,11 @@ public class BetterEloCommand implements CommandExecutor {
                             } catch (IOException e) {
                                 pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand: claim: Error while saving rewards configuration: " + e);
                             }
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Rewards claimed!");
+                        }else {
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " No rewards assigned.");
                         }
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " No rewards assigned.");
-                        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: claim: player: " + player.getName() + " No rewards assigned.");
+
                         break;
                     case "timeleft":
                         handleTimeLeft(sender);
@@ -698,13 +699,14 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be holo <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- creates holo at your position.");
             sender.sendMessage(ChatColor.AQUA + "/be holo delete <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- delete given holo");
             sender.sendMessage(ChatColor.AQUA + "/be antyweb <radius> " + ChatColor.GREEN + "- creates antyweb effect with given radius");
-            sender.sendMessage(ChatColor.AQUA + "/be addelytra " + ChatColor.GREEN + "- adds Elytra Effect to the chestplate (works only with infinite Infinite Firework)");
             sender.sendMessage(ChatColor.AQUA + "/be firework <power> " + ChatColor.GREEN + "- creates an Infinite Firework with given power");
             sender.sendMessage(ChatColor.AQUA + "/be flamethrower <distance> <range>" + ChatColor.GREEN + "- adds Flamethrower effect");
             sender.sendMessage(ChatColor.AQUA + "/be zephyr <power> " + ChatColor.GREEN + "- adds Zephyr effect");
             sender.sendMessage(ChatColor.AQUA + "/be addspawner <spawnerName> <mobName> <cooldown(s)> <mobCountPerSpawn> <maxMobs>" + ChatColor.GREEN + "- creates custom mob spawner");
             sender.sendMessage(ChatColor.AQUA + "/be droptable <name> - opens a GUI to create new drop table");
             sender.sendMessage(ChatColor.AQUA + "/be spawnmob <mobname> <amount> - spawn given custom mob");
+            sender.sendMessage(ChatColor.AQUA + "/be enchantitem - gives you 1x Enchant Item");
+            sender.sendMessage(ChatColor.AQUA + "/be forcespawn <spawnerName> - forces a respawn of a given spawner");
         }
     }
     private void handleTimeLeft(CommandSender sender){

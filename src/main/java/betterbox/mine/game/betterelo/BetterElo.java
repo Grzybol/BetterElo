@@ -21,6 +21,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.*;
@@ -73,6 +75,11 @@ public final class BetterElo extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        createPluginFolders();
+        createExampleDropTablesFiles();
+        createExampleDropsFiles();
+        createExampleMobsFiles();
+        createExampleConfigFiles();
         // Inicjalizacja PluginLoggera
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO,PluginLogger.LogLevel.DEBUG, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
         folderPath = getDataFolder().getAbsolutePath();
@@ -143,7 +150,7 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Scheduling monthly ranking rewards...");
         scheduleRewards("monthly", 0, true);
 
-        File dataFolder = this.getDataFolder();
+        File dataFolder = new File(getDataFolder(),"data");
         File databaseFile = new File(dataFolder, "database.txt");
         //WebRankingServer server = new WebRankingServer(databaseFile.getAbsolutePath(), 39378,pluginLogger);
 
@@ -155,6 +162,7 @@ public final class BetterElo extends JavaPlugin {
         new ChatNotifier(this).runTaskTimer(this, 0, 36000);
         // Uzyskaj dostęp do loggera pluginu
         java.util.logging.Logger logger = this.getLogger();
+
 
         // Użyj loggera do rejestrowania wiadomości
         logger.info("[BetterElo] Running");
@@ -178,6 +186,120 @@ public final class BetterElo extends JavaPlugin {
         checkMobsExistence();
 
     }
+    public void createPluginFolders() {
+        // Lista folderów do utworzenia
+        String[] folders = {"customDrops", "customDropTables", "customMobs", "logs","data"};
+
+        // Tworzenie folderów, jeśli nie istnieją
+        for (String folderName : folders) {
+            File folder = new File(getDataFolder(), folderName);
+            if (!folder.exists()) {
+                folder.mkdirs();  // Metoda mkdirs() tworzy folder oraz wszystkie wymagane nadrzędne foldery
+                getLogger().severe("Catalogs "+folders.toString()+" created!");
+            }
+        }
+    }
+    private void createExampleDropsFiles() {
+        // Tworzenie docelowego folderu, jeśli nie istnieje
+        File customFolder = new File(getDataFolder(), "customDrops");
+        if (!customFolder.exists()) {
+            customFolder.mkdirs();
+        }
+
+        // Lokalizacja docelowego pliku konfiguracyjnego
+        String[] fileNames = {"ExampleDropTable_item0.yml", "ExampleDropTable_item1.yml", "ExampleDropTable_item2.yml", "ExampleDropTable_item3.yml", "ExampleDropTable_item4.yml", "ExampleDropTable_item5.yml"};  // Dodaj więcej nazw plików jak potrzebujesz
+
+        for (String fileName : fileNames) {
+            File file = new File(customFolder, fileName);
+            if (!file.exists()) {
+                try (InputStream in = getResource("customDrops/" + fileName)) {
+                    if (in == null) {
+                        getLogger().severe("Resource 'customDrops/" + fileName + "' not found.");
+                        continue;
+                    }
+                    Files.copy(in, file.toPath());
+                } catch (IOException e) {
+                    getLogger().severe("Could not save " + fileName + " to " + file + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    private void createExampleDropTablesFiles() {
+        // Tworzenie docelowego folderu, jeśli nie istnieje
+        File customFolder = new File(getDataFolder(), "customDropTables");
+        if (!customFolder.exists()) {
+            customFolder.mkdirs();
+        }
+
+        // Lokalizacja docelowego pliku konfiguracyjnego
+        String[] fileNames = {"ExampleDropTable.yml"};
+
+        for (String fileName : fileNames) {
+            File file = new File(customFolder, fileName);
+            if (!file.exists()) {
+                try (InputStream in = getResource("customDropTables/" + fileName)) {
+                    if (in == null) {
+                        getLogger().severe("Resource 'customDropTables/" + fileName + "' not found.");
+                        continue;
+                    }
+                    Files.copy(in, file.toPath());
+                } catch (IOException e) {
+                    getLogger().severe("Could not save " + fileName + " to " + file + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    private void createExampleConfigFiles() {
+        // Tworzenie docelowego folderu, jeśli nie istnieje
+        File customFolder = getDataFolder();
+        if (!customFolder.exists()) {
+            customFolder.mkdirs();
+        }
+
+        // Lokalizacja docelowego pliku konfiguracyjnego
+        String[] fileNames = {"config.yml"};
+
+        for (String fileName : fileNames) {
+            File file = new File(customFolder, fileName);
+            if (!file.exists()) {
+                try (InputStream in = getResource(fileName)) {
+                    if (in == null) {
+                        getLogger().severe(fileName + "' not found.");
+                        continue;
+                    }
+                    Files.copy(in, file.toPath());
+                } catch (IOException e) {
+                    getLogger().severe("Could not save " + fileName + " to " + file + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    private void createExampleMobsFiles() {
+        // Tworzenie docelowego folderu, jeśli nie istnieje
+        File customFolder = new File(getDataFolder(), "customMobs");
+        if (!customFolder.exists()) {
+            customFolder.mkdirs();
+        }
+
+        // Lokalizacja docelowego pliku konfiguracyjnego
+        String[] fileNames = {"Marksman.yml","Panda.yml"};
+
+        for (String fileName : fileNames) {
+            File file = new File(customFolder, fileName);
+            if (!file.exists()) {
+                try (InputStream in = getResource("customMobs/" + fileName)) {
+                    if (in == null) {
+                        getLogger().severe("Resource 'customMobs/" + fileName + "' not found.");
+                        continue;
+                    }
+                    Files.copy(in, file.toPath());
+                } catch (IOException e) {
+                    getLogger().severe("Could not save " + fileName + " to " + file + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
 
     @Override
     public void onDisable() {

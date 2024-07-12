@@ -28,11 +28,13 @@ public class FileRewardManager {
     private final PluginLogger pluginLogger; // Dodajemy referencję do PluginLogger
 
     private String rewardType;
+    private File dataFolder;
 
     public FileRewardManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
         this.pluginLogger = pluginLogger; // Inicjalizujemy PluginLogger
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: Inicjalizacja");
+        dataFolder = new File(plugin.getDataFolder(),"data");
     }
 
     public void setRewardType(String rewardType,String subType) {
@@ -47,7 +49,8 @@ public class FileRewardManager {
     }
 
     public List<ItemStack> loadRewards() {
-        File rewardsFile = new File(plugin.getDataFolder(), rewardType + ".yml");
+
+        File rewardsFile = new File(dataFolder, rewardType + ".yml");
         if (!rewardsFile.exists()) {
             return new ArrayList<>(); // return empty list if the file does not exist
         }
@@ -62,7 +65,7 @@ public class FileRewardManager {
         return rewards;
     }
     public List<ItemStack> loadReRollCost() {
-        File rewardsFile = new File(plugin.getDataFolder(), "reroll.yml");
+        File rewardsFile = new File(dataFolder, "reroll.yml");
         if (!rewardsFile.exists()) {
             return new ArrayList<>(); // return empty list if the file does not exist
         }
@@ -77,7 +80,7 @@ public class FileRewardManager {
         return rewards;
     }
     public List<ItemStack> loadRewards(Player player) {
-        File rewardsFile = new File(plugin.getDataFolder(), rewardType + ".yml");
+        File rewardsFile = new File(dataFolder, rewardType + ".yml");
         if (!rewardsFile.exists()) {
             return new ArrayList<>(); // return empty list if the file does not exist
         }
@@ -86,7 +89,7 @@ public class FileRewardManager {
     }
     public List<ItemStack> getReward(String rewardType) {
         // Załaduj konfigurację z pliku dla danego typu nagrody
-        File rewardFile = new File(plugin.getDataFolder(), rewardType + ".yml");
+        File rewardFile = new File(dataFolder, rewardType + ".yml");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"FileRewardManager: getReward: rewardType:" + rewardType);
         FileConfiguration rewardConfig = YamlConfiguration.loadConfiguration(rewardFile);
         // Pobierz dane o nagrodzie z pliku konfiguracyjnego
@@ -119,7 +122,7 @@ public class FileRewardManager {
     }
     public void saveRewards(String fileName, List<ItemStack> rewards) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "FileRewardManager.saveRewards called. fileName: "+fileName);
-        File rewardsFile = new File(plugin.getDataFolder(), fileName + ".yml");
+        File rewardsFile = new File(dataFolder, fileName + ".yml");
         if (!rewardsFile.getParentFile().exists()) {
             rewardsFile.getParentFile().mkdirs(); // Tworzy katalog, jeśli nie istnieje
         }

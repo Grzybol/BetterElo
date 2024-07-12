@@ -8,6 +8,7 @@ import java.util.*;
 public class DataManager {
     private final JavaPlugin plugin;
     private final File dataFolder;
+    private final File pluginDataFolder;
     private final File databaseFile;
     private final File dailyDatabaseFile;
     private final File weeklyDatabaseFile;
@@ -23,7 +24,8 @@ public class DataManager {
     public DataManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
         this.pluginLogger = pluginLogger; // Inicjalizujemy PluginLogger
-        this.dataFolder = plugin.getDataFolder();
+        this.pluginDataFolder = plugin.getDataFolder();
+        this.dataFolder = new File(pluginDataFolder,"data");
         this.databaseFile = new File(dataFolder, "database.txt");
         this.dailyDatabaseFile = new File(dataFolder, "daily_database.txt");
         this.weeklyDatabaseFile = new File(dataFolder, "weekly_database.txt");
