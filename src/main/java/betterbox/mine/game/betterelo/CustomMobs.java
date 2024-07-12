@@ -60,7 +60,7 @@ public class CustomMobs {
             if (weapon != null) {
                 this.weapon = weapon;
             } else {
-                plugin.getLogger().warning(mobName + " does not have weapon set. Setting AIR");
+                //plugin.getLogger().warning(mobName + " does not have weapon set. Setting AIR");
                 this.weapon = new ItemStack(Material.AIR);
             }
 
@@ -157,7 +157,7 @@ public class CustomMobs {
             if (weapon != null) {
                 entity.getEquipment().setItemInMainHand(weapon);
             } else {
-                plugin.getLogger().warning(mobName + " does not have weapon set. Setting AIR");
+                //plugin.getLogger().warning(mobName + " does not have weapon set. Setting AIR");
                 entity.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
             }
             entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(hp);

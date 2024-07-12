@@ -1,0 +1,130 @@
+Item0:
+  itemPath: customDrops/ExampleDropTable_item0.yml
+  dropChance: 50.0
+  # itemName and description is purely for user information, not needed for the plugin itself
+  itemName: TranslatableComponentImpl{key="chat.square_brackets", args=[TextComponentImpl{content="",
+    style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set, underlined=not_set,
+    italic=true, color=null, clickEvent=null, hoverEvent=null, insertion=null, font=null},
+    children=[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set, bold=not_set,
+    strikethrough=not_set, underlined=not_set, italic=not_set, color=null, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="BetterCoin",
+    style=StyleImpl{obfuscated=false, bold=false, strikethrough=false, underlined=false,
+    italic=false, color=NamedTextColor{name="gold", value="#ffaa00"}, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[]}]}]}], style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=NamedTextColor{name="white",
+    value="#ffffff"}, clickEvent=null, hoverEvent=HoverEvent{action=show_item, value=ShowItem{item=KeyImpl{namespace="minecraft",
+    value="honeycomb"}, count=1, nbt={display:{Lore:['{"extra":[{"bold":false,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"yellow","text":"Valuable
+    currency you can use to buy items."}],"text":""}'],Name:'{"extra":[{"bold":false,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"gold","text":"BetterCoin"}],"text":""}'}}}},
+    insertion=null, font=null}, children=[]}
+  avgDmgBonus: false
+  description: '[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=null,
+    clickEvent=null, hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Valuable
+    currency you can use to buy items.", style=StyleImpl{obfuscated=false, bold=false,
+    strikethrough=false, underlined=false, italic=false, color=NamedTextColor{name="yellow",
+    value="#ffff55"}, clickEvent=null, hoverEvent=null, insertion=null, font=null},
+    children=[]}]}]'
+Item1:
+  itemPath: customDrops/ExampleDropTable_item1.yml
+  dropChance: 100.0
+  # itemName and description is purely for user information, not needed for the plugin itself
+  itemName: TranslatableComponentImpl{key="chat.square_brackets", args=[TextComponentImpl{content="",
+    style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set, underlined=not_set,
+    italic=true, color=null, clickEvent=null, hoverEvent=null, insertion=null, font=null},
+    children=[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set, bold=not_set,
+    strikethrough=not_set, underlined=not_set, italic=not_set, color=null, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Coin",
+    style=StyleImpl{obfuscated=false, bold=false, strikethrough=false, underlined=false,
+    italic=false, color=NamedTextColor{name="gold", value="#ffaa00"}, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[]}]}]}], style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=NamedTextColor{name="white",
+    value="#ffffff"}, clickEvent=null, hoverEvent=HoverEvent{action=show_item, value=ShowItem{item=KeyImpl{namespace="minecraft",
+    value="sunflower"}, count=1, nbt={display:{Lore:['{"extra":[{"bold":false,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"yellow","text":"Currency
+    you can use to buy items."}],"text":""}'],Name:'{"extra":[{"bold":false,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"gold","text":"Coin"}],"text":""}'}}}},
+    insertion=null, font=null}, children=[]}
+  avgDmgBonus: false
+  description: '[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=null,
+    clickEvent=null, hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Currency
+    you can use to buy items.", style=StyleImpl{obfuscated=false, bold=false, strikethrough=false,
+    underlined=false, italic=false, color=NamedTextColor{name="yellow", value="#ffff55"},
+    clickEvent=null, hoverEvent=null, insertion=null, font=null}, children=[]}]}]'
+Item2:
+  itemPath: customDrops/ExampleDropTable_item2.yml
+  dropChance: 100.0
+  # itemName and description is purely for user information, not needed for the plugin itself
+  itemName: TranslatableComponentImpl{key="chat.square_brackets", args=[TextComponentImpl{content="",
+    style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set, underlined=not_set,
+    italic=true, color=null, clickEvent=null, hoverEvent=null, insertion=null, font=null},
+    children=[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set, bold=not_set,
+    strikethrough=not_set, underlined=not_set, italic=not_set, color=null, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Shears
+    LvL12", style=StyleImpl{obfuscated=false, bold=true, strikethrough=false, underlined=false,
+    italic=false, color=NamedTextColor{name="gold", value="#ffaa00"}, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[]}]}]}], style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=NamedTextColor{name="aqua",
+    value="#55ffff"}, clickEvent=null, hoverEvent=HoverEvent{action=show_item, value=ShowItem{item=KeyImpl{namespace="minecraft",
+    value="shears"}, count=1, nbt={Damage:0,Enchantments:[{id:"minecraft:efficiency",lvl:11s}],HideFlags:1,Unbreakable:1b,display:{Lore:['{"extra":[{"bold":true,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"gold","text":"Antyweb
+    2"}],"text":""}'],Name:'{"extra":[{"bold":true,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"gold","text":"Shears
+    LvL12"}],"text":""}'}}}}, insertion=null, font=null}, children=[]}
+  avgDmgBonus: false
+  description: '[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=null,
+    clickEvent=null, hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Antyweb
+    2", style=StyleImpl{obfuscated=false, bold=true, strikethrough=false, underlined=false,
+    italic=false, color=NamedTextColor{name="gold", value="#ffaa00"}, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[]}]}]'
+Item3:
+  itemPath: customDrops/ExampleDropTable_item3.yml
+  avgDmgBonus: true
+  dropChance: 100.0
+  # itemName and description is purely for user information, not needed for the plugin itself
+  itemName: TranslatableComponentImpl{key="chat.square_brackets", args=[TextComponentImpl{content="",
+    style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set, underlined=not_set,
+    italic=true, color=null, clickEvent=null, hoverEvent=null, insertion=null, font=null},
+    children=[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set, bold=not_set,
+    strikethrough=not_set, underlined=not_set, italic=not_set, color=null, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Example
+    Item", style=StyleImpl{obfuscated=false, bold=true, strikethrough=false, underlined=false,
+    italic=false, color=NamedTextColor{name="dark_purple", value="#aa00aa"}, clickEvent=null,
+    hoverEvent=null, insertion=null, font=null}, children=[]}]}]}], style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=NamedTextColor{name="white",
+    value="#ffffff"}, clickEvent=null, hoverEvent=HoverEvent{action=show_item, value=ShowItem{item=KeyImpl{namespace="minecraft",
+    value="netherite_sword"}, count=1, nbt={Damage:0,display:{Lore:['{"extra":[{"bold":true,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"gold","text":"Mob
+    Damage 20-100"}],"text":""}'],Name:'{"extra":[{"bold":true,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"dark_purple","text":"Example
+    Item"}],"text":""}'}}}}, insertion=null, font=null}, children=[]}
+  description: '[TextComponentImpl{content="", style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=null,
+    clickEvent=null, hoverEvent=null, insertion=null, font=null}, children=[TextComponentImpl{content="Mob
+    Damage 20-100", style=StyleImpl{obfuscated=false, bold=true, strikethrough=false,
+    underlined=false, italic=false, color=NamedTextColor{name="gold", value="#ffaa00"},
+    clickEvent=null, hoverEvent=null, insertion=null, font=null}, children=[]}]}]'
+Item4:
+  itemPath: customDrops/ExampleDropTable_item4.yml
+  dropChance: 100.0
+  itemName: TranslatableComponentImpl{key="chat.square_brackets", args=[TextComponentImpl{content="",
+    style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set, underlined=not_set,
+    italic=not_set, color=null, clickEvent=null, hoverEvent=null, insertion=null,
+    font=null}, children=[TranslatableComponentImpl{key="block.minecraft.beacon",
+    args=[], style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set,
+    underlined=not_set, italic=not_set, color=null, clickEvent=null, hoverEvent=null,
+    insertion=null, font=null}, children=[]}]}], style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=NamedTextColor{name="aqua",
+    value="#55ffff"}, clickEvent=null, hoverEvent=HoverEvent{action=show_item, value=ShowItem{item=KeyImpl{namespace="minecraft",
+    value="beacon"}, count=6, nbt=null}}, insertion=null, font=null}, children=[]}
+  avgDmgBonus: false
+Item5:
+  itemPath: customDrops/ExampleDropTable_item5.yml
+  dropChance: 100.0
+  itemName: TranslatableComponentImpl{key="chat.square_brackets", args=[TextComponentImpl{content="",
+    style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set, underlined=not_set,
+    italic=not_set, color=null, clickEvent=null, hoverEvent=null, insertion=null,
+    font=null}, children=[TranslatableComponentImpl{key="item.minecraft.enchanted_golden_apple",
+    args=[], style=StyleImpl{obfuscated=not_set, bold=not_set, strikethrough=not_set,
+    underlined=not_set, italic=not_set, color=null, clickEvent=null, hoverEvent=null,
+    insertion=null, font=null}, children=[]}]}], style=StyleImpl{obfuscated=not_set,
+    bold=not_set, strikethrough=not_set, underlined=not_set, italic=not_set, color=NamedTextColor{name="light_purple",
+    value="#ff55ff"}, clickEvent=null, hoverEvent=HoverEvent{action=show_item, value=ShowItem{item=KeyImpl{namespace="minecraft",
+    value="enchanted_golden_apple"}, count=11, nbt=null}}, insertion=null, font=null},
+    children=[]}
+  avgDmgBonus: false

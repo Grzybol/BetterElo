@@ -15,6 +15,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.*;
 
 import org.bukkit.Location;
@@ -120,25 +123,23 @@ public class CustomMobsFileManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobsFileManager.CreateCustomMobsFolder exception: " + e.getMessage());
         }
     }
-
+    private void CreateExampleSpawnersFile(File spawnersFile){
+        try (InputStream in = plugin.getResource("customMobs/spawners.yml")) {
+            if (in == null) {
+                plugin.getLogger().severe("Resource 'customDropTables/spawners.yml not found.");
+                return;
+            }
+            Files.copy(in, spawnersFile.toPath());
+        } catch (IOException e) {
+            plugin.getLogger().severe("Could not save spawners.yml to " + spawnersFile + ": " + e.getMessage());
+        }
+    }
     private void CreateSpawnersFile(String folderPath) {
         try {
             String spawnersFileName = "spawners.yml";
             spawnersFile = new File(folderPath + File.separator + "customMobs", spawnersFileName);
             if (!spawnersFile.exists()) {
-                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobsFileManager.CreateSpawnersFile creating new file.");
-                spawnersFile.createNewFile();
-
-                // Tworzymy domyślną strukturę pliku
-                FileConfiguration config = YamlConfiguration.loadConfiguration(spawnersFile);
-                config.createSection("spawners");
-                config.set("spawners.exampleSpawner.location", "x y z");
-                config.set("spawners.exampleSpawner.mobName", "exampleMobName");
-                config.set("spawners.exampleSpawner.cooldown", "exampleCooldown");
-                config.set("spawners.exampleSpawner.mobsPerSpawn", "mobsPerSpawn");
-                config.set("spawners.exampleSpawner.mobsPerSpawn", "maxMobs");
-                // Zapisujemy zmiany do pliku
-                config.save(spawnersFile);
+                CreateExampleSpawnersFile(spawnersFile);
             } else {
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.CreateSpawnersFile file already exists.");
             }
