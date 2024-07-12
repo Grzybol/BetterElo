@@ -54,19 +54,46 @@ There are no special permissions required to use the following Player commands.
 
 **IMPORTANT!! I hardcoded 10s interval for checking placeholders - lemme know if you want it to be configurable in config file**
 
-- `%be_player%` returns the player's main ranking points
-- `%be_player_daily%` returns the player's daily ranking points
-- `%be_player_weekly%` returns the player's weekly ranking points
-- `%be_player_monthly%` returns the player's monthly ranking points
-- `%be_rank%` returns the player's main ranking
-- `%be_rank_daily%` returns the player's daily ranking
-- `%be_rank_weekly%` returns the player's weekly ranking
-- `%be_rank_monthly%` returns the player's monthly ranking
-- `%be_player_top<n>%` returns the player's nickname at position `<n>` in ranking
-- `%be_points_top<n>%` returns the player's points at position `<n>` in ranking
-- `%be_daily_tl%` returns time left on daily rewards timer - automatically converts to D-M-S format
-- `%be_weekly_tl%` returns time left on weekly rewards timer - automatically converts to D-M-S format
-- `%be_monthly_tl%` returns time left on monthly rewards timer - automatically converts to D-M-S format
-- `%be_event_tl%` returns time left on event rewards timer - automatically converts to D-M-S format
-- `%be_event_daily%` returns the player's event ranking
-- `%be_event_monthly%` returns the player's event ranking points
+## PlaceholderAPI Integration
+
+This plugin integrates with PlaceholderAPI to provide various placeholders that can be used in other plugins or parts of your server setup. Here's a list of available placeholders and their descriptions:
+
+### General Placeholders
+- **%be_player%** - Returns the main ranking points of the player.
+- **%be_rank%** - Returns the main rank of the player.
+
+### Time Left Placeholders
+- **%be_daily_tl%** - Returns the remaining time for daily rewards.
+- **%be_weekly_tl%** - Returns the remaining time for weekly rewards.
+- **%be_monthly_tl%** - Returns the remaining time for monthly rewards.
+- **%be_event_tl%** - Returns the remaining time for the current event, if active.
+
+### Player Specific Ranking Points
+- **%be_player_daily%** - Returns the daily ranking points of the player.
+- **%be_player_weekly%** - Returns the weekly ranking points of the player.
+- **%be_player_monthly%** - Returns the monthly ranking points of the player.
+- **%be_player_event%** - Returns the event ranking points of the player, if an event is active.
+
+### Player Specific Ranks
+- **%be_rank_daily%** - Returns the daily rank of the player.
+- **%be_rank_weekly%** - Returns the weekly rank of the player.
+- **%be_rank_monthly%** - Returns the monthly rank of the player.
+- **%be_rank_event%** - Returns the event rank of the player, if an event is active.
+
+### Top Player Placeholders
+- **%be_points_top{n}%** - Returns the points of the player at the nth position in the main ranking.
+- **%be_player_top{n}%** - Returns the name of the player at the nth position in the main ranking.
+
+### Daily, Weekly, Monthly, and Event Specific
+- **%be_daily_points_top{n}%** - Returns the points of the player at the nth position in the daily ranking.
+- **%be_weekly_points_top{n}%** - Returns the points of the player at the nth position in the weekly ranking.
+- **%be_monthly_points_top{n}%** - Returns the points of the player at the nth position in the monthly ranking.
+- **%be_event_points_top{n}%** - Returns the points of the player at the nth position in the event ranking, if an event is active.
+
+### Miscellaneous
+- **%be_daily_player_top{n}%** - Returns the name of the player at the nth position in the daily ranking.
+- **%be_weekly_player_top{n}%** - Returns the name of the player at the nth position in the weekly ranking.
+- **%be_monthly_player_top{n}%** - Returns the name of the player at the nth position in the monthly ranking.
+- **%be_event_player_top{n}%** - Returns the name of the player at the nth position in the event ranking, if an event is active.
+
+These placeholders can be used to display dynamic content related to rankings and events within your server. Ensure that PlaceholderAPI is installed and configured properly to utilize these placeholders.
