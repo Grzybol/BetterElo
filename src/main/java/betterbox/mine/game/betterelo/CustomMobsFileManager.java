@@ -38,6 +38,7 @@ public class CustomMobsFileManager {
     // Klasa wewnętrzna do przechowywania danych spawnera
     static class SpawnerData {
         String spawnerName;
+        int maxDistance;
         String location;
         String mobName;
         int cooldown;
@@ -45,18 +46,29 @@ public class CustomMobsFileManager {
         int spawnedMobCount; // Counter for spawned mobs
         int maxMobs;
 
-        SpawnerData(String spawnerName, String location, String mobName, int cooldown, int mobCount, int maxMobs) {
+        SpawnerData(String spawnerName, String location, String mobName, int cooldown, int mobCount, int maxMobs, int maxDistance) {
             this.spawnerName = spawnerName;
             this.location = location;
             this.mobName = mobName;
             this.cooldown = cooldown;
             this.mobCount = mobCount;
             this.maxMobs = maxMobs;
+            this.maxDistance = maxDistance;
             this.spawnedMobCount = 0; // Initialize the spawned mob counter to 0
         }
         public int getSpawnedMobCount() {
             return this.spawnedMobCount;
         }
+        public int getMaxMobs() {
+            return this.maxMobs;
+        }
+        public int getMobsPerSpawn() {
+            return this.mobCount;
+        }
+        public int getCooldown() {
+            return this.cooldown;
+        }
+        public int getMaxDistance() {return this.maxDistance;}
     }
     public class DropItem {
         private double dropChance;
@@ -156,8 +168,11 @@ public class CustomMobsFileManager {
                 int cooldown = spawnerSection.getInt("cooldown");
                 int mobCount = spawnerSection.getInt("mobsPerSpawn");
                 int maxMobs = spawnerSection.getInt("maxMobs");
+                //default 20 blocks
+                int maxDistance = 20;
+                maxDistance=spawnerSection.getInt("maxDistance");
                 // Zapisywanie danych spawnera do struktury w pamięci
-                spawnersData.put(key, new SpawnerData(key,location, mobName, cooldown,mobCount, maxMobs));
+                spawnersData.put(key, new SpawnerData(key,location, mobName, cooldown,mobCount, maxMobs,maxDistance));
                 pluginLogger.log(PluginLogger.LogLevel.INFO, "Spawner "+key+" with mobName: "+mobName+", location: ("+location+"), cooldown: "+cooldown+", mobsPerSpawn: "+mobCount+", maxMobs: "+maxMobs+" loaded!");
             }
         }
@@ -182,12 +197,37 @@ public class CustomMobsFileManager {
         }
 
     }
+    public int getMaxDistance(String spawnerName){
+        if (spawnersData.containsKey(spawnerName)) {
+            // Retrieve the SpawnerData object corresponding to the spawnerName
+            SpawnerData spawnerData = spawnersData.get(spawnerName);
+            // Return the cooldown value
+            //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner '" + spawnerName + "' spawnerData.maxDistance: "+spawnerData.maxDistance);
+            return spawnerData.maxDistance;
+        } else {
+            // If the spawnerName is not found, log an error and return a default value or throw an exception
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            return 20; // or any other default value that indicates an error
+        }
+    }
     public String getSpawnerMobName(String spawnerName){
         if (spawnersData.containsKey(spawnerName)) {
             // Retrieve the SpawnerData object corresponding to the spawnerName
             SpawnerData spawnerData = spawnersData.get(spawnerName);
             // Return the cooldown value
             return spawnerData.mobName;
+        } else {
+            // If the spawnerName is not found, log an error and return a default value or throw an exception
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            return null; // or any other default value that indicates an error
+        }
+    }
+    public String getSpawnerLocation(String spawnerName){
+        if (spawnersData.containsKey(spawnerName)) {
+            // Retrieve the SpawnerData object corresponding to the spawnerName
+            SpawnerData spawnerData = spawnersData.get(spawnerName);
+            // Return the cooldown value
+            return spawnerData.location;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
@@ -246,7 +286,7 @@ public class CustomMobsFileManager {
             ItemStack leggings=null;
             ItemStack boots=null;
             ItemStack weapon=null;
-
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob entityTypeString: "+entityTypeString);
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")) {// Wczytanie wyposażenia z pliku
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
                  helmet = loadItemStack(mobData, "equipment.helmet");
