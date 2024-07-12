@@ -8,11 +8,6 @@ Minecraft version 1.18.2+
 
 Dependencies: PlaceholderAPI, BetterRanks
 
-## Player Commands
-
-There are no special permissions required to use the following Player commands.
-
-### BetterElo commands:
 
 ## Plugin Commands
 
@@ -49,10 +44,6 @@ There are no special permissions required to use the following Player commands.
 - **/be spawnmob `<mobname> <amount>`** - Spawns the specified custom mob.
 - **/be enchantitem** - Gives you 1x Enchant Item.
 - **/be forcespawn `<spawnerName>`** - Forces a respawn of the specified spawner.
-
-## Placeholders
-
-**IMPORTANT!! I hardcoded 10s interval for checking placeholders - lemme know if you want it to be configurable in config file**
 
 ## PlaceholderAPI Integration
 
