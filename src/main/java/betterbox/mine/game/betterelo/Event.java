@@ -479,6 +479,9 @@ public class  Event implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.BLOCK_PLACE,"Event.onBlockPlace: called");
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE) {
+            return; // Exit if the player is in Creative mode
+        }
         try {
             Block block = event.getBlockPlaced();
             Player player = event.getPlayer();
