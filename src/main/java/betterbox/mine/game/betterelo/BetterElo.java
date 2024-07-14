@@ -4,6 +4,7 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
@@ -34,6 +35,7 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import org.checkerframework.checker.units.qual.C;
 
 public final class BetterElo extends JavaPlugin {
+    HashMap<LivingEntity, BukkitTask> mobTasks = new HashMap<>();
     private static BetterElo instance;
     private PluginLogger pluginLogger;
     private DataManager dataManager;
@@ -759,11 +761,30 @@ public final class BetterElo extends JavaPlugin {
     }
     public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
+        schedulePercentageHealthRegeneration(customMob.entity, 200L, 5.0);
         customMobsMap.put(entity, customMob);
     }
     public void unregisterCustomMob(Entity entity) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
         customMobsMap.remove(entity);
+        if (mobTasks.containsKey(entity)) {
+            mobTasks.get(entity).cancel(); // Anuluje zadanie
+            mobTasks.remove(entity); // Usuwa referencję do zadania z mapy
+        }
+    }
+    public void schedulePercentageHealthRegeneration(LivingEntity mob, long noDamageTicks, double regenPercentage) {
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - mob.getLastDamage() >= noDamageTicks * 50) { // Przekształcenie ticków na milisekundy
+                    double maxHealth = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+                    double regenAmount = maxHealth * (regenPercentage / 100.0);
+                    double newHealth = Math.min(mob.getHealth() + regenAmount, maxHealth);
+                    mob.setHealth(newHealth);
+                }
+            }
+        }.runTaskTimer(this, 20L, 20L); // Uruchamia zadanie co 1 sekundę (20 ticków)
+        mobTasks.put(mob, task); // Przechowuje zadanie dla tego moba
     }
 
     public CustomMobs.CustomMob getCustomMobFromEntity(Entity entity) {

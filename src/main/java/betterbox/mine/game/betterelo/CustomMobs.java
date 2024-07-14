@@ -45,15 +45,17 @@ public class CustomMobs {
         ItemStack helmet, chestplate, leggings, boots, weapon;
         //HashMap< Double,ItemStack> dropTable;
         List<CustomMobsFileManager.DropItem> dropTable;
-        double armor, speed, attackDamage, EMKSchance;
+        double armor, speed, attackDamage, EMKSchance, regenPercent;
         String passengerMobName; // Nowe pole dla nazwy pasażera
-        int hp, attackSpeed, defense;
+        int hp, attackSpeed, defense, regenSeconds;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName, int regenSeconds,double regenPercent) {
             this.plugin = plugin;
+            this.regenSeconds=regenSeconds;
+            this.regenPercent=regenPercent;
             this.passengerMobName=passengerMobName;
             this.dropEMKS = dropEMKS;
             this.EMKSchance = EMKSchance;
@@ -93,8 +95,10 @@ public class CustomMobs {
             //setupMob();
         }
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, int regenSeconds,double regenPercent) {
             this.plugin = plugin;
+            this.regenSeconds=regenSeconds;
+            this.regenPercent=regenPercent;
             this.dropEMKS = dropEMKS;
             this.EMKSchance = EMKSchance;
             this.mobName = mobName;
@@ -113,8 +117,10 @@ public class CustomMobs {
             this.customMetadata = customMetadata;
             //setupMob();
         }
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName,int regenSeconds,double regenPercent) {
             this.plugin = plugin;
+            this.regenSeconds=regenSeconds;
+            this.regenPercent=regenPercent;
             this.dropEMKS = dropEMKS;
             this.EMKSchance = EMKSchance;
             this.mobName = mobName;
@@ -160,12 +166,12 @@ public class CustomMobs {
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
                 newMob.spawnMob(spawnLocation);
             } else {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.regenSeconds, this.regenPercent);
                 newMob.spawnMob(spawnLocation);
             }
             return newMob;
@@ -175,7 +181,7 @@ public class CustomMobs {
             CustomMob newMob = null;
             newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
             newMob.spawnMob(spawnLocation);
 
             return newMob;
@@ -617,6 +623,7 @@ public class CustomMobs {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }
     }
+
 
 
 
