@@ -46,13 +46,15 @@ public class CustomMobs {
         //HashMap< Double,ItemStack> dropTable;
         List<CustomMobsFileManager.DropItem> dropTable;
         double armor, speed, attackDamage, EMKSchance;
+        String passengerMobName; // Nowe pole dla nazwy pasażera
         int hp, attackSpeed, defense;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName) {
             this.plugin = plugin;
+            this.passengerMobName=passengerMobName;
             this.dropEMKS = dropEMKS;
             this.EMKSchance = EMKSchance;
             this.mobName = mobName;
@@ -111,17 +113,44 @@ public class CustomMobs {
             this.customMetadata = customMetadata;
             //setupMob();
         }
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName) {
+            this.plugin = plugin;
+            this.dropEMKS = dropEMKS;
+            this.EMKSchance = EMKSchance;
+            this.mobName = mobName;
+            this.entity = entity;
+            this.entityType = entityType;
+            this.dropFileManager = dropFileManager;
+            this.dropTableName = dropTableName;
+            //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
+            this.dropTable = dropFileManager.loadCustomDropsv2(dropTableName);
+            this.passengerMobName = passengerMobName;
+            this.armor = armor;
+            this.hp = hp;
+            this.attackSpeed = attackSpeed;
+            this.speed = speed;
+            this.defense = defense;
+            this.attackDamage = attackDamage;
+            this.customMetadata = customMetadata;
+            //setupMob();
+        }
 
         // Metoda do stworzenia i ustawienia encji moba
         public void spawnMob(Location location) {
             if (this.entityType == null) {
-                plugin.getLogger().warning("EntityType nie jest ustawiony dla " + mobName);
+                plugin.getLogger().warning("EntityType not set for " + mobName);
                 return;
             }
             this.entity = (LivingEntity) location.getWorld().spawnEntity(location, entityType);
+
             setupMob(); // Teraz wywołujemy setupMob() po stworzeniu encji
             ((BetterElo) plugin).registerCustomMob(this.entity, this);
+
         }
+        public Entity getEntity(){
+            return entity;
+        }
+
 
         public CustomMob cloneForSpawn(Location spawnLocation, String mobType) {
 
@@ -131,7 +160,7 @@ public class CustomMobs {
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName);
                 newMob.spawnMob(spawnLocation);
             } else {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
@@ -139,6 +168,16 @@ public class CustomMobs {
                         this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense);
                 newMob.spawnMob(spawnLocation);
             }
+            return newMob;
+        }
+        public CustomMob cloneForSpawn(Location spawnLocation) {
+
+            CustomMob newMob = null;
+            newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
+                        this.armor, this.hp, this.speed,
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName);
+            newMob.spawnMob(spawnLocation);
+
             return newMob;
         }
 
@@ -182,7 +221,9 @@ public class CustomMobs {
         }
 
 
+
     }
+
 
 
     public CustomMobs(PluginLogger pluginLogger, JavaPlugin plugin, CustomMobsFileManager fileManager, FileRewardManager fileRewardManager, BetterElo betterElo) {
@@ -503,10 +544,7 @@ public class CustomMobs {
         }
     }
 
-    public CustomMob getCustomMob(String mobName) {
-        // Zwróć customowego moba na podstawie nazwy
-        return customMobsMap.get(mobName);
-    }
+
     public Entity getEntityForCustomMob(CustomMob customMob) {
         // Sprawdzenie, czy przypisana encja do moba istnieje
         if (customMob != null && customMob.entity != null) {
@@ -521,10 +559,27 @@ public class CustomMobs {
         CustomMob templateMob = customMobsMap.get(mobName);
         if (templateMob != null) {
             Location adjustedLocation = adjustLocationToAirAbove(location);
-            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation, templateMob.entityType.toString());
-            newMob.customMetadata.put("SpawnerName", spawnerName);
-            newMob.spawnerName = spawnerName;
-            //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
+            CustomMob newMob=null;
+
+            if(templateMob.passengerMobName!=null){
+                newMob = templateMob.cloneForSpawn(adjustedLocation);
+                newMob.customMetadata.put("SpawnerName", spawnerName);
+                newMob.spawnerName = spawnerName;
+                CustomMob passengerTemplateMob = customMobsMap.get(templateMob.passengerMobName);
+                if(passengerTemplateMob!=null) {
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob spawning newMob.passengerMobName: "+newMob.passengerMobName);
+                    CustomMob newPassengerMob = passengerTemplateMob.cloneForSpawn(adjustedLocation, passengerTemplateMob.entityType.toString());
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.passengerMobName: "+newMob.passengerMobName+" spawned, adding as passenger");
+                    newMob.entity.addPassenger(newPassengerMob.entity);
+                    newPassengerMob.customMetadata.put("SpawnerName", spawnerName);
+                    newPassengerMob.spawnerName = spawnerName;
+                    spawnedMobsMap.put(newPassengerMob.entity.getUniqueId(), spawnerName);
+                }
+            }else{
+                newMob = templateMob.cloneForSpawn(adjustedLocation, templateMob.entityType.toString());
+                newMob.customMetadata.put("SpawnerName", spawnerName);
+                newMob.spawnerName = spawnerName;
+            }
             pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
             try{
@@ -543,10 +598,21 @@ public class CustomMobs {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", location: "+location+", mobtype: "+templateMob.entityType.toString());
         if (templateMob != null) {
             Location adjustedLocation = adjustLocationToAirAbove(location);
-            CustomMob newMob = templateMob.cloneForSpawn(adjustedLocation, templateMob.entityType.toString());
-            //newMob.dropTable = fileManager.loadCustomDrops(newMob.dropTableName);
-            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
+            CustomMob newMob = null;
+
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.passengerMobName: "+templateMob.passengerMobName);
+            if(templateMob.passengerMobName!=null){
+                newMob = templateMob.cloneForSpawn(adjustedLocation);
+                CustomMob passengerTemplateMob = customMobsMap.get(templateMob.passengerMobName);
+                if(passengerTemplateMob!=null) {
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob spawning newMob.passengerMobName: "+newMob.passengerMobName);
+                    CustomMob newPassengerMob = passengerTemplateMob.cloneForSpawn(adjustedLocation, passengerTemplateMob.entityType.toString());
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.passengerMobName: "+newMob.passengerMobName+" spawned, adding as passenger");
+                    newMob.entity.addPassenger(newPassengerMob.entity);
+                }
+            }else{
+                newMob = templateMob.cloneForSpawn(adjustedLocation, templateMob.entityType.toString());
+            }
         } else {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
         }

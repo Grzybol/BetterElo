@@ -34,6 +34,7 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import org.checkerframework.checker.units.qual.C;
 
 public final class BetterElo extends JavaPlugin {
+    private static BetterElo instance;
     private PluginLogger pluginLogger;
     private DataManager dataManager;
     public final Map<Entity, CustomMobs.CustomMob> customMobsMap = new HashMap<>();
@@ -75,6 +76,7 @@ public final class BetterElo extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
         createPluginFolders();
         createExampleDropTablesFiles();
         createExampleDropsFiles();
@@ -501,6 +503,13 @@ public final class BetterElo extends JavaPlugin {
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo: scheduleRewards exception: "+e.getMessage());
         }
+    }
+    public static BetterElo getInstance() {
+        return instance;
+    }
+    public CustomMobs.CustomMob getCustomMob(String mobName) {
+        // Zwróć customowego moba na podstawie nazwy
+        return customMobsMap.get(mobName);
     }
     public void stopEvent(){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.stopEvent called");
