@@ -222,7 +222,7 @@ public class CustomMobsFileManager {
             return spawnerData.maxDistance;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "getMaxDistance Spawner '" + spawnerName + "' not found.");
             return 20; // or any other default value that indicates an error
         }
     }
@@ -234,7 +234,7 @@ public class CustomMobsFileManager {
             return spawnerData.mobName;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "getSpawnerMobName Spawner '" + spawnerName + "' not found.");
             return null; // or any other default value that indicates an error
         }
     }
@@ -246,7 +246,7 @@ public class CustomMobsFileManager {
             return spawnerData.location;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "getSpawnerLocation Spawner '" + spawnerName + "' not found.");
             return null; // or any other default value that indicates an error
         }
     }
@@ -259,7 +259,7 @@ public class CustomMobsFileManager {
             return spawnerData.cooldown;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "getSpawnerCooldown Spawner '" + spawnerName + "' not found.");
             return -1; // or any other default value that indicates an error
         }
     }
@@ -271,7 +271,7 @@ public class CustomMobsFileManager {
             return spawnerData.maxMobs;
         } else {
             // If the spawnerName is not found, log an error and return a default value or throw an exception
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawner '" + spawnerName + "' not found.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "getSpawnerMaxMobs Spawner '" + spawnerName + "' not found.");
             return -1; // or any other default value that indicates an error
         }
     }
@@ -363,12 +363,17 @@ public class CustomMobsFileManager {
             CustomMobs.CustomMob customMob=null;
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")){
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
-                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense);
-
-            }else if(passengerMobName!=null){
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense,null);
+                if(passengerMobName!=null) {
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: " + passengerMobName);
+                    customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense, passengerMobName);
+                }
+                }else if(passengerMobName!=null){
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: "+passengerMobName);
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense,passengerMobName);
             }
             else{
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob normal mob");
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense);
 
             }

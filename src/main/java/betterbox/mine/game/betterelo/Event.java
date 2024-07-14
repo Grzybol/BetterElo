@@ -1604,30 +1604,33 @@ public class  Event implements Listener {
 
         if (customMob != null) {
             Location entityLocation = entity.getLocation();
-            String spawnerLocationString = customMobsFileManager.getSpawnerLocation(customMob.spawnerName);
-            Location  spawnerLocation = customMobs.getLocationFromString(spawnerLocationString);
-
-            int maxDistance = customMobsFileManager.getMaxDistance(customMob.spawnerName);
-            if(maxDistance==0){
-                maxDistance=20;
-            }
-            if (spawnerLocation==null){
-                return;
-            }
-            if (entityLocation.distance(spawnerLocation) > maxDistance) {
-                // Teleportacja entity z powrotem do spawnerLocation
-                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Event.onEntityMove teleporting mob: "+customMob.mobName);
-                while (spawnerLocation.getBlock().getType() != Material.AIR) {
-                    spawnerLocation.add(0, 1, 0); // Zwiększ y o 1
-                    if (spawnerLocation.getBlockY() > spawnerLocation.getWorld().getMaxHeight()) {
-                        // Jeśli przekraczamy maksymalną wysokość, przerwij pętlę, aby uniknąć pętli nieskończonej
-                        System.out.println("Reached the top of the world without finding an AIR block.");
-                        break;
-                    }
+            if (customMob.spawnerName!=null) {
+                String spawnerLocationString = customMobsFileManager.getSpawnerLocation(customMob.spawnerName);
+                Location spawnerLocation = customMobs.getLocationFromString(spawnerLocationString);
+                int maxDistance = customMobsFileManager.getMaxDistance(customMob.spawnerName);
+                if(maxDistance==0){
+                    maxDistance=20;
                 }
-                spawnerLocation.add(0, 1, 0);
-                entity.teleport(spawnerLocation);
+                if (spawnerLocation==null){
+                    return;
+                }
+                if (entityLocation.distance(spawnerLocation) > maxDistance) {
+                    // Teleportacja entity z powrotem do spawnerLocation
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Event.onEntityMove teleporting mob: "+customMob.mobName);
+                    while (spawnerLocation.getBlock().getType() != Material.AIR) {
+                        spawnerLocation.add(0, 1, 0); // Zwiększ y o 1
+                        if (spawnerLocation.getBlockY() > spawnerLocation.getWorld().getMaxHeight()) {
+                            // Jeśli przekraczamy maksymalną wysokość, przerwij pętlę, aby uniknąć pętli nieskończonej
+                            System.out.println("Reached the top of the world without finding an AIR block.");
+                            break;
+                        }
+                    }
+                    spawnerLocation.add(0, 1, 0);
+                    entity.teleport(spawnerLocation);
+                }
             }
+
+
 
 
         }
