@@ -161,7 +161,7 @@ public class CustomMobs {
         public CustomMob cloneForSpawn(Location spawnLocation, String mobType) {
 
             CustomMob newMob = null;
-            if (mobType.equals("SKELETON") || mobType.equals("ZOMBIE")) {
+            if (mobType.equals("SKELETON") || mobType.equals("ZOMBIE") || mobType.equals("STRAY")|| mobType.equals("HUSK")|| mobType.equals("WITHER_SKELETON")) {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),

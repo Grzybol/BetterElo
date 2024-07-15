@@ -303,7 +303,7 @@ public class CustomMobsFileManager {
             ItemStack boots=null;
             ItemStack weapon=null;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob entityTypeString: "+entityTypeString);
-            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")) {// Wczytanie wyposażenia z pliku
+            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON") || entityTypeString.equals("WITHER_SKELETON")|| entityTypeString.equals("HUSK")) {// Wczytanie wyposażenia z pliku
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
                  helmet = loadItemStack(mobData, "equipment.helmet");
                  chestplate = loadItemStack(mobData, "equipment.chestplate");
@@ -371,8 +371,8 @@ public class CustomMobsFileManager {
             // Utworzenie instancji CustomMob
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
             CustomMobs.CustomMob customMob=null;
-            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")){
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
+            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON")|| entityTypeString.equals("HUSK")){
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON or STRAY");
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName, dropEMKS, EKMSchance, defense,null, regenSeconds,regenPercent);
                 if(passengerMobName!=null) {
                     pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: " + passengerMobName);
