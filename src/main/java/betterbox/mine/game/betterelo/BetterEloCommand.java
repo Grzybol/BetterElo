@@ -384,71 +384,82 @@ public class BetterEloCommand implements CommandExecutor {
                 }
 
             case 3:
-                if (sender.isOp()&& Objects.equals(args[0], "spawnmob")){
-                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
-                    try{
-                        handleCustomMobsCommands(sender, args[1], Integer.parseInt(args[2]));
-                    }catch (Exception e){
-                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterEloCommand.OnCommand spawnmob command generated exception: "+e);
-                    }
+                if (sender.isOp()) {
+                    switch (args[0]) {
+                        case "spawnmob":
+                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterEloCommand.OnCommand calling handleCustomMobsCommands(sender)");
+                            try {
+                                handleCustomMobsCommands(sender, args[1], Integer.parseInt(args[2]));
+                            } catch (Exception e) {
+                                pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand.OnCommand spawnmob command generated exception: " + e);
+                            }
+                            break;
 
-                }
-                if ((sender.hasPermission("betterelo.flamethrower") || sender.isOp()) && sender instanceof Player && Objects.equals(args[0], "flamethrower")) {
-                    Player player = ((Player) sender).getPlayer();
-                    assert player != null;
-                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                    if (itemInHand.getType().isAir()) {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + "You must hold an item in your hand to add Antyweb lore!");
-                        return true;
+                        case "startevent":
+                            int eventDuration;
+                            try {
+                                eventDuration = Integer.parseInt(args[1]);
+                            } catch (NumberFormatException e) {
+                                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid event duration: " + args[1]);
+                                sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Invalid event duration!");
+                                return true;
+                            }
+
+                            String eventUnit = args[2];
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.onCommand.event called. Duration:" + args[1] + " timeUnit:" + args[2]);
+                            betterElo.eventDuration = eventDuration;
+                            betterElo.eventUnit = eventUnit;
+                            betterElo.isEventEnabled = true;
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo: onEnable: Planowanie nagród event...");
+
+                            long periodMillis = 0;
+                            switch (eventUnit) {
+                                case "h":
+                                    periodMillis = TimeUnit.HOURS.toMillis(eventDuration);
+                                    break;
+                                case "m":
+                                    periodMillis = TimeUnit.MINUTES.toMillis(eventDuration);
+                                    break;
+                                default:
+                                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand.onCommand.event: eventUnit: " + eventUnit);
+                                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " Invalid time unit!");
+                                    return true;
+                            }
+
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.onCommand.event: scheduling event rewards periodMillis:" + periodMillis);
+                            betterElo.scheduleRewards("event", periodMillis, false);
+                            betterElo.rewardStates.put("event", true);
+                            betterElo.loadRewards();
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.onCommand.event: calling betterElo.updateLastScheduledTime(event)");
+                            betterElo.updateLastScheduledTime("event");
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event started! Duration " + eventDuration + " " + eventUnit);
+                            break;
+
+                        case "setattribute":
+                            Player player = (Player) sender;
+                            ItemStack item = player.getInventory().getItemInMainHand();
+                            if(item!=null&&!item.getType().equals("AIR")){
+                                switch (args[1]){
+                                    case "mobdefense":
+                                        betterElo.addMobDefenseAttribute(item, Integer.parseInt(args[2]));
+                                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " MobDefense attribute set with value "+args[2]);
+                                        break;
+                                    case "mobdamage":
+                                        betterElo.addMobDamageAttribute(item, args[2]);
+                                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " mobdamage attribute set with value "+args[2]);
+                                        break;
+                                    case "averagedamage":
+                                        betterElo.addAverageDamageAttribute(item, Integer.parseInt(args[2]));
+                                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " averagedamage attribute set with value "+args[2]);
+                                        break;
+                                }
+                            }
+
+                        default:
+                            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+                            break;
                     }
-                    int radius;
-                    int distance;
-                    try {
-                        // Spróbuj przekonwertować argument na liczbę
-                        radius = Integer.parseInt(args[1]);
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
-                        return true;
-                    }
-                    try {
-                        // Spróbuj przekonwertować argument na liczbę
-                        distance = Integer.parseInt(args[2]);
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED +"Invalid radius! Please provide a number.");
-                        return true;
-                    }
-                    addFlamethrowerLore(player, itemInHand, radius, distance);
-                }
-                if (sender.isOp()&& Objects.equals(args[0], "holo")&& Objects.equals(args[1], "delete")&&args[2].equals("event")){
-                        hologramEvent.delete();
-                        //hologramEvent.isDeleted();
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Holo for Event removed! " + hologramEvent.isDeleted());
-                        eventHoloTask.cancel();
-                }
-                if (sender.isOp()&& Objects.equals(args[0], "startevent")){
-                    int eventDuration = Integer.parseInt(args[1]);
-                    String eventUnit = args[2];
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event called. Duration:"+args[1]+" timeUnit:"+args[2]);
-                    betterElo.eventDuration= Integer.parseInt(args[1]);
-                    betterElo.eventUnit=args[2];
-                    betterElo.isEventEnabled=true;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Planowanie nagród event...");
-                    long periodMillis =0;
-                    if(Objects.equals(eventUnit, "h")) {
-                        periodMillis = TimeUnit.HOURS.toMillis(eventDuration);
-                    }else if(Objects.equals(eventUnit, "m")){
-                        periodMillis = TimeUnit.MINUTES.toMillis(eventDuration);
-                    }else{
-                        pluginLogger.log(PluginLogger.LogLevel.ERROR,"BetterEloCommand.onCommand.event: eventUnit: "+eventUnit);
-                    }
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: scheduling event rewards periodMillis:"+periodMillis);
-                    betterElo.scheduleRewards("event", periodMillis, false);
-                    betterElo.rewardStates.put("event", true);
-                    betterElo.loadRewards();
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand.onCommand.event: calling betterElo.updateLastScheduledTime(event)");
-                    betterElo.updateLastScheduledTime("event");
-                    sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Event started! Duration "+eventDuration+" "+eventUnit);
-                }else{
+                } else {
                     sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
                     return true;
                 }
