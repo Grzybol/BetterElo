@@ -15,6 +15,8 @@ import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -62,6 +64,7 @@ public final class BetterElo extends JavaPlugin {
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
+    private NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -78,6 +81,9 @@ public final class BetterElo extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        this.mobDefenseKey = new NamespacedKey(this, "mob_defense");
+        this.mobDamageKey = new NamespacedKey(this, "mob_damage");
+        this.averageDamageKey = new NamespacedKey(this, "average_damage");
         instance = this;
         createPluginFolders();
         createExampleDropTablesFiles();
@@ -826,6 +832,96 @@ public final class BetterElo extends JavaPlugin {
                 }
             }
         }.runTaskTimer(this, 0L, 20L * 10); // Uruchom co 1 minutę (20 ticków = 1 sekunda)
+    }
+    public void addMobDefenseAttribute(ItemStack item, int value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDefenseAttribute called with value: "+value);
+        if (item != null && item.hasItemMeta()) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDefenseAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDefenseAttribute null item!"+item);
+        }
+    }
+    public void addMobDamageAttribute(ItemStack item, String value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value);
+        if (item != null && item.hasItemMeta()) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item);
+        }
+    }
+    public void addAverageDamageAttribute(ItemStack item, int value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
+        if (item != null ) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addAverageDamageAttribute null item!"+item);
+        }
+    }
+    public int[] getMobDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                String damageRange = dataContainer.get(mobDamageKey, PersistentDataType.STRING);
+                String[] parts = damageRange.split("-");
+                int minDamage = Integer.parseInt(parts[0]);
+                int maxDamage = Integer.parseInt(parts[1]);
+                return new int[]{minDamage, maxDamage};
+            }
+        }
+        return new int[]{0, 0};
+    }
+    public int getMobDefenseAttribute(List<ItemStack> wornItems) {
+        int totalDefense = 0;
+
+        for (ItemStack item : wornItems) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(mobDefenseKey, PersistentDataType.INTEGER)) {
+                    totalDefense += dataContainer.get(mobDefenseKey, PersistentDataType.INTEGER);
+                }
+            }
+        }
+
+        return totalDefense;
+    }
+
+    public int getAverageDamageAttribute(List<ItemStack> wornItems) {
+        int totalDamage = 0;
+
+        for (ItemStack item : wornItems) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                    totalDamage += dataContainer.get(averageDamageKey, PersistentDataType.INTEGER);
+                }
+            }
+        }
+
+        return totalDamage;
     }
 
 }

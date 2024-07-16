@@ -151,8 +151,7 @@ public class  Event implements Listener {
 
     // Metoda do aktualizacji czasu ostatniego uderzenia
     public void updateLastHitTime(Player player) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: updateLastHitTime called");
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: updateLastHitTime saving "+player.getUniqueId()+" "+System.currentTimeMillis());
+        //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: updateLastHitTime saving "+player.getUniqueId()+" "+System.currentTimeMillis());
         lastHitTime.put(player.getUniqueId(), System.currentTimeMillis());
     }
 
@@ -1082,7 +1081,6 @@ public class  Event implements Listener {
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
         Entity damagerEntity = event.getDamager();
         Entity victimEntity = event.getEntity();
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
@@ -1094,19 +1092,11 @@ public class  Event implements Listener {
                 return;
             }
 
-            ItemStack itemInHand = damager.getInventory().getItemInMainHand();
-            List<ItemStack> equippedItems = getPlayerEquippedItems(damager);
-            double averageDamageBonusPercent =0;
-            averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems)/100;
+            int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
             double totalDamage = event.getDamage() + event.getDamage()*averageDamageBonusPercent;
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage);
-
             event.setDamage(totalDamage);
-            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
-
-            // Aktualizacja czasu ostatniego uderzenia
             updateLastHitTime(damager);
-            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
             updateLastHitTime(victim);
             damager.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
@@ -1118,25 +1108,45 @@ public class  Event implements Listener {
             return;
         }
         LivingEntity entity = (LivingEntity) event.getEntity();
-        if (victimEntity.hasMetadata("CustomMob")){
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
-            customEntityDamageEvent(event);
-            //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
-            //Zombie zombie = (Zombie) entity;
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-            //customMobs.updateCustomMobName(zombie);
-            if (!event.getEntity().hasMetadata("CustomMob")) {
-                return;
-            }
+        if (victimEntity.hasMetadata("CustomMob") && damagerEntity instanceof Player){
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
+            Player damager = (Player) event.getDamager();
+            int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
+            int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus);
+            customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus);
             removePlayerPlacedBlocksAsync(victimEntity);
             return;
         }
         if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage());
-            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus((Player) victimEntity))));
+            int customArmorBonus =betterElo.getMobDefenseAttribute(getPlayerEquippedItems((Player) victimEntity));
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus);
+            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
 
         }
 
+    }
+    public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent){
+        double armor=1,defense=0;
+        double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
+        int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
+        double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", averageDamageBonusPercent: "+averageDamageBonusPercent+", bonusDamage: "+bonusDamage);
+        CustomMobs.CustomMob customMob = null;
+        customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
+        if(customMob!=null)
+        {
+            defense = customMob.defense;
+            armor = customMob.armor;
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent  from customMob object - defense: "+defense+", armor: "+armor);
+
+        }
+        double defDmgReduction= (1-(0.01*defense));
+        double finalDamage =((totalDamage-armor)*defDmgReduction);
+        if(finalDamage<=0)
+            finalDamage=0;
+        event.setDamage(finalDamage);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor);
     }
     public void removePlayerPlacedBlocksAsync(Entity entity) {
         // Asynchronicznie przygotowujesz dane
@@ -1191,6 +1201,7 @@ public class  Event implements Listener {
         }
         return CustomArmorBonus;
     }
+
     public void customEntityDamageEvent(EntityDamageByEntityEvent event){
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
 
@@ -1635,6 +1646,7 @@ public class  Event implements Listener {
 
         }
     }
+
 
 
 
