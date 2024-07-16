@@ -1113,7 +1113,7 @@ public class  Event implements Listener {
             Player damager = (Player) event.getDamager();
             int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
             int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange+", avgBonus: "+avgBonus);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus);
             customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus);
             removePlayerPlacedBlocksAsync(victimEntity);
             return;
@@ -1131,7 +1131,7 @@ public class  Event implements Listener {
         double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
         int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
         double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", bonusAverageDamage: "+bonusDamage);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", averageDamageBonusPercent: "+averageDamageBonusPercent+", bonusDamage: "+bonusDamage);
         CustomMobs.CustomMob customMob = null;
         customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
         if(customMob!=null)

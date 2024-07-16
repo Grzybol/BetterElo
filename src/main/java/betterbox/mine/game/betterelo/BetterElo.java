@@ -836,6 +836,9 @@ public final class BetterElo extends JavaPlugin {
     public void addMobDefenseAttribute(ItemStack item, int value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDefenseAttribute called with value: "+value);
         if (item != null && item.hasItemMeta()) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
@@ -848,6 +851,9 @@ public final class BetterElo extends JavaPlugin {
     public void addMobDamageAttribute(ItemStack item, String value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value);
         if (item != null && item.hasItemMeta()) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
@@ -859,7 +865,10 @@ public final class BetterElo extends JavaPlugin {
     }
     public void addAverageDamageAttribute(ItemStack item, int value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
-        if (item != null && item.hasItemMeta()) {
+        if (item != null ) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);
