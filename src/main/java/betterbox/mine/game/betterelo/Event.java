@@ -496,8 +496,37 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
         }
     }
+    private LivingEntity getTargetEntity(Player player) {
+        // Prosta implementacja do uzyskania celu ataku gracza
+        // Można użyć ray tracingu, aby określić, w co gracz celuje
+        Vector direction = player.getEyeLocation().getDirection().normalize();
+        for (int i = 0; i < 5; i++) { // Sprawdzenie w promieniu 5 bloków
+            Vector targetPos = player.getEyeLocation().add(direction.clone().multiply(i)).toVector();
+            for (LivingEntity entity : player.getWorld().getLivingEntities()) {
+                if (entity.getLocation().toVector().distance(targetPos) < 1.0) { // Sprawdzenie odległości od celu
+                    return entity;
+                }
+            }
+        }
+        return null;
+    }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
+
+        /*
+        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            if(betterElo.hasMobDamageAttribute(event.getPlayer().getInventory().getItemInMainHand())) {
+                Player player = event.getPlayer();
+                LivingEntity target = getTargetEntity(player); // Musisz zaimplementować tę metodę do uzyskania celu
+                if (target != null) {
+                    double damage = 2.0; // Ustawienie wartości obrażeń
+                    target.damage(damage, player);
+                }
+            }
+        }
+
+         */
+
         pluginLogger.log(PluginLogger.LogLevel.PLAYER_INTERACT,"Event.onPlayerInteract called");
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -1079,6 +1108,7 @@ public class  Event implements Listener {
             return null;
         }
     }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         long startTime = System.nanoTime();
@@ -1154,8 +1184,20 @@ public class  Event implements Listener {
         long duration = endTime - startTime;
         double durationInMillis = duration / 1_000_000.0;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
+        Bukkit.getScheduler().runTaskLater(BetterElo.getInstance(), () -> {
+            ((LivingEntity)event.getEntity()).setNoDamageTicks(0);
+            //((Player) event.getEntity()).damage(1D);
+        }, 1L);
 
 
+    }
+    public void customDamageHandling(Player damager, Player victim, double initialDamage) {
+        int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems(damager));
+        double totalDamage = initialDamage + initialDamage * averageDamageBonusPercent;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "customDamageHandling initialDamage: " + initialDamage + ", averageDamageBonusPercent: " + averageDamageBonusPercent + ", totalDamage: " + totalDamage);
+        victim.damage(totalDamage, damager);
+        updateLastHitTime(damager);
+        updateLastHitTime(victim);
     }
     public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent){
         long timer;

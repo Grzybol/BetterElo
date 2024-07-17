@@ -908,6 +908,16 @@ public final class BetterElo extends JavaPlugin {
         }
         return new int[]{0, 0};
     }
+    public boolean hasMobDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
+    }
     public int getMobDefenseAttribute(List<ItemStack> wornItems) {
         int totalDefense = 0;
 
