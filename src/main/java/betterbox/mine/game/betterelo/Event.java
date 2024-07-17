@@ -1080,6 +1080,7 @@ public class  Event implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
+        long startTime = System.nanoTime();
         Entity damagerEntity = event.getDamager();
         Entity victimEntity = event.getEntity();
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
@@ -1112,10 +1113,8 @@ public class  Event implements Listener {
                     damager.removeMetadata("handledDamage", plugin);
                 }
             }, 1L);
-            return;
-        }
-        LivingEntity entity = (LivingEntity) event.getEntity();
-        if (victimEntity.hasMetadata("CustomMob")){
+
+        }else if(victimEntity.hasMetadata("CustomMob")){
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
             customEntityDamageEvent(event);
             //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
@@ -1126,13 +1125,14 @@ public class  Event implements Listener {
                 return;
             }
             removePlayerPlacedBlocksAsync(victimEntity);
-            return;
-        }
-        if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
+        }else if(damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage());
             event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus((Player) victimEntity))));
-
         }
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        double durationInMillis = duration / 1_000_000.0;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
 
     }
     public void removePlayerPlacedBlocksAsync(Entity entity) {
