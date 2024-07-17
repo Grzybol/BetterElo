@@ -1081,6 +1081,7 @@ public class  Event implements Listener {
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        long startTime = System.nanoTime();
         Entity damagerEntity = event.getDamager();
         Entity victimEntity = event.getEntity();
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
@@ -1105,10 +1106,7 @@ public class  Event implements Listener {
                     damager.removeMetadata("handledDamage", plugin);
                 }
             }, 1L);
-            return;
-        }
-        LivingEntity entity = (LivingEntity) event.getEntity();
-        if (victimEntity.hasMetadata("CustomMob") && damagerEntity instanceof Player){
+        }else if (victimEntity.hasMetadata("CustomMob") && damagerEntity instanceof Player){
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
             Player damager = (Player) event.getDamager();
             int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
@@ -1116,17 +1114,20 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus);
             customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus);
             removePlayerPlacedBlocksAsync(victimEntity);
-            return;
-        }
-        if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
+        }else if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
             int customArmorBonus =betterElo.getMobDefenseAttribute(getPlayerEquippedItems((Player) victimEntity));
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus);
             event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
 
         }
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        double durationInMillis = duration / 1_000_000.0;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
 
     }
     public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent){
+        long timer;
         double armor=1,defense=0;
         double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
         int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
