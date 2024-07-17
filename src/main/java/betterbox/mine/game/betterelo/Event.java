@@ -1084,14 +1084,30 @@ public class  Event implements Listener {
         long startTime = System.nanoTime();
         Entity damagerEntity = event.getDamager();
         Entity victimEntity = event.getEntity();
+
+        if (damagerEntity.hasMetadata("handledDamage")) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
+            return;
+        }
+        if (damagerEntity instanceof Player){
+            damagerEntity.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            damagerEntity.removeMetadata("handledDamage", BetterElo.getInstance());
+                        }
+                    }.runTask(BetterElo.getInstance());
+                }
+            }.runTaskLaterAsynchronously(BetterElo.getInstance(), 1L);
+        }
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
 
-            if (damager.hasMetadata("handledDamage")) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
-                return;
-            }
+
 
             int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
             double totalDamage = event.getDamage() + event.getDamage()*averageDamageBonusPercent;
@@ -1099,13 +1115,6 @@ public class  Event implements Listener {
             event.setDamage(totalDamage);
             updateLastHitTime(damager);
             updateLastHitTime(victim);
-            damager.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    damager.removeMetadata("handledDamage", plugin);
-                }
-            }, 1L);
         }else if (victimEntity.hasMetadata("CustomMob") && damagerEntity instanceof Player){
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
             Player damager = (Player) event.getDamager();
@@ -1120,10 +1129,32 @@ public class  Event implements Listener {
             event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
 
         }
+
+        if (victimEntity instanceof LivingEntity) {
+            LivingEntity entity = (LivingEntity) event.getEntity();
+            if (entity.hasMetadata("CustomMob")) {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if (!entity.isDead()) {
+                                    customMobs.updateCustomMobName(entity);
+                                }
+                            }
+                        }.runTask(BetterElo.getInstance());
+                    }
+                }.runTaskLaterAsynchronously(BetterElo.getInstance(), 1L);
+
+            }
+        }
+
         long endTime = System.nanoTime();
         long duration = endTime - startTime;
         double durationInMillis = duration / 1_000_000.0;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
+
 
     }
     public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent){
@@ -1287,22 +1318,7 @@ public class  Event implements Listener {
 
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
     }
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onDamageUpdateCustomMobHealth(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof LivingEntity) {
-            LivingEntity entity = (LivingEntity) event.getEntity();
-            if (entity.hasMetadata("CustomMob")) {
-                // Opóźnienie wykonania aktualizacji nazwy, aby zdążyć na aktualizację zdrowia
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    // Sprawdzenie, czy mob nadal żyje przed aktualizacją nazwy
-                    if (!entity.isDead()) {
-                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected. Updating name.");
-                        customMobs.updateCustomMobName(entity);
-                    }
-                }, 1L); // Opóźnienie o 1 tick
-            }
-        }
-    }
+
 
     public List<ItemStack> getPlayerEquippedItems(Player player) {
         EntityEquipment equipment = player.getEquipment();
