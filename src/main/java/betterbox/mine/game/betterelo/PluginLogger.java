@@ -57,7 +57,7 @@ public class PluginLogger {
     public void log(LogLevel level, String message) {
         if (enabledLogLevels.contains(level)) {
             // Dodanie timestampu i poziomu logowania do wiadomości
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
             String logMessage = timestamp + " [" + level + "] - " + message;
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {

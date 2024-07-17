@@ -49,6 +49,7 @@ public class  Event implements Listener {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private final BetterElo betterElo;
+    private Map<String, Long> lastAttackTimes = new HashMap<>();
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
     private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
@@ -1121,6 +1122,7 @@ public class  Event implements Listener {
         }
         if (damagerEntity instanceof Player){
             damagerEntity.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
+
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -1146,13 +1148,37 @@ public class  Event implements Listener {
             updateLastHitTime(damager);
             updateLastHitTime(victim);
         }else if (victimEntity.hasMetadata("CustomMob") && damagerEntity instanceof Player){
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
             Player damager = (Player) event.getDamager();
+
+            String key = damager.getUniqueId() + ":" + victimEntity.getUniqueId();
+            long currentTime = System.currentTimeMillis();
+            Long lastAttackTime = lastAttackTimes.get(key);
+
+            String metadataKey = "last-attack-time-" + victimEntity.getUniqueId().toString();
+
+            // Sprawdzenie, czy metadane istnieją i czy ostatni atak był mniej niż 10 ticków temu
+
+            if (lastAttackTime != null && (currentTime - lastAttackTime) < 500) {
+                event.setCancelled(true);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Player " + damager.getName() + " tried to hit too fast!");
+                return;
+            }
+
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
+
             int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
             int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus);
             customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus);
             removePlayerPlacedBlocksAsync(victimEntity);
+
+            lastAttackTimes.put(key, currentTime);
+
+            Bukkit.getScheduler().runTaskLater(BetterElo.getInstance(), () -> {
+                ((LivingEntity)event.getEntity()).setNoDamageTicks(0);
+                //((Player) event.getEntity()).damage(1D);
+            }, 1L);
+
         }else if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
             int customArmorBonus =betterElo.getMobDefenseAttribute(getPlayerEquippedItems((Player) victimEntity));
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus);
@@ -1184,10 +1210,8 @@ public class  Event implements Listener {
         long duration = endTime - startTime;
         double durationInMillis = duration / 1_000_000.0;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
-        Bukkit.getScheduler().runTaskLater(BetterElo.getInstance(), () -> {
-            ((LivingEntity)event.getEntity()).setNoDamageTicks(0);
-            //((Player) event.getEntity()).damage(1D);
-        }, 1L);
+
+
 
 
     }
