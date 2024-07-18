@@ -55,13 +55,11 @@ public class CustomMobs {
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName, int regenSeconds,double regenPercent) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName, int regenSeconds,double regenPercent) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
             this.passengerMobName=passengerMobName;
-            this.dropEMKS = dropEMKS;
-            this.EMKSchance = EMKSchance;
             this.mobName = mobName;
             this.entity = entity;
             if (weapon != null) {
@@ -98,12 +96,10 @@ public class CustomMobs {
             //setupMob();
         }
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, int regenSeconds,double regenPercent) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, int regenSeconds,double regenPercent) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
-            this.dropEMKS = dropEMKS;
-            this.EMKSchance = EMKSchance;
             this.mobName = mobName;
             this.entity = entity;
             this.entityType = entityType;
@@ -120,12 +116,10 @@ public class CustomMobs {
             this.customMetadata = customMetadata;
             //setupMob();
         }
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, Boolean dropEMKS, double EMKSchance, int defense, String passengerMobName,int regenSeconds,double regenPercent) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName,int regenSeconds,double regenPercent) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
-            this.dropEMKS = dropEMKS;
-            this.EMKSchance = EMKSchance;
             this.mobName = mobName;
             this.entity = entity;
             this.entityType = entityType;
@@ -169,12 +163,12 @@ public class CustomMobs {
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
                 newMob.spawnMob(spawnLocation);
             } else {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.regenSeconds, this.regenPercent);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.defense, this.regenSeconds, this.regenPercent);
                 newMob.spawnMob(spawnLocation);
             }
             return newMob;
@@ -184,7 +178,7 @@ public class CustomMobs {
             CustomMob newMob = null;
             newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.dropEMKS, this.EMKSchance, this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
             newMob.spawnMob(spawnLocation);
 
             return newMob;
@@ -272,7 +266,7 @@ public class CustomMobs {
         mob.setCustomNameVisible(true);
     }
 
-    public static String dropAverageDamage() {
+    public static int dropAverageDamage() {
         // Używamy funkcji wykładniczej do zmniejszenia prawdopodobieństwa wyższych wartości
         double x = -Math.log(random.nextDouble()) / 10.0; // Dostosuj parametr 10.0, aby zmienić rozkład
         //double y = random.
@@ -281,7 +275,7 @@ public class CustomMobs {
         // Ograniczamy wartość bonusu do maksymalnie 60%
         bonus = Math.min(bonus, 60);
 
-        return "§6§lAverage Damage +" + bonus + "%";
+        return bonus;
     }
 
     public void spawnCustomMobFromSpawner() {

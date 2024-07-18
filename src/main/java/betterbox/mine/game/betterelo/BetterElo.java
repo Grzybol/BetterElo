@@ -908,16 +908,7 @@ public final class BetterElo extends JavaPlugin {
         }
         return new int[]{0, 0};
     }
-    public boolean hasMobDamageAttribute(ItemStack item) {
-        if (item != null && item.hasItemMeta()) {
-            ItemMeta meta = item.getItemMeta();
-            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-            if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
-                return true;
-            }
-        }
-        return false;
-    }
+
     public int getMobDefenseAttribute(List<ItemStack> wornItems) {
         int totalDefense = 0;
 
@@ -948,6 +939,36 @@ public final class BetterElo extends JavaPlugin {
         }
 
         return totalDamage;
+    }
+    public boolean hasMobDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasMobDefenseAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDefenseKey, PersistentDataType.INTEGER)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasAverageDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

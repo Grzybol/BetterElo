@@ -99,48 +99,6 @@ public class GuiManager{
         player.openInventory(inv);
     }
 
-
-    private void handleReRollEvent(InventoryClickEvent event, Inventory inv) {
-        if (event.getSlot() == 2) { // Zapobieganie interakcji z wynikowym slotem
-            event.setCancelled(true);
-            return;
-        }
-
-        // Asynchroniczne sprawdzenie receptury i aktualizacja slotu wynikowego
-        Bukkit.getScheduler().runTaskLater(plugin, () -> updateResultSlot(inv), 1L);
-    }
-
-    private void updateResultSlot(Inventory inv) {
-        ItemStack item0 = inv.getItem(0);
-        ItemStack item1 = inv.getItem(1);
-        if (item0 != null && item1 != null && item0.hasItemMeta() && item1.hasItemMeta()) {
-            ItemMeta meta0 = item0.getItemMeta();
-            ItemMeta meta1 = item1.getItemMeta();
-            boolean slot0Condition = meta0.getLore().stream().anyMatch(line -> line.contains("Average Damage"));
-            boolean slot1Condition = meta1.getDisplayName().equals("test");
-            if (slot0Condition && slot1Condition) {
-                ItemStack result = item0.clone();
-                ItemMeta resultMeta = result.getItemMeta();
-                List<String> lore = new ArrayList<>(resultMeta.getLore());
-                boolean mobDamage = false;
-                for (int i = 0; i < lore.size(); i++) {
-                    if(lore.get(i).contains("Mob Damage"))
-                        mobDamage=true;
-                    if (lore.get(i).contains("Average Damage")&& mobDamage) {
-                        lore.set(i, customMobs.dropAverageDamage());
-                        break;
-                    }
-                }
-                resultMeta.setLore(lore);
-                result.setItemMeta(resultMeta);
-                inv.setItem(2, result);
-            } else {
-                inv.setItem(2, new ItemStack(Material.AIR));
-            }
-        }
-    }
-
-
     public void openCustomSmithingTable(Player player) {
         Inventory smithingTable = Bukkit.createInventory(player, InventoryType.SMITHING, "Re-roll Average Damage bonus");
 

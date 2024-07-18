@@ -39,6 +39,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -1035,23 +1036,19 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
                             int i=0;
                             if (dropItem.isAvgDmgBonus()) {
+
+                                int AvgDmgBonus = CustomMobs.dropAverageDamage();
+                                betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
+
                                 List<String> lore = meta.getLore();
-                                    // Zastąp znalezioną linię nowym tekstem
-                                    String AvgDmgBonus = CustomMobs.dropAverageDamage();
-                                    if(lore!=null) {
-                                        lore.add(AvgDmgBonus);
-                                    }else{
-                                        lore.set(0,AvgDmgBonus);
-                                    }
-                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added AvgDmgBonus: "+AvgDmgBonus);
-
-
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath lore to save: "+lore);
-                                // Zapisz zmodyfikowane lore z powrotem do metadanych przedmiotu
+                                if (lore == null) {
+                                    lore = new ArrayList<>();
+                                }
+                                lore.add("§6§lAverage Damage +"+AvgDmgBonus+"%");
                                 meta.setLore(lore);
-                                item.setItemMeta(meta);
                             }
                             drops.add(item);
+                            item.setItemMeta(meta);
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }else{
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
@@ -1067,16 +1064,6 @@ public class  Event implements Listener {
                 }else {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
-                if(customMob.dropEMKS) {
-                    double EMKSchance = 0.00;
-                    EMKSchance = customMob.EMKSchance/100;
-                    double randomValue = Math.random();
-                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS drop chance: " + EMKSchance + ", randomValue: " + randomValue);
-                    if (randomValue <= EMKSchance) {
-                        drops.add(dropMobKillerSword());
-                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS sword added");
-                    }
-                }
             }
 
 
@@ -1085,31 +1072,6 @@ public class  Event implements Listener {
 
 
     }
-    private ItemStack dropMobKillerSword(){
-        int minDamage = 25 + (int) (Math.random() * 40); // Losuje wartość od 10 do 100
-        int maxDamage = minDamage + (int) (Math.random() * (131 - minDamage)); // Losuje wartość od minDamage do 100
-
-        // Dodaj swój niestandardowy drop
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta meta = sword.getItemMeta();
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword sword created");
-        if (meta != null) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword");
-            meta.setDisplayName("§6§lEpic Mob Slayer Sword");
-            List<String> lore = new ArrayList<>();
-            lore.add("§6§lMob Damage " + minDamage + "-" + maxDamage);
-            lore.add(CustomMobs.dropAverageDamage());
-            meta.setLore(lore);
-            meta.setUnbreakable(true);
-            sword.setItemMeta(meta);
-            return sword;
-        }else{
-
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword meta null");
-            return null;
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         long startTime = System.nanoTime();
@@ -1492,7 +1454,7 @@ public class  Event implements Listener {
             case "Set Rewards":
                 event.setCancelled(true);
                 guiManager.periodType = currentItem.getItemMeta().getDisplayName();
-                if(guiManager.periodType.equals("dropTable")){
+                if (guiManager.periodType.equals("dropTable")) {
                     List<ItemStack> currentRewards = fileRewardManager.loadRewards();
                     inv = Bukkit.createInventory(null, 36, "Add Items");
                     currentRewards.forEach(inv::addItem);
@@ -1529,23 +1491,23 @@ public class  Event implements Listener {
                             continue;
                         }
                         ItemStack item = inventory.getItem(i);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: "+item);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: " + item);
                         if (item != null && item.getType() != Material.AIR) {
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: "+item);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: " + item);
                             itemsToSave.add(item);
                         }
 
                     }
 
-                    String fileName=guiManager.periodType+"_"+guiManager.dropTable;
+                    String fileName = guiManager.periodType + "_" + guiManager.dropTable;
 
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType="+guiManager.periodType);
-                    if(guiManager.periodType.equals("dropTable")){
-                        fileName=guiManager.dropTable;
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: "+fileName);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops("+fileName+",itemsToSave)");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType=" + guiManager.periodType);
+                    if (guiManager.periodType.equals("dropTable")) {
+                        fileName = guiManager.dropTable;
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: " + fileName);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops(" + fileName + ",itemsToSave)");
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
-                    }else{
+                    } else {
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }
 
@@ -1564,94 +1526,88 @@ public class  Event implements Listener {
                         }
                     }
 
-                    String fileName=guiManager.periodType+"_"+guiManager.rewardType;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
-                    fileRewardManager.saveRewards(fileName,itemsToSave);
+                    String fileName = guiManager.periodType + "_" + guiManager.rewardType;
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards(" + fileName + ",itemsToSave)");
+                    fileRewardManager.saveRewards(fileName, itemsToSave);
 
                 }
                 break;
             case "AvgDmg bonus change":
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll");
+                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll");
 
-                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5){
+                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5) {
                     playerInventory.setContents(savedInventory);
                     event.setCancelled(true);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll clicked");
+                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll clicked");
                     Inventory inventory = event.getInventory();
                     ItemStack item0 = inventory.getItem(3);
                     if (item0 != null && item0.hasItemMeta()) {
-
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, item0: "+item0+", item0.hasItemMeta(): "+item0.hasItemMeta());
-                        ItemMeta meta0 = item0.getItemMeta();
-                        boolean slot0Condition = meta0.getLore().stream().anyMatch(line -> line.contains("Average Damage"));
-                        ItemMeta meta  = item0.getItemMeta();
-                        //List<String> lore = meta.getLore();
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, slot0Condition: "+slot0Condition);
-
-                        if (slot0Condition) {
-                            ItemStack result = item0.clone();
-                            ItemMeta resultMeta = result.getItemMeta();
-                            List<String> lore = new ArrayList<>(resultMeta.getLore());
-                            boolean mobDamage=false;
-                            for (int i = 0; i < lore.size(); i++) {
-                                if(lore.get(i).contains("Mob Damage"))
-                                    mobDamage=true;
-                                if (lore.get(i).contains("Average Damage") && mobDamage) {
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, Average Damage lore line found i: " + i);
-                                    if( guiManager.checkAndRemoveEnchantItem(player)) {
-                                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, player paid, re-rolling..." );
-                                        lore.set(i, customMobs.dropAverageDamage());
-                                        player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
-                                        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                player.removeMetadata("avgDmgRerolled", plugin);
-                                            }
-                                        }, 1L);
-                                        break;
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, betterElo.hasMobDamageAttribute(item0): "+betterElo.hasMobDamageAttribute(item0)+", betterElo.hasAverageDamageAttribute(item0): "+betterElo.hasAverageDamageAttribute(item0));
+                        ItemStack result = item0.clone();
+                        ItemMeta resultMeta = result.getItemMeta();
+                        List<String> lore = new ArrayList<>(resultMeta.getLore());
+                        if (betterElo.hasMobDamageAttribute(item0) && betterElo.hasAverageDamageAttribute(item0)) {
+                            if (guiManager.checkAndRemoveEnchantItem(player)) {
+                                int avgDmg = CustomMobs.dropAverageDamage();
+                                betterElo.addAverageDamageAttribute(result, avgDmg);
+                                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...");
+                                for (int i = 0; i < lore.size(); i++) {
+                                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i);
+                                    if (lore.get(i).contains("Average Damage")) {
+                                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i+" contains Average Damage, setting avgDmg: "+avgDmg);
+                                        lore.set(i,"§6§lAverage Damage +"  + avgDmg + "%");
                                     }
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, player has no money for the re-roll." );
                                 }
                             }
+                            player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
+                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    player.removeMetadata("avgDmgRerolled", plugin);
+                                }
+                            }, 1L);
+
+
                             resultMeta.setLore(lore);
                             result.setItemMeta(resultMeta);
                             inventory.setItem(3, result);
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick result placed back in slot 3");
-
-
-                            ItemStack greenWoolItem = inventory.getItem(5);
-                            if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
-                                ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
-                                List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
-                                String avgDmgLine = lore.stream().filter(line -> line.contains("Average Damage")).findFirst().orElse("Average Damage +0%");
-
-                                // Ustalanie indeksów dla "current bonus:" i wartości
-                                int bonusIndex = -1;
-                                for (int i = 0; i < greenWoolLore.size(); i++) {
-                                    if (greenWoolLore.get(i).equals("current bonus:")) {
-                                        bonusIndex = i;
-                                        break;
-                                    }
-                                }
-
-                                if (bonusIndex != -1 && bonusIndex + 1 < greenWoolLore.size()) {
-                                    // Aktualizujemy istniejącą wartość jeśli jest miejsce w lore
-                                    greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
-                                } else if (bonusIndex == -1) {
-                                    // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
-                                    greenWoolLore.add("current bonus:");
-                                    greenWoolLore.add("<" + avgDmgLine + ">");
-                                } else {
-                                    // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość
-                                    greenWoolLore.add("<" + avgDmgLine + ">");
-                                }
-
-                                greenWoolMeta.setLore(greenWoolLore);
-                                greenWoolItem.setItemMeta(greenWoolMeta);
-                                inventory.setItem(5, greenWoolItem);
-
-
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick result placed back in slot 3");
                         }
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player has no money for the re-roll.");
+
+
+                        ItemStack greenWoolItem = inventory.getItem(5);
+
+                        if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
+                            ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
+                            List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
+                            String avgDmgLine = lore.stream().filter(line -> line.contains("Average Damage")).findFirst().orElse("Average Damage +0%");
+
+                            // Ustalanie indeksów dla "current bonus:" i wartości
+                            int bonusIndex = -1;
+                            for (int i = 0; i < greenWoolLore.size(); i++) {
+                                if (greenWoolLore.get(i).equals("current bonus:")) {
+                                    bonusIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (bonusIndex != -1 && bonusIndex + 1 < greenWoolLore.size()) {
+                                // Aktualizujemy istniejącą wartość jeśli jest miejsce w lore
+                                greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
+                            } else if (bonusIndex == -1) {
+                                // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
+                                greenWoolLore.add("current bonus:");
+                                greenWoolLore.add("<" + avgDmgLine + ">");
+                            } else {
+                                // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość
+                                greenWoolLore.add("<" + avgDmgLine + ">");
+                            }
+
+                            greenWoolMeta.setLore(greenWoolLore);
+                            greenWoolItem.setItemMeta(greenWoolMeta);
+                            inventory.setItem(5, greenWoolItem);
+
 
                         }
                     }
