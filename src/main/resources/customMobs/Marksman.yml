@@ -8,6 +8,7 @@ dropTable: ExampleDropTable # tbh I don't remember which one is used in the plug
 defense: 30 # x% damage reduction
 regenSeconds: 10
 regenPercent: 20
+knockbackResistance: 5.0
 customMetadata:
   CustomMob: true # leave this always as true!!
   MobName: EXAMPLE BOSS - Panda # displayname COLORS/FORMATTING NOT SUPPORTED YET

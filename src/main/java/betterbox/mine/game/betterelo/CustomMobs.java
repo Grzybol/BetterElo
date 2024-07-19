@@ -48,14 +48,14 @@ public class CustomMobs {
         ItemStack helmet, chestplate, leggings, boots, weapon;
         //HashMap< Double,ItemStack> dropTable;
         List<CustomMobsFileManager.DropItem> dropTable;
-        double armor, speed, attackDamage, EMKSchance, regenPercent;
+        double armor, speed, attackDamage, EMKSchance, regenPercent, knockbackResistance;
         String passengerMobName; // Nowe pole dla nazwy pasażera
         int hp, attackSpeed, defense, regenSeconds;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName, int regenSeconds,double regenPercent) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -93,10 +93,11 @@ public class CustomMobs {
             this.defense = defense;
             this.attackDamage = attackDamage;
             this.customMetadata = customMetadata;
+            this.knockbackResistance = knockbackResistance;
             //setupMob();
         }
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, int regenSeconds,double regenPercent) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, int regenSeconds,double regenPercent, double knockbackResistance) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -114,11 +115,13 @@ public class CustomMobs {
             this.defense = defense;
             this.attackDamage = attackDamage;
             this.customMetadata = customMetadata;
+            this.knockbackResistance = knockbackResistance;
             //setupMob();
         }
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName,int regenSeconds,double regenPercent) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
+            this.knockbackResistance = knockbackResistance;
             this.regenPercent=regenPercent;
             this.mobName = mobName;
             this.entity = entity;
@@ -163,12 +166,12 @@ public class CustomMobs {
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance);
                 newMob.spawnMob(spawnLocation);
             } else {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.defense, this.regenSeconds, this.regenPercent);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.defense, this.regenSeconds, this.regenPercent, this.knockbackResistance);
                 newMob.spawnMob(spawnLocation);
             }
             return newMob;
@@ -178,7 +181,7 @@ public class CustomMobs {
             CustomMob newMob = null;
             newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance);
             newMob.spawnMob(spawnLocation);
 
             return newMob;
@@ -206,6 +209,7 @@ public class CustomMobs {
             entity.setHealth(hp);
             entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
             entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(attackDamage);
+            entity.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(knockbackResistance); // Ustawienie knockbackResistance
             //plugin.getLogger().info("attackSpeed: "+attackSpeed);
             //entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
 
