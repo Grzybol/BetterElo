@@ -940,6 +940,19 @@ public final class BetterElo extends JavaPlugin {
 
         return totalDamage;
     }
+    public int getAverageDamageAttribute(ItemStack item) {
+        int totalDamage = 0;
+
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                    totalDamage += dataContainer.get(averageDamageKey, PersistentDataType.INTEGER);
+                }
+            }
+
+        return totalDamage;
+    }
     public boolean hasMobDamageAttribute(ItemStack item) {
         if (item != null && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();

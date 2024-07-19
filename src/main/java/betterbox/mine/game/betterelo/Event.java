@@ -1034,11 +1034,9 @@ public class  Event implements Listener {
                             ItemStack item = dropItem.getItemStack();
                             ItemMeta meta = item.getItemMeta();
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
-                            int i=0;
                             if (dropItem.isAvgDmgBonus()) {
 
                                 int AvgDmgBonus = CustomMobs.dropAverageDamage();
-                                betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
 
                                 List<String> lore = meta.getLore();
                                 if (lore == null) {
@@ -1046,9 +1044,18 @@ public class  Event implements Listener {
                                 }
                                 lore.add("§6§lAverage Damage +"+AvgDmgBonus+"%");
                                 meta.setLore(lore);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item);
+                                item.setItemMeta(meta);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item));
+                                betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item)+", getAverageDamageAttribute: "+betterElo.getAverageDamageAttribute(item));
+
                             }
+
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item);
                             drops.add(item);
-                            item.setItemMeta(meta);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath drops.toArray()[0]: "+drops.toArray()[0]);
+
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }else{
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
