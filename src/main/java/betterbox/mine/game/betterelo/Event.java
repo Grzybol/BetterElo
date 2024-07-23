@@ -39,6 +39,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -49,6 +50,7 @@ public class  Event implements Listener {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private final BetterElo betterElo;
+    private Map<String, Long> lastAttackTimes = new HashMap<>();
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
     private HashMap<Player, Long> lastFireworkUsage = new HashMap<>();
@@ -151,8 +153,7 @@ public class  Event implements Listener {
 
     // Metoda do aktualizacji czasu ostatniego uderzenia
     public void updateLastHitTime(Player player) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: updateLastHitTime called");
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: updateLastHitTime saving "+player.getUniqueId()+" "+System.currentTimeMillis());
+        //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: updateLastHitTime saving "+player.getUniqueId()+" "+System.currentTimeMillis());
         lastHitTime.put(player.getUniqueId(), System.currentTimeMillis());
     }
 
@@ -479,6 +480,9 @@ public class  Event implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         pluginLogger.log(PluginLogger.LogLevel.BLOCK_PLACE,"Event.onBlockPlace: called");
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE) {
+            return; // Exit if the player is in Creative mode
+        }
         try {
             Block block = event.getBlockPlaced();
             Player player = event.getPlayer();
@@ -494,8 +498,37 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.ERROR,"Event.onBlockPlace: "+e.getMessage());
         }
     }
+    private LivingEntity getTargetEntity(Player player) {
+        // Prosta implementacja do uzyskania celu ataku gracza
+        // Można użyć ray tracingu, aby określić, w co gracz celuje
+        Vector direction = player.getEyeLocation().getDirection().normalize();
+        for (int i = 0; i < 5; i++) { // Sprawdzenie w promieniu 5 bloków
+            Vector targetPos = player.getEyeLocation().add(direction.clone().multiply(i)).toVector();
+            for (LivingEntity entity : player.getWorld().getLivingEntities()) {
+                if (entity.getLocation().toVector().distance(targetPos) < 1.0) { // Sprawdzenie odległości od celu
+                    return entity;
+                }
+            }
+        }
+        return null;
+    }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
+
+        /*
+        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            if(betterElo.hasMobDamageAttribute(event.getPlayer().getInventory().getItemInMainHand())) {
+                Player player = event.getPlayer();
+                LivingEntity target = getTargetEntity(player); // Musisz zaimplementować tę metodę do uzyskania celu
+                if (target != null) {
+                    double damage = 2.0; // Ustawienie wartości obrażeń
+                    target.damage(damage, player);
+                }
+            }
+        }
+
+         */
+
         pluginLogger.log(PluginLogger.LogLevel.PLAYER_INTERACT,"Event.onPlayerInteract called");
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -1001,25 +1034,28 @@ public class  Event implements Listener {
                             ItemStack item = dropItem.getItemStack();
                             ItemMeta meta = item.getItemMeta();
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
-                            int i=0;
                             if (dropItem.isAvgDmgBonus()) {
+
+                                int AvgDmgBonus = CustomMobs.dropAverageDamage();
+
                                 List<String> lore = meta.getLore();
-                                    // Zastąp znalezioną linię nowym tekstem
-                                    String AvgDmgBonus = CustomMobs.dropAverageDamage();
-                                    if(lore!=null) {
-                                        lore.add(AvgDmgBonus);
-                                    }else{
-                                        lore.set(0,AvgDmgBonus);
-                                    }
-                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added AvgDmgBonus: "+AvgDmgBonus);
-
-
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath lore to save: "+lore);
-                                // Zapisz zmodyfikowane lore z powrotem do metadanych przedmiotu
+                                if (lore == null) {
+                                    lore = new ArrayList<>();
+                                }
+                                lore.add("§6§lAverage Damage +"+AvgDmgBonus+"%");
                                 meta.setLore(lore);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item);
                                 item.setItemMeta(meta);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item));
+                                betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item)+", getAverageDamageAttribute: "+betterElo.getAverageDamageAttribute(item));
+
                             }
+
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item);
                             drops.add(item);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath drops.toArray()[0]: "+drops.toArray()[0]);
+
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }else{
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
@@ -1035,16 +1071,6 @@ public class  Event implements Listener {
                 }else {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
-                if(customMob.dropEMKS) {
-                    double EMKSchance = 0.00;
-                    EMKSchance = customMob.EMKSchance/100;
-                    double randomValue = Math.random();
-                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS drop chance: " + EMKSchance + ", randomValue: " + randomValue);
-                    if (randomValue <= EMKSchance) {
-                        drops.add(dropMobKillerSword());
-                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath EMKS sword added");
-                    }
-                }
             }
 
 
@@ -1053,87 +1079,141 @@ public class  Event implements Listener {
 
 
     }
-    private ItemStack dropMobKillerSword(){
-        int minDamage = 25 + (int) (Math.random() * 40); // Losuje wartość od 10 do 100
-        int maxDamage = minDamage + (int) (Math.random() * (131 - minDamage)); // Losuje wartość od minDamage do 100
-
-        // Dodaj swój niestandardowy drop
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta meta = sword.getItemMeta();
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword sword created");
-        if (meta != null) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword");
-            meta.setDisplayName("§6§lEpic Mob Slayer Sword");
-            List<String> lore = new ArrayList<>();
-            lore.add("§6§lMob Damage " + minDamage + "-" + maxDamage);
-            lore.add(CustomMobs.dropAverageDamage());
-            meta.setLore(lore);
-            meta.setUnbreakable(true);
-            sword.setItemMeta(meta);
-            return sword;
-        }else{
-
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.dropMobKillerSword meta null");
-            return null;
-        }
-    }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onEntityDamageByEntity onEntityDamageByEntity called");
+        long startTime = System.nanoTime();
         Entity damagerEntity = event.getDamager();
         Entity victimEntity = event.getEntity();
+
+        if (damagerEntity.hasMetadata("handledDamage")) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
+            return;
+        }
+        if (damagerEntity instanceof Player){
+            damagerEntity.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            damagerEntity.removeMetadata("handledDamage", BetterElo.getInstance());
+                        }
+                    }.runTask(BetterElo.getInstance());
+                }
+            }.runTaskLaterAsynchronously(BetterElo.getInstance(), 1L);
+        }
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
 
-            if (damager.hasMetadata("handledDamage")) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
-                return;
-            }
 
-            ItemStack itemInHand = damager.getInventory().getItemInMainHand();
-            List<ItemStack> equippedItems = getPlayerEquippedItems(damager);
-            double averageDamageBonusPercent =0;
-            averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems)/100;
+
+            int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
             double totalDamage = event.getDamage() + event.getDamage()*averageDamageBonusPercent;
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage);
-
             event.setDamage(totalDamage);
-            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(damager) "+damager);
-
-            // Aktualizacja czasu ostatniego uderzenia
             updateLastHitTime(damager);
-            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onEntityDamageByEntity: calling updateLastHitTime(victim) "+victim);
             updateLastHitTime(victim);
-            damager.setMetadata("handledDamage", new FixedMetadataValue(plugin, true));
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    damager.removeMetadata("handledDamage", plugin);
-                }
-            }, 1L);
-            return;
-        }
-        LivingEntity entity = (LivingEntity) event.getEntity();
-        if (victimEntity.hasMetadata("CustomMob")){
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected");
-            customEntityDamageEvent(event);
-            //CustomMobs.CustomMob customMob = (CustomMobs.CustomMob) entity;
-            //Zombie zombie = (Zombie) entity;
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent calling customMobs.updateZombieCustomName(zombie)");
-            //customMobs.updateCustomMobName(zombie);
-            if (!event.getEntity().hasMetadata("CustomMob")) {
+        }else if (victimEntity.hasMetadata("CustomMob") && damagerEntity instanceof Player){
+            Player damager = (Player) event.getDamager();
+
+            String key = damager.getUniqueId() + ":" + victimEntity.getUniqueId();
+            long currentTime = System.currentTimeMillis();
+            Long lastAttackTime = lastAttackTimes.get(key);
+
+            String metadataKey = "last-attack-time-" + victimEntity.getUniqueId().toString();
+
+            // Sprawdzenie, czy metadane istnieją i czy ostatni atak był mniej niż 10 ticków temu
+
+            if (lastAttackTime != null && (currentTime - lastAttackTime) < 500) {
+                event.setCancelled(true);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Player " + damager.getName() + " tried to hit too fast!");
                 return;
             }
+
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
+
+            int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
+            int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus);
+            customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus);
             removePlayerPlacedBlocksAsync(victimEntity);
-            return;
-        }
-        if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage());
-            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus((Player) victimEntity))));
+
+            lastAttackTimes.put(key, currentTime);
+
+            Bukkit.getScheduler().runTaskLater(BetterElo.getInstance(), () -> {
+                ((LivingEntity)event.getEntity()).setNoDamageTicks(0);
+                //((Player) event.getEntity()).damage(1D);
+            }, 1L);
+
+        }else if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
+            int customArmorBonus =betterElo.getMobDefenseAttribute(getPlayerEquippedItems((Player) victimEntity));
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus);
+            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
 
         }
 
+        if (victimEntity instanceof LivingEntity) {
+            LivingEntity entity = (LivingEntity) event.getEntity();
+            if (entity.hasMetadata("CustomMob")) {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if (!entity.isDead()) {
+                                    customMobs.updateCustomMobName(entity);
+                                }
+                            }
+                        }.runTask(BetterElo.getInstance());
+                    }
+                }.runTaskLaterAsynchronously(BetterElo.getInstance(), 1L);
+
+            }
+        }
+
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        double durationInMillis = duration / 1_000_000.0;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
+
+
+
+
+    }
+    public void customDamageHandling(Player damager, Player victim, double initialDamage) {
+        int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems(damager));
+        double totalDamage = initialDamage + initialDamage * averageDamageBonusPercent;
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "customDamageHandling initialDamage: " + initialDamage + ", averageDamageBonusPercent: " + averageDamageBonusPercent + ", totalDamage: " + totalDamage);
+        victim.damage(totalDamage, damager);
+        updateLastHitTime(damager);
+        updateLastHitTime(victim);
+    }
+    public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent){
+        long timer;
+        double armor=1,defense=0;
+        double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
+        int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
+        double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", averageDamageBonusPercent: "+averageDamageBonusPercent+", bonusDamage: "+bonusDamage);
+        CustomMobs.CustomMob customMob = null;
+        customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
+        if(customMob!=null)
+        {
+            defense = customMob.defense;
+            armor = customMob.armor;
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent  from customMob object - defense: "+defense+", armor: "+armor);
+
+        }
+        double defDmgReduction= (1-(0.01*defense));
+        double finalDamage =((totalDamage-armor)*defDmgReduction);
+        if(finalDamage<=0)
+            finalDamage=0;
+        event.setDamage(finalDamage);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor);
     }
     public void removePlayerPlacedBlocksAsync(Entity entity) {
         // Asynchronicznie przygotowujesz dane
@@ -1188,6 +1268,7 @@ public class  Event implements Listener {
         }
         return CustomArmorBonus;
     }
+
     public void customEntityDamageEvent(EntityDamageByEntityEvent event){
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
 
@@ -1272,22 +1353,7 @@ public class  Event implements Listener {
 
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
     }
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onDamageUpdateCustomMobHealth(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof LivingEntity) {
-            LivingEntity entity = (LivingEntity) event.getEntity();
-            if (entity.hasMetadata("CustomMob")) {
-                // Opóźnienie wykonania aktualizacji nazwy, aby zdążyć na aktualizację zdrowia
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    // Sprawdzenie, czy mob nadal żyje przed aktualizacją nazwy
-                    if (!entity.isDead()) {
-                        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob detected. Updating name.");
-                        customMobs.updateCustomMobName(entity);
-                    }
-                }, 1L); // Opóźnienie o 1 tick
-            }
-        }
-    }
+
 
     public List<ItemStack> getPlayerEquippedItems(Player player) {
         EntityEquipment equipment = player.getEquipment();
@@ -1395,7 +1461,7 @@ public class  Event implements Listener {
             case "Set Rewards":
                 event.setCancelled(true);
                 guiManager.periodType = currentItem.getItemMeta().getDisplayName();
-                if(guiManager.periodType.equals("dropTable")){
+                if (guiManager.periodType.equals("dropTable")) {
                     List<ItemStack> currentRewards = fileRewardManager.loadRewards();
                     inv = Bukkit.createInventory(null, 36, "Add Items");
                     currentRewards.forEach(inv::addItem);
@@ -1432,23 +1498,23 @@ public class  Event implements Listener {
                             continue;
                         }
                         ItemStack item = inventory.getItem(i);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: "+item);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: " + item);
                         if (item != null && item.getType() != Material.AIR) {
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: "+item);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: " + item);
                             itemsToSave.add(item);
                         }
 
                     }
 
-                    String fileName=guiManager.periodType+"_"+guiManager.dropTable;
+                    String fileName = guiManager.periodType + "_" + guiManager.dropTable;
 
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType="+guiManager.periodType);
-                    if(guiManager.periodType.equals("dropTable")){
-                        fileName=guiManager.dropTable;
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: "+fileName);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops("+fileName+",itemsToSave)");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType=" + guiManager.periodType);
+                    if (guiManager.periodType.equals("dropTable")) {
+                        fileName = guiManager.dropTable;
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: " + fileName);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops(" + fileName + ",itemsToSave)");
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
-                    }else{
+                    } else {
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     }
 
@@ -1467,94 +1533,88 @@ public class  Event implements Listener {
                         }
                     }
 
-                    String fileName=guiManager.periodType+"_"+guiManager.rewardType;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards("+fileName+",itemsToSave)");
-                    fileRewardManager.saveRewards(fileName,itemsToSave);
+                    String fileName = guiManager.periodType + "_" + guiManager.rewardType;
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards(" + fileName + ",itemsToSave)");
+                    fileRewardManager.saveRewards(fileName, itemsToSave);
 
                 }
                 break;
             case "AvgDmg bonus change":
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll");
+                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll");
 
-                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5){
+                if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5) {
                     playerInventory.setContents(savedInventory);
                     event.setCancelled(true);
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Average Damage bonus re-roll clicked");
+                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll clicked");
                     Inventory inventory = event.getInventory();
                     ItemStack item0 = inventory.getItem(3);
                     if (item0 != null && item0.hasItemMeta()) {
-
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, item0: "+item0+", item0.hasItemMeta(): "+item0.hasItemMeta());
-                        ItemMeta meta0 = item0.getItemMeta();
-                        boolean slot0Condition = meta0.getLore().stream().anyMatch(line -> line.contains("Average Damage"));
-                        ItemMeta meta  = item0.getItemMeta();
-                        //List<String> lore = meta.getLore();
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, slot0Condition: "+slot0Condition);
-
-                        if (slot0Condition) {
-                            ItemStack result = item0.clone();
-                            ItemMeta resultMeta = result.getItemMeta();
-                            List<String> lore = new ArrayList<>(resultMeta.getLore());
-                            boolean mobDamage=false;
-                            for (int i = 0; i < lore.size(); i++) {
-                                if(lore.get(i).contains("Mob Damage"))
-                                    mobDamage=true;
-                                if (lore.get(i).contains("Average Damage") && mobDamage) {
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, Average Damage lore line found i: " + i);
-                                    if( guiManager.checkAndRemoveEnchantItem(player)) {
-                                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, player paid, re-rolling..." );
-                                        lore.set(i, customMobs.dropAverageDamage());
-                                        player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
-                                        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                player.removeMetadata("avgDmgRerolled", plugin);
-                                            }
-                                        }, 1L);
-                                        break;
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, betterElo.hasMobDamageAttribute(item0): "+betterElo.hasMobDamageAttribute(item0)+", betterElo.hasAverageDamageAttribute(item0): "+betterElo.hasAverageDamageAttribute(item0));
+                        ItemStack result = item0.clone();
+                        ItemMeta resultMeta = result.getItemMeta();
+                        List<String> lore = new ArrayList<>(resultMeta.getLore());
+                        if (betterElo.hasMobDamageAttribute(item0) && betterElo.hasAverageDamageAttribute(item0)) {
+                            if (guiManager.checkAndRemoveEnchantItem(player)) {
+                                int avgDmg = CustomMobs.dropAverageDamage();
+                                betterElo.addAverageDamageAttribute(result, avgDmg);
+                                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...");
+                                for (int i = 0; i < lore.size(); i++) {
+                                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i);
+                                    if (lore.get(i).contains("Average Damage")) {
+                                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i+" contains Average Damage, setting avgDmg: "+avgDmg);
+                                        lore.set(i,"§6§lAverage Damage +"  + avgDmg + "%");
                                     }
-                                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick reroll, player has no money for the re-roll." );
                                 }
                             }
+                            player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
+                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    player.removeMetadata("avgDmgRerolled", plugin);
+                                }
+                            }, 1L);
+
+
                             resultMeta.setLore(lore);
                             result.setItemMeta(resultMeta);
                             inventory.setItem(3, result);
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick result placed back in slot 3");
-
-
-                            ItemStack greenWoolItem = inventory.getItem(5);
-                            if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
-                                ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
-                                List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
-                                String avgDmgLine = lore.stream().filter(line -> line.contains("Average Damage")).findFirst().orElse("Average Damage +0%");
-
-                                // Ustalanie indeksów dla "current bonus:" i wartości
-                                int bonusIndex = -1;
-                                for (int i = 0; i < greenWoolLore.size(); i++) {
-                                    if (greenWoolLore.get(i).equals("current bonus:")) {
-                                        bonusIndex = i;
-                                        break;
-                                    }
-                                }
-
-                                if (bonusIndex != -1 && bonusIndex + 1 < greenWoolLore.size()) {
-                                    // Aktualizujemy istniejącą wartość jeśli jest miejsce w lore
-                                    greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
-                                } else if (bonusIndex == -1) {
-                                    // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
-                                    greenWoolLore.add("current bonus:");
-                                    greenWoolLore.add("<" + avgDmgLine + ">");
-                                } else {
-                                    // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość
-                                    greenWoolLore.add("<" + avgDmgLine + ">");
-                                }
-
-                                greenWoolMeta.setLore(greenWoolLore);
-                                greenWoolItem.setItemMeta(greenWoolMeta);
-                                inventory.setItem(5, greenWoolItem);
-
-
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick result placed back in slot 3");
                         }
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player has no money for the re-roll.");
+
+
+                        ItemStack greenWoolItem = inventory.getItem(5);
+
+                        if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
+                            ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
+                            List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
+                            String avgDmgLine = lore.stream().filter(line -> line.contains("Average Damage")).findFirst().orElse("Average Damage +0%");
+
+                            // Ustalanie indeksów dla "current bonus:" i wartości
+                            int bonusIndex = -1;
+                            for (int i = 0; i < greenWoolLore.size(); i++) {
+                                if (greenWoolLore.get(i).equals("current bonus:")) {
+                                    bonusIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (bonusIndex != -1 && bonusIndex + 1 < greenWoolLore.size()) {
+                                // Aktualizujemy istniejącą wartość jeśli jest miejsce w lore
+                                greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
+                            } else if (bonusIndex == -1) {
+                                // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
+                                greenWoolLore.add("current bonus:");
+                                greenWoolLore.add("<" + avgDmgLine + ">");
+                            } else {
+                                // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość
+                                greenWoolLore.add("<" + avgDmgLine + ">");
+                            }
+
+                            greenWoolMeta.setLore(greenWoolLore);
+                            greenWoolItem.setItemMeta(greenWoolMeta);
+                            inventory.setItem(5, greenWoolItem);
+
 
                         }
                     }
@@ -1601,34 +1661,38 @@ public class  Event implements Listener {
 
         if (customMob != null) {
             Location entityLocation = entity.getLocation();
-            String spawnerLocationString = customMobsFileManager.getSpawnerLocation(customMob.spawnerName);
-            Location  spawnerLocation = customMobs.getLocationFromString(spawnerLocationString);
-
-            int maxDistance = customMobsFileManager.getMaxDistance(customMob.spawnerName);
-            if(maxDistance==0){
-                maxDistance=20;
-            }
-            if (spawnerLocation==null){
-                return;
-            }
-            if (entityLocation.distance(spawnerLocation) > maxDistance) {
-                // Teleportacja entity z powrotem do spawnerLocation
-                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Event.onEntityMove teleporting mob: "+customMob.mobName);
-                while (spawnerLocation.getBlock().getType() != Material.AIR) {
-                    spawnerLocation.add(0, 1, 0); // Zwiększ y o 1
-                    if (spawnerLocation.getBlockY() > spawnerLocation.getWorld().getMaxHeight()) {
-                        // Jeśli przekraczamy maksymalną wysokość, przerwij pętlę, aby uniknąć pętli nieskończonej
-                        System.out.println("Reached the top of the world without finding an AIR block.");
-                        break;
-                    }
+            if (customMob.spawnerName!=null) {
+                String spawnerLocationString = customMobsFileManager.getSpawnerLocation(customMob.spawnerName);
+                Location spawnerLocation = customMobs.getLocationFromString(spawnerLocationString);
+                int maxDistance = customMobsFileManager.getMaxDistance(customMob.spawnerName);
+                if(maxDistance==0){
+                    maxDistance=20;
                 }
-                spawnerLocation.add(0, 1, 0);
-                entity.teleport(spawnerLocation);
+                if (spawnerLocation==null){
+                    return;
+                }
+                if (entityLocation.distance(spawnerLocation) > maxDistance) {
+                    // Teleportacja entity z powrotem do spawnerLocation
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Event.onEntityMove teleporting mob: "+customMob.mobName);
+                    while (spawnerLocation.getBlock().getType() != Material.AIR) {
+                        spawnerLocation.add(0, 1, 0); // Zwiększ y o 1
+                        if (spawnerLocation.getBlockY() > spawnerLocation.getWorld().getMaxHeight()) {
+                            // Jeśli przekraczamy maksymalną wysokość, przerwij pętlę, aby uniknąć pętli nieskończonej
+                            System.out.println("Reached the top of the world without finding an AIR block.");
+                            break;
+                        }
+                    }
+                    spawnerLocation.add(0, 1, 0);
+                    entity.teleport(spawnerLocation);
+                }
             }
+
+
 
 
         }
     }
+
 
 
 

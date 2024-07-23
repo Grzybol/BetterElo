@@ -20,7 +20,7 @@ public class PluginLogger {
 
     // Enumeracja dla poziomów logowania
     public enum LogLevel {
-        INFO, WARNING, ERROR,CUSTOM_MOBS, DEBUG, DEBUG_LVL2, DEBUG_LVL3,DEBUG_LVL4,CHEATERS, RANKING_REWARDS ,FLAMETHROWER,DROP,SPAWNERS, ZEPHYR, KILL_EVENT, COMMAND, PLACEHOLDER, BLOCK_BREAK, BLOCK_PLACE, PLAYER_INTERACT, ELYTRA_CHECK, ANTYWEB
+        INFO, WARNING, ERROR,CUSTOM_MOBS, DEBUG, DEBUG_LVL2, DEBUG_LVL3,DEBUG_LVL4,CHEATERS, RANKING_REWARDS ,FLAMETHROWER,DROP,SPAWNERS, ZEPHYR, KILL_EVENT, COMMAND, PLACEHOLDER, BLOCK_BREAK, BLOCK_PLACE, PLAYER_INTERACT, ELYTRA_CHECK, ANTYWEB, REROLL
     }
 
     public PluginLogger(String folderPath, Set<LogLevel> enabledLogLevels, JavaPlugin plugin) {
@@ -57,7 +57,7 @@ public class PluginLogger {
     public void log(LogLevel level, String message) {
         if (enabledLogLevels.contains(level)) {
             // Dodanie timestampu i poziomu logowania do wiadomości
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
             String logMessage = timestamp + " [" + level + "] - " + message;
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {

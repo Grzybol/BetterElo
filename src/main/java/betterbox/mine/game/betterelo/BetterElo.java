@@ -3,7 +3,9 @@ package betterbox.mine.game.betterelo;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
@@ -14,6 +16,8 @@ import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -34,6 +38,8 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import org.checkerframework.checker.units.qual.C;
 
 public final class BetterElo extends JavaPlugin {
+    HashMap<LivingEntity, BukkitTask> mobTasks = new HashMap<>();
+    private static BetterElo instance;
     private PluginLogger pluginLogger;
     private DataManager dataManager;
     public final Map<Entity, CustomMobs.CustomMob> customMobsMap = new HashMap<>();
@@ -59,6 +65,7 @@ public final class BetterElo extends JavaPlugin {
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
+    private NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -75,6 +82,12 @@ public final class BetterElo extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        int pluginId = 22747; // Zamień na rzeczywisty ID twojego pluginu na bStats
+        Metrics metrics = new Metrics(this, pluginId);
+        this.mobDefenseKey = new NamespacedKey(this, "mob_defense");
+        this.mobDamageKey = new NamespacedKey(this, "mob_damage");
+        this.averageDamageKey = new NamespacedKey(this, "average_damage");
+        instance = this;
         createPluginFolders();
         createExampleDropTablesFiles();
         createExampleDropsFiles();
@@ -502,6 +515,13 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo: scheduleRewards exception: "+e.getMessage());
         }
     }
+    public static BetterElo getInstance() {
+        return instance;
+    }
+    public CustomMobs.CustomMob getCustomMob(String mobName) {
+        // Zwróć customowego moba na podstawie nazwy
+        return customMobsMap.get(mobName);
+    }
     public void stopEvent(){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.stopEvent called");
         if(isEventEnabled) {
@@ -750,11 +770,46 @@ public final class BetterElo extends JavaPlugin {
     }
     public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
+        schedulePercentageHealthRegeneration(customMob.entity, customMob.regenSeconds, customMob.regenPercent);
         customMobsMap.put(entity, customMob);
     }
     public void unregisterCustomMob(Entity entity) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
         customMobsMap.remove(entity);
+        if (mobTasks.containsKey(entity)) {
+            mobTasks.get(entity).cancel(); // Anuluje zadanie
+            mobTasks.remove(entity); // Usuwa referencję do zadania z mapy
+        }
+    }
+    public void schedulePercentageHealthRegeneration(LivingEntity mob, int regenSeconds, double regenPercentage) {
+        // Usuń istniejące zadanie regeneracji dla tego moba, jeśli istnieje
+        if (mobTasks.containsKey(mob)) {
+            mobTasks.get(mob).cancel();
+        }
+
+        // Utwórz nowe zadanie regeneracji
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - mob.getLastDamage() >= regenSeconds * 1000L) { // Przekształcenie sekund na milisekundy
+                    double maxHealth = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+                    double regenAmount = maxHealth * (regenPercentage / 100.0);
+                    double newHealth = Math.min(mob.getHealth() + regenAmount, maxHealth);
+                    mob.setHealth(newHealth);
+                }
+            }
+        }.runTaskTimer(this, 0L, regenSeconds * 20L); // Uruchamia zadanie co regenSeconds sekund
+
+        // Przechowuje zadanie dla tego moba
+        mobTasks.put(mob, task);
+    }
+
+    // Opcjonalnie, metoda do anulowania zadania regeneracji dla moba
+    public void cancelHealthRegeneration(LivingEntity mob) {
+        if (mobTasks.containsKey(mob)) {
+            mobTasks.get(mob).cancel();
+            mobTasks.remove(mob);
+        }
     }
 
     public CustomMobs.CustomMob getCustomMobFromEntity(Entity entity) {
@@ -796,6 +851,140 @@ public final class BetterElo extends JavaPlugin {
                 }
             }
         }.runTaskTimer(this, 0L, 20L * 10); // Uruchom co 1 minutę (20 ticków = 1 sekunda)
+    }
+    public void addMobDefenseAttribute(ItemStack item, int value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDefenseAttribute called with value: "+value);
+        if (item != null && item.hasItemMeta()) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDefenseAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDefenseAttribute null item!"+item);
+        }
+    }
+    public void addMobDamageAttribute(ItemStack item, String value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value);
+        if (item != null && item.hasItemMeta()) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item);
+        }
+    }
+    public void addAverageDamageAttribute(ItemStack item, int value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
+        if (item != null ) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addAverageDamageAttribute null item!"+item);
+        }
+    }
+    public int[] getMobDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                String damageRange = dataContainer.get(mobDamageKey, PersistentDataType.STRING);
+                String[] parts = damageRange.split("-");
+                int minDamage = Integer.parseInt(parts[0]);
+                int maxDamage = Integer.parseInt(parts[1]);
+                return new int[]{minDamage, maxDamage};
+            }
+        }
+        return new int[]{0, 0};
+    }
+
+    public int getMobDefenseAttribute(List<ItemStack> wornItems) {
+        int totalDefense = 0;
+
+        for (ItemStack item : wornItems) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(mobDefenseKey, PersistentDataType.INTEGER)) {
+                    totalDefense += dataContainer.get(mobDefenseKey, PersistentDataType.INTEGER);
+                }
+            }
+        }
+
+        return totalDefense;
+    }
+
+    public int getAverageDamageAttribute(List<ItemStack> wornItems) {
+        int totalDamage = 0;
+
+        for (ItemStack item : wornItems) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                    totalDamage += dataContainer.get(averageDamageKey, PersistentDataType.INTEGER);
+                }
+            }
+        }
+
+        return totalDamage;
+    }
+    public int getAverageDamageAttribute(ItemStack item) {
+        int totalDamage = 0;
+
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                    totalDamage += dataContainer.get(averageDamageKey, PersistentDataType.INTEGER);
+                }
+            }
+
+        return totalDamage;
+    }
+    public boolean hasMobDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasMobDefenseAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(mobDefenseKey, PersistentDataType.INTEGER)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasAverageDamageAttribute(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

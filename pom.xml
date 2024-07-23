@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>4.6.4-SNAPSHOT</version>
+    <version>4.7.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BetterElo</name>
@@ -20,30 +20,17 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Implementation-Version>${project.version}</Implementation-Version>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>9</source>
-                    <target>9</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.1.0</version>
+                <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <!-- Replace this with your package! -->
+                            <shadedPattern>betterbox.mine.game.betterelo</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -56,6 +43,33 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>9</source>
+                    <target>9</target>
+                </configuration>
+            </plugin>
+
+
+
+
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -113,28 +127,34 @@
     </repositories>
 
     <dependencies>
+
+        
         <dependency>
             <groupId>me.filoghost.holographicdisplays</groupId>
             <artifactId>holographicdisplays-api</artifactId>
             <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-platform-bukkit</artifactId>
             <version>4.3.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>9.4.43.v20210629</version>
         </dependency>
+
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.18.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -156,5 +176,13 @@
             <version>7.0.4</version> <!-- Zaktualizuj do wersji kompatybilnej z Twoim serwerem -->
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
 </project>
