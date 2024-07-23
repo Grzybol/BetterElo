@@ -3,6 +3,7 @@ package betterbox.mine.game.betterelo;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -81,6 +82,8 @@ public final class BetterElo extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        int pluginId = 22747; // Zamień na rzeczywisty ID twojego pluginu na bStats
+        Metrics metrics = new Metrics(this, pluginId);
         this.mobDefenseKey = new NamespacedKey(this, "mob_defense");
         this.mobDamageKey = new NamespacedKey(this, "mob_damage");
         this.averageDamageKey = new NamespacedKey(this, "average_damage");
