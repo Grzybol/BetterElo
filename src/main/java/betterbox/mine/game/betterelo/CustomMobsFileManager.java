@@ -1,6 +1,5 @@
 package betterbox.mine.game.betterelo;
 
-import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -148,7 +147,7 @@ public class CustomMobsFileManager {
     }
     private void CreateSpawnersFile(String folderPath) {
         try {
-            String spawnersFileName = "spawners.yml";
+            String spawnersFileName = "customMobs/spawners.yml";
             spawnersFile = new File(folderPath + File.separator + "customMobs", spawnersFileName);
             if (!spawnersFile.exists()) {
                 CreateExampleSpawnersFile(spawnersFile);
@@ -448,7 +447,7 @@ public class CustomMobsFileManager {
 
             if (files != null) {
                 for (File file : files) {
-                    if (file.isFile() && file.getName().endsWith(".yml") &&!file.getName().equalsIgnoreCase("spawners.yml")) {
+                    if (file.isFile() && file.getName().endsWith(".yml") &&!file.getName().equalsIgnoreCase("customMobs/spawners.yml")) {
                         customMobFiles.add(file);
                     }
                 }

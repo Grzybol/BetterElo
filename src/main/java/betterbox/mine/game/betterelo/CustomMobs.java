@@ -1,22 +1,13 @@
 package betterbox.mine.game.betterelo;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -533,7 +524,7 @@ public class CustomMobs {
         // Wczytaj customowe moby i przechowaj je w pamięci
         // Dla każdego pliku moba w folderze customMobs
         for (File mobFile : fileManager.getCustomMobFiles()) {
-            if (!mobFile.getName().equals("spawners.yml"))
+            if (!mobFile.getName().equals("customMobs/spawners.yml"))
             {
                 try {
                     CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile);
