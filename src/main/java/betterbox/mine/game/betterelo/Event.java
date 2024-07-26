@@ -146,7 +146,7 @@ public class  Event implements Listener {
         }
         return pointsEarned;
     }
-    private double handleKillEvent(String rankingType, CustomMobs.CustomMob victim, Player killer) {
+    private double handleMobKillEvent(String rankingType, CustomMobs.CustomMob victim, Player killer) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
 
             double pointsEarned = 0;
@@ -163,10 +163,10 @@ public class  Event implements Listener {
             addPoints(killer, pointsEarned, rankingType);
         return pointsEarned;
     }
-    private void handleRankingPoints(Player killer, CustomMobs.CustomMob victim, String ranking) {
+    private void handleRankingPointsFromMobKill(Player killer, CustomMobs.CustomMob victim, String ranking) {
         if (dataManager.getPoints(killer.getUniqueId().toString(), ranking) - victim.eloPoints < 1000) {
             pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer);
-            double pointsEarned = handleKillEvent(ranking, victim, killer);
+            double pointsEarned = handleMobKillEvent(ranking, victim, killer);
             if (ranking.equals("main")) {
                 notifyPlayerAboutPoints(killer, pointsEarned, victim.eloMultiplier);
             }
@@ -360,6 +360,10 @@ public class  Event implements Listener {
     private double calculatePointsEarned(double base, double killerelo, double victimelo, double maxElo, double minElo) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT,"Event: calculatePointsEarned called with parameters : base "+base+" elo1 "+killerelo+" elo2 "+victimelo+" maxElo "+maxElo+" minElo "+minElo);
         double eloDifference = killerelo - victimelo;
+        if(maxElo<victimelo){
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT,"Event: calculatePointsEarned: maxElo<victimelo, setting maxElo=victimelo");
+            maxElo=victimelo;
+        }
         double normalizedDifference = eloDifference / (maxElo - minElo + 1);
         double points = base * (1 - normalizedDifference);
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT,"Event: calculatePointsEarned: eloDifference: "+eloDifference+" normalizedDifference: "+normalizedDifference+" points: "+points+" maxElo: "+maxElo+" minElo: "+minElo);
@@ -1079,11 +1083,11 @@ public class  Event implements Listener {
                         boolean eventEnabled = betterElo.isEventEnabled;
 
                         for (String ranking : rankings) {
-                            handleRankingPoints(killer, customMob, ranking);
+                            handleRankingPointsFromMobKill(killer, customMob, ranking);
                         }
 
                         if (eventEnabled) {
-                            handleRankingPoints(killer, customMob,  "event");
+                            handleRankingPointsFromMobKill(killer, customMob,  "event");
                         }
                     }catch (Exception e){
                         pluginLogger.log(PluginLogger.LogLevel.ERROR  , "Event.onMobDeath exception: "+e.getMessage());
