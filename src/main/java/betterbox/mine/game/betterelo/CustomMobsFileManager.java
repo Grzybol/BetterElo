@@ -302,7 +302,7 @@ public class CustomMobsFileManager {
             ItemStack boots=null;
             ItemStack weapon=null;
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob entityTypeString: "+entityTypeString);
-            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON") || entityTypeString.equals("WITHER_SKELETON")|| entityTypeString.equals("HUSK")) {// Wczytanie wyposażenia z pliku
+            if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON") || entityTypeString.equals("HUSK")) {// Wczytanie wyposażenia z pliku
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
                  helmet = loadItemStack(mobData, "equipment.helmet");
                  chestplate = loadItemStack(mobData, "equipment.chestplate");
@@ -317,7 +317,7 @@ public class CustomMobsFileManager {
             double attackDamage = mobData.getDouble("attackDamage");
             int attackSpeed = 1;
             int regenSeconds= 5;
-            double regenPercent = 5, knockbackResistance=0;
+            double regenPercent = 5, knockbackResistance=0, eloPoints=0, eloMultiplier=0;
             int defense = 0;
             String passengerMobName=null;
 
@@ -349,11 +349,19 @@ public class CustomMobsFileManager {
                 knockbackResistance = mobData.getDouble("knockbackResistance");
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded knockbackResistance:" + knockbackResistance);
             }
+            if(mobData.contains("eloPoints")){
+                eloPoints = mobData.getDouble("eloPoints");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded eloPoints:" + eloPoints);
+            }
+            if(mobData.contains("eloMultiplier")){
+                eloMultiplier = mobData.getDouble("eloMultiplier");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded eloMultiplier:" + eloMultiplier);
+            }
 
             String mobName = mobData.getString("mobName");
             String dropTableName = mobData.getString("dropTable");
 
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropTablename: "+dropTableName+", passengerMobName: "+passengerMobName+", regenSeconds: "+regenSeconds+", regenPercent: "+regenPercent);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropTablename: "+dropTableName+", passengerMobName: "+passengerMobName+", regenSeconds: "+regenSeconds+", regenPercent: "+regenPercent+", knockbackResistance: "+knockbackResistance+", eloPoints: "+eloPoints+", eloMultiplier: "+eloMultiplier);
             EntityType entityType = EntityType.valueOf(entityTypeString);
 
             // Wczytanie niestandardowych metadanych i ustawienie spawnerName
@@ -365,18 +373,18 @@ public class CustomMobsFileManager {
             CustomMobs.CustomMob customMob=null;
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON")|| entityTypeString.equals("HUSK")){
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON or STRAY");
-                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense,null, regenSeconds,regenPercent,knockbackResistance);
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense,null, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
                 if(passengerMobName!=null) {
                     pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: " + passengerMobName);
-                    customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense, passengerMobName, regenSeconds,regenPercent,knockbackResistance);
+                    customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense, passengerMobName, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
                 }
                 }else if(passengerMobName!=null){
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: "+passengerMobName);
-                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense,passengerMobName, regenSeconds,regenPercent,knockbackResistance);
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense,passengerMobName, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
             }
             else{
                 pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob normal mob");
-                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense, regenSeconds,regenPercent,knockbackResistance);
+                customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
 
             }
 

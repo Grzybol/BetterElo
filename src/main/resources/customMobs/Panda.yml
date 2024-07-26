@@ -10,6 +10,8 @@ passengerMobName: Marksman
 knockbackResistance: 5.0
 regenSeconds: 30
 regenPercent: 30
+eloPoints: 3500
+eloMultiplier: 3.0
 customMetadata:
   CustomMob: true # leave this always as true!!
   MobName: EXAMPLE BOSS - Panda # displayname COLORS/FORMATTING NOT SUPPORTED YET

@@ -146,6 +146,34 @@ public class  Event implements Listener {
         }
         return pointsEarned;
     }
+    private double handleKillEvent(String rankingType, CustomMobs.CustomMob victim, Player killer) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
+
+            double pointsEarned = 0;
+            double victimElo = victim.eloPoints;
+            double eloMultiplier = victim.eloMultiplier;
+            double killerElo = getElo(killer.getUniqueId().toString(), rankingType);
+            double maxElo = getMaxElo(rankingType);
+            double minElo = dataManager.getMinElo(rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + ", loaded variables: maxElo:" + maxElo + ", minElo: " + minElo + ", victimElo:" + victimElo + ", eloMultiplier: "+eloMultiplier);
+            double basePoints = 100;
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo);
+            pointsEarned = eloMultiplier * calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
+            addPoints(killer, pointsEarned, rankingType);
+        return pointsEarned;
+    }
+    private void handleRankingPoints(Player killer, CustomMobs.CustomMob victim, String ranking) {
+        if (dataManager.getPoints(killer.getUniqueId().toString(), ranking) - victim.eloPoints < 1000) {
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer);
+            double pointsEarned = handleKillEvent(ranking, victim, killer);
+            if (ranking.equals("main")) {
+                notifyPlayerAboutPoints(killer, pointsEarned, victim.eloMultiplier);
+            }
+        } else {
+            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the " + ranking + " ranking is too big! No reward for this one.");
+        }
+    }
 
 
     // Mapa do śledzenia ostatnich uderzeń
@@ -256,45 +284,21 @@ public class  Event implements Listener {
                     //return;
                 }
                 if(!isEloAllowed(victim,victim.getLocation())){
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
+                    //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
                     killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
                     return;
                 }
                 String victimUUID = victim.getUniqueId().toString();
                 String killerUUID = killer.getUniqueId().toString();
-                if (dataManager.getPoints(killerUUID, "main") - dataManager.getPoints(victimUUID, "main") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: main " + victim + " " + killer);
-                    double pointsEarned = handleKillEvent("main", victim, killer);
-                    assert killer != null;
-                    notifyPlayersAboutPoints(killer, victim, pointsEarned);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Main ranking is too big! No reward for this one.");
+                String[] rankings = {"main", "daily", "weekly", "monthly"};
+                boolean eventEnabled = betterElo.isEventEnabled;
+
+                for (String ranking : rankings) {
+                    handleRankingPoints(killer, victim, killerUUID, victimUUID, ranking);
                 }
-                if (dataManager.getPoints(killerUUID, "daily") - dataManager.getPoints(victimUUID, "daily") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: daily " + victim + " " + killer);
-                    handleKillEvent("daily", victim, killer);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Daily ranking is too big! No reward for this one.");
-                }
-                if (dataManager.getPoints(killerUUID, "weekly") - dataManager.getPoints(victimUUID, "weekly") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: weekly " + victim + " " + killer);
-                    handleKillEvent("weekly", victim, killer);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Weekly ranking is too big! No reward for this one.");
-                }
-                if (dataManager.getPoints(killerUUID, "monthly") - dataManager.getPoints(victimUUID, "monthly") < 1000) {
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: monthly " + victim + " " + killer);
-                    handleKillEvent("monthly", victim, killer);
-                } else {
-                    killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Monthly ranking is too big! No reward for this one.");
-                }
-                if(betterElo.isEventEnabled) {
-                    if (dataManager.getPoints(killerUUID, "event") - dataManager.getPoints(victimUUID, "event") < 1000) {
-                        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: event " + victim + " " + killer);
-                        handleKillEvent("event", victim, killer);
-                    } else {
-                        killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the Event ranking is too big! No reward for this one.");
-                    }
+
+                if (eventEnabled) {
+                    handleRankingPoints(killer, victim, killerUUID, victimUUID, "event");
                 }
 
 
@@ -305,8 +309,20 @@ public class  Event implements Listener {
         } catch (Exception e) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event: onPlayerDeath exception  " + e + " " + e.getMessage());
         }
-    });
-}
+
+        });
+    }
+    private void handleRankingPoints(Player killer, Player victim, String killerUUID, String victimUUID, String ranking) {
+        if (dataManager.getPoints(killerUUID, ranking) - dataManager.getPoints(victimUUID, ranking) < 1000) {
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer);
+            double pointsEarned = handleKillEvent(ranking, victim, killer);
+            if (ranking.equals("main")) {
+                notifyPlayersAboutPoints(killer, victim, pointsEarned);
+            }
+        } else {
+            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the " + ranking + " ranking is too big! No reward for this one.");
+        }
+    }
 
     private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned) {
         pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
@@ -324,7 +340,7 @@ public class  Event implements Listener {
 
         victim.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.RED +  "You have lost "+ChatColor.DARK_RED + "" + ChatColor.BOLD +df.format(pointsEarned)+" Elo");
     }
-    private void notifyPlayerAboutPoints(Player player, double pointsEarned, Double blockReward) {
+    private void notifyPlayerAboutPoints(Player player, double pointsEarned, double blockReward) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event: notifyPlayersAboutPoints called with parameters: "+player+" "+pointsEarned);
         DecimalFormat df = new DecimalFormat("#.##");
 
@@ -333,7 +349,7 @@ public class  Event implements Listener {
         Duration fadeOut = Duration.ofMillis(300); // czas znikania
         Title.Times times = Title.Times.times(fadeIn, stay, fadeOut);
         Component killerTitleComponent = Component.text(ChatColor.GREEN +""+ChatColor.BOLD+ "+"+df.format((double)Math.round(pointsEarned*100)/100)+" Elo");
-        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Block multiplier: x"+blockReward);
+        Component killerSubtitleComponent = Component.text(ChatColor.GOLD +"Elo multiplier: x"+blockReward);
         // Notify the killer
         Title killerTitle = Title.title(killerTitleComponent,killerSubtitleComponent,times);
         player.showTitle(killerTitle);
@@ -419,61 +435,49 @@ public class  Event implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"onBlockBreak called");
+        pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK, "onBlockBreak called");
         Block block = event.getBlock();
+        String blockType = block.getType().toString();
 
-        // Sprawdź, czy blok zniszczony przez gracza znajduje się na liście nagród
-            String blockType = block.getType().toString();
-
-            if (configManager.getBlockRewards().containsKey(blockType)) {
-                for (MetadataValue meta : block.getMetadata("placed_by_player")) {
-                    if (meta.asBoolean()) {
-                        pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"onBlockBreak: block was placed by a player");
-                        return;
-                    }
-                }
-                double blockReward = configManager.getBlockRewards().get(blockType);
-                Player player = event.getPlayer();
-                String uuid = player.getUniqueId().toString();
-                double base = configManager.blockBase;
-                if(!isEloAllowed(player,player.getLocation())){
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "Event: onPlayerDeath noElo zone!");
-                    player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
-                    return;
-                }
-                double playerElo = dataManager.getPoints(uuid,"main");
-                double pointsEarnedMain = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("main"), dataManager.getMinElo("main"));
-                addPoints(uuid,pointsEarnedMain,"main");
-                pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarnedMain+", ranking main");
-
-                playerElo = dataManager.getPoints(uuid,"daily");
-                double pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("daily"), dataManager.getMinElo("daily"));
-                addPoints(uuid,pointsEarned,"daily");
-                pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking daily");
-
-                playerElo = dataManager.getPoints(uuid,"weekly");
-                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("weekly"), dataManager.getMinElo("weekly"));
-                addPoints(uuid,pointsEarned,"weekly");
-                pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking weekly");
-
-                playerElo = dataManager.getPoints(uuid,"monthly");
-                pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("monthly"), dataManager.getMinElo("monthly"));
-                addPoints(uuid,pointsEarned,"monthly");
-                pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking monthly");
-                if(betterElo.isEventEnabled){
-                    playerElo = dataManager.getPoints(uuid,"event");
-                    pointsEarned = calculatePointsEarnedFromBlock(base,playerElo,blockReward, dataManager.getMaxElo("event"), dataManager.getMinElo("event"));
-                    addPoints(uuid,pointsEarned,"event");
-                    pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"Event: onBlockBreak: player: "+player.getName()+", blockType: "+blockType+", pointsEarned: "+pointsEarned+", ranking event");
-                }
-                if(pointsEarnedMain>0.001) {
-                    notifyPlayerAboutPoints(player, pointsEarnedMain, blockReward);
-                }
-            }
-            else{
-                pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK,"Block "+blockType+" is not on the list");
+        if (configManager.getBlockRewards().containsKey(blockType)) {
+            if (block.getMetadata("placed_by_player").stream().anyMatch(MetadataValue::asBoolean)) {
+                pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK, "onBlockBreak: block was placed by a player");
+                return;
             }
 
+            double blockReward = configManager.getBlockRewards().get(blockType);
+            Player player = event.getPlayer();
+            String uuid = player.getUniqueId().toString();
+            double base = configManager.blockBase;
+
+            if (!isEloAllowed(player, player.getLocation())) {
+                //pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "Event: onPlayerDeath noElo zone!");
+                //player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
+                return;
+            }
+
+            updatePlayerPoints(uuid, player, base, blockReward, "main");
+            updatePlayerPoints(uuid, player, base, blockReward, "daily");
+            updatePlayerPoints(uuid, player, base, blockReward, "weekly");
+            updatePlayerPoints(uuid, player, base, blockReward, "monthly");
+
+            if (betterElo.isEventEnabled) {
+                updatePlayerPoints(uuid, player, base, blockReward, "event");
+            }
+        } else {
+            pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK, "Block " + blockType + " is not on the list");
+        }
+    }
+
+    private void updatePlayerPoints(String uuid, Player player, double base, double blockReward, String ranking) {
+        double playerElo = dataManager.getPoints(uuid, ranking);
+        double pointsEarned = calculatePointsEarnedFromBlock(base, playerElo, blockReward, dataManager.getMaxElo(ranking), dataManager.getMinElo(ranking));
+        addPoints(uuid, pointsEarned, ranking);
+        pluginLogger.log(PluginLogger.LogLevel.BLOCK_BREAK, "Event: onBlockBreak: player: " + player.getName() + ", pointsEarned: " + pointsEarned + ", ranking " + ranking);
+
+        if (ranking.equals("main") && pointsEarned > 0.001) {
+            notifyPlayerAboutPoints(player, pointsEarned, blockReward);
+        }
     }
 
     // Metoda do dodawania metadanych do bloku podczas stawiania przez gracza
@@ -999,7 +1003,7 @@ public class  Event implements Listener {
     public void onMobDeath(EntityDeathEvent event) {
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
         LivingEntity entity = event.getEntity();
-        CustomMobs.CustomMob customMob = null;
+        CustomMobs.CustomMob customMob;
         if (entity.hasMetadata("DeathHandled")) {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mobDeath already processed!");
             return; // Zdarzenie śmierci zostało już obsłużone, więc nic nie rób
@@ -1021,6 +1025,8 @@ public class  Event implements Listener {
                 customMob =  betterElo.getCustomMobFromEntity(entity);
                 if(customMob!=null)
                 {
+
+
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath customMob.dropTable: "+customMob.dropTable);
                     //HashMap<Double, ItemStack> dropTable = customMob.dropTable;
                     List<CustomMobsFileManager.DropItem> dropTable = customMob.dropTable;
@@ -1061,6 +1067,30 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
                         }
                     }
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    try{
+                        Player killer = event.getEntity().getKiller();
+                        if(!isEloAllowed(killer,killer.getLocation())){
+                            //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
+                            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
+                            return;
+                        }
+                        String[] rankings = {"main", "daily", "weekly", "monthly"};
+                        boolean eventEnabled = betterElo.isEventEnabled;
+
+                        for (String ranking : rankings) {
+                            handleRankingPoints(killer, customMob, ranking);
+                        }
+
+                        if (eventEnabled) {
+                            handleRankingPoints(killer, customMob,  "event");
+                        }
+                    }catch (Exception e){
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR  , "Event.onMobDeath exception: "+e.getMessage());
+                    }
+                    });
+
+
 
                     pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath customMob.mobName: "+customMob.mobName+", customMob.spawnerName: "+customMob.spawnerName);
                     if(customMob.spawnerName!=null){
@@ -1071,10 +1101,14 @@ public class  Event implements Listener {
                 }else {
                     pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
                 }
+            } else {
+                customMob = null;
             }
 
 
             entity.setMetadata("DeathHandled", new FixedMetadataValue(plugin, true));
+        } else {
+            customMob = null;
         }
 
 
