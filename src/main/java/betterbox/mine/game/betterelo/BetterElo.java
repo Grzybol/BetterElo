@@ -854,7 +854,7 @@ public final class BetterElo extends JavaPlugin {
     }
     public void addMobDefenseAttribute(ItemStack item, int value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDefenseAttribute called with value: "+value);
-        if (item != null && item.hasItemMeta()) {
+        if (item != null) {
             if(!item.hasItemMeta()){
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
@@ -869,7 +869,7 @@ public final class BetterElo extends JavaPlugin {
     }
     public void addMobDamageAttribute(ItemStack item, String value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value);
-        if (item != null && item.hasItemMeta()) {
+        if (item != null) {
             if(!item.hasItemMeta()){
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
@@ -884,7 +884,7 @@ public final class BetterElo extends JavaPlugin {
     }
     public void addAverageDamageAttribute(ItemStack item, int value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
-        if (item != null ) {
+        if (item != null) {
             if(!item.hasItemMeta()){
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }

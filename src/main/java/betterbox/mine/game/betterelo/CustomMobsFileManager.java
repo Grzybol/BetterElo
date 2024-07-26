@@ -147,7 +147,7 @@ public class CustomMobsFileManager {
     }
     private void CreateSpawnersFile(String folderPath) {
         try {
-            String spawnersFileName = "customMobs/spawners.yml";
+            String spawnersFileName = "spawners.yml";
             spawnersFile = new File(folderPath + File.separator + "customMobs", spawnersFileName);
             if (!spawnersFile.exists()) {
                 CreateExampleSpawnersFile(spawnersFile);
@@ -164,8 +164,8 @@ public class CustomMobsFileManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Spawners file is not initialized.");
             return;
         }
-
         FileConfiguration config = YamlConfiguration.loadConfiguration(spawnersFile);
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobsFileManager.loadSpawners ");
         ConfigurationSection spawnersSection = config.getConfigurationSection("spawners");
         if (spawnersSection == null) {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "No spawners defined in spawners.yml.");
@@ -182,7 +182,9 @@ public class CustomMobsFileManager {
                 int maxMobs = spawnerSection.getInt("maxMobs");
                 //default 20 blocks
                 int maxDistance = 20;
-                maxDistance=spawnerSection.getInt("maxDistance");
+                if(spawnerSection.contains("maxDistance")) {
+                    maxDistance = spawnerSection.getInt("maxDistance");
+                }
 
                 String passengerMobName = spawnerSection.getString("passengerMobName", null);
 
