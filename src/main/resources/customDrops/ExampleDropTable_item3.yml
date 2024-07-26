@@ -10,3 +10,6 @@ item:
     lore:
     - '{"extra":[{"bold":true,"italic":false,"underlined":false,"strikethrough":false,"obfuscated":false,"color":"gold","text":"Mob
       Damage 20-100"}],"text":""}'
+    PublicBukkitValues:
+      betterelo:mob_damage: 20-100
+      betterelo:average_damage: 4i
