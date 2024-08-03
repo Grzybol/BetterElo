@@ -1192,11 +1192,8 @@ public class  Event implements Listener {
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
-
-
-
             int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
-            double totalDamage = event.getDamage() + event.getDamage()*averageDamageBonusPercent;
+            double totalDamage = event.getDamage() + event.getDamage() * ((double) averageDamageBonusPercent /100);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage);
             event.setDamage(totalDamage);
             updateLastHitTime(damager);
