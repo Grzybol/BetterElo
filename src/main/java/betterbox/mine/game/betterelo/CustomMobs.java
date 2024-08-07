@@ -210,8 +210,13 @@ public class CustomMobs {
             //plugin.getLogger().info("attackSpeed: "+attackSpeed);
             //entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
 
+            if (customMetadata.containsKey("MobName")){
+                entity.setCustomName(customMetadata.get("MobName").toString());
+            }else{
+                entity.setCustomName(mobName);
+            }
 
-            entity.setCustomName(mobName);
+
             entity.setCustomNameVisible(true);
 
             // Ustawianie niestandardowych metadanych
