@@ -20,7 +20,7 @@ import java.util.UUID;
 
 public class CustomMobs {
     private Map<String, CustomMob> customMobsMap = new HashMap<>();
-
+    private Map<ChatColor, String> formattingMap = new HashMap<>();
     private final PluginLogger pluginLogger;
     private final JavaPlugin plugin;
     private final BetterElo betterElo;
@@ -211,7 +211,7 @@ public class CustomMobs {
             //entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
 
             if (customMetadata.containsKey("MobName")){
-                entity.setCustomName(customMetadata.get("MobName").toString());
+                entity.setCustomName(FormatUtil.applyFormatting(customMetadata.get("MobName").toString()));
             }else{
                 entity.setCustomName(mobName);
             }
@@ -231,6 +231,58 @@ public class CustomMobs {
 
 
 
+    }
+    public enum ChatColor {
+        BLACK("&0"),
+        DARK_BLUE("&1"),
+        DARK_GREEN("&2"),
+        DARK_AQUA("&3"),
+        DARK_RED("&4"),
+        DARK_PURPLE("&5"),
+        GOLD("&6"),
+        GRAY("&7"),
+        DARK_GRAY("&8"),
+        BLUE("&9"),
+        GREEN("&a"),
+        AQUA("&b"),
+        RED("&c"),
+        LIGHT_PURPLE("&d"),
+        YELLOW("&e"),
+        WHITE("&f"),
+        OBFUSCATED("&k"),
+        BOLD("&l"),
+        STRIKETHROUGH("&m"),
+        UNDERLINE("&n"),
+        ITALIC("&o"),
+        RESET("&r");
+
+        private final String code;
+
+        ChatColor(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public static String translateAlternateColorCodes(String message) {
+            for (ChatColor color : values()) {
+                message = message.replace(color.getCode(), color.name());
+            }
+            return message;
+        }
+    }
+    public static class FormatUtil {
+        public static String applyFormatting(String input) {
+            return ChatColor.translateAlternateColorCodes(input);
+        }
+    }
+
+    public static void main(String[] args) {
+        String input = "&6&ltest";
+        String formatted = FormatUtil.applyFormatting(input);
+        System.out.println(formatted);  // Wypisze coś w stylu "GOLD BOLD test" jeśli zaimplementujesz odpowiednie zamiany w ChatColor.translateAlternateColorCodes
     }
 
 
@@ -264,7 +316,7 @@ public class CustomMobs {
         String customName = value.asString();
         Component nameComponent;
 
-        nameComponent = Component.text(customName, NamedTextColor.DARK_RED)
+        nameComponent = Component.text(FormatUtil.applyFormatting(customName))
                 .append(Component.text(" HP: " + Math.round(mob.getHealth()) + "/" + Math.round(mob.getMaxHealth()), NamedTextColor.WHITE));
 
 
