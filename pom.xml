@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>4.7.23-SNAPSHOT</version>
+    <version>4.7.24-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BetterElo</name>

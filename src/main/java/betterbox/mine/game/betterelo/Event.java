@@ -1291,7 +1291,7 @@ public class  Event implements Listener {
 
         }
         double defDmgReduction= (1-(0.01*defense));
-        double finalDamage =((totalDamage-armor)*defDmgReduction);
+        double finalDamage =event.getFinalDamage()+((totalDamage-armor)*defDmgReduction);
         if(finalDamage<=0)
             finalDamage=0;
         event.setDamage(finalDamage);
