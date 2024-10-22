@@ -14,58 +14,61 @@ commands:
     usage: /be
     aliases:
       - betterelo
-  be-info:
+  be info:
     description: Informacje o pluginie.
     usage: /be info
-  be-help:
+  be help:
     description: Command list
     usage: /be help
-  be-player:
+  be player:
     description: Informacje o miejscu w rankingu i punktach gracza.
     usage: /be <nazwa_gracza>
-  be-top:
+  be top:
     description: Nick gracza i jego punkty z pozycji n w rankingu.
     usage: /be top <n>
-  be-top10:
+  be top10:
     description: Wyświetla top 10 graczy i ich punkty.
     usage: /be top10
-  be-setrewards:
+  be setrewards:
     description: Otwiera interfejs GUI do ustawiania nagród.
     usage: /be setrewards
     permission: betterelo.setrewards
-  be-daily:
+  be daily:
     description: Włącza lub wyłącza codzienne nagrody.
     usage: /be daily
-  be-weekly:
+  be weekly:
     description: Włącza lub wyłącza tygodniowe nagrody.
     usage: /be weekly
-  be-monthly:
+  be monthly:
     description: Włącza lub wyłącza miesięczne nagrody.
     usage: /be monthly
-  be-timeleft:
+  be timeleft:
     description: pokazuje reszte czasu do rozdania nagród.
     usage: /be timeleft
-  be-claim:
+  be claim:
     description: Komenda do odbierania nagród offline.
     usage: /be claim
-  be-add:
+  be add:
     description: Komenda do dodawania punktów graczowi.
     usage: /be add
-  be-sub:
+  be sub:
     description: Komenda do odbierania punktów graczowi.
     usage: /be sub
-  be-event:
+  be event:
     description: creating event
     usage: /be event
-  be-stopevent:
+  be stopevent:
     description: removing event
     usage: /be stopevent
-  be-holo:
+  be holo:
     description: Holo management
     usage: /be holo
-  be-antyweb:
+  be antyweb:
     description: Add antyweb to item
     usage: /be antyweb x
+  be setattribute:
+    description: Add attribute to the item in hand.
+    usage: /be setattribute mobdefense/mobdamage/averagedamage X
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.

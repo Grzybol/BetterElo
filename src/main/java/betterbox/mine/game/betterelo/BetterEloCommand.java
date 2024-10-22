@@ -707,17 +707,13 @@ public class BetterEloCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.AQUA + "/be sub <player> <points> <rankingtype> " + ChatColor.GREEN + "- subtracting points from given player in specific ranking (main,daily,weekly,monthly)");
             sender.sendMessage(ChatColor.AQUA + "/be startevent <duration> <timeUnit> " + ChatColor.GREEN + "- setting up event duration and time unit <h/m> ");
             sender.sendMessage(ChatColor.AQUA + "/be stopevent " + ChatColor.GREEN + "- Stops current event (if active).");
-            sender.sendMessage(ChatColor.AQUA + "/be holo <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- creates holo at your position.");
-            sender.sendMessage(ChatColor.AQUA + "/be holo delete <event/main/daily/weekly/monthly> " + ChatColor.GREEN + "- delete given holo");
             sender.sendMessage(ChatColor.AQUA + "/be antyweb <radius> " + ChatColor.GREEN + "- creates antyweb effect with given radius");
-            sender.sendMessage(ChatColor.AQUA + "/be firework <power> " + ChatColor.GREEN + "- creates an Infinite Firework with given power");
-            sender.sendMessage(ChatColor.AQUA + "/be flamethrower <distance> <range>" + ChatColor.GREEN + "- adds Flamethrower effect");
-            sender.sendMessage(ChatColor.AQUA + "/be zephyr <power> " + ChatColor.GREEN + "- adds Zephyr effect");
             sender.sendMessage(ChatColor.AQUA + "/be addspawner <spawnerName> <mobName> <cooldown(s)> <mobCountPerSpawn> <maxMobs>" + ChatColor.GREEN + "- creates custom mob spawner");
             sender.sendMessage(ChatColor.AQUA + "/be droptable <name> - opens a GUI to create new drop table");
             sender.sendMessage(ChatColor.AQUA + "/be spawnmob <mobname> <amount> - spawn given custom mob");
             sender.sendMessage(ChatColor.AQUA + "/be enchantitem - gives you 1x Enchant Item");
             sender.sendMessage(ChatColor.AQUA + "/be forcespawn <spawnerName> - forces a respawn of a given spawner");
+            sender.sendMessage(ChatColor.AQUA + "/be setattribute mobdefense/mobdamage/avaragedamage x - adds custom attribute with x value to the item in hand");
         }
     }
     private void handleTimeLeft(CommandSender sender){
