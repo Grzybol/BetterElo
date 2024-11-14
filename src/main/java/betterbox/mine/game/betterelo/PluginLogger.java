@@ -72,7 +72,7 @@ public class PluginLogger {
             }
             if(isElasticBufferEnabled){
                 try{
-                    elasticBuffer.receiveLog(message,level.toString(),plugin.getDescription().toString(),null);
+                    elasticBuffer.receiveLog(message,level.toString(),plugin.getDescription().getName(),null);
                 }catch (Exception e) {
                     plugin.getLogger().severe("PluginLogger: log: Could not write to log file!" + e.getMessage());
                 }
@@ -94,7 +94,7 @@ public class PluginLogger {
             }
             if(isElasticBufferEnabled){
                 try{
-                    elasticBuffer.receiveLog(message,level.toString(),plugin.getDescription().toString(),transactionID);
+                    elasticBuffer.receiveLog(message,level.toString(),plugin.getDescription().getName(),transactionID);
                 }catch (Exception e) {
                     plugin.getLogger().severe("PluginLogger: log: Could not write to log file!" + e.getMessage());
                 }
