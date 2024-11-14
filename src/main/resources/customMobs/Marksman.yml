@@ -9,6 +9,8 @@ defense: 30 # x% damage reduction
 regenSeconds: 10
 regenPercent: 20
 knockbackResistance: 5.0
+eloPoints: 1500
+eloMultiplier: 0.6
 customMetadata:
   CustomMob: true # leave this always as true!!
   MobName: EXAMPLE BOSS - Panda # displayname COLORS/FORMATTING NOT SUPPORTED YET

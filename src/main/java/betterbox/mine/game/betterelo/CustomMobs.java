@@ -1,22 +1,13 @@
 package betterbox.mine.game.betterelo;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -29,7 +20,7 @@ import java.util.UUID;
 
 public class CustomMobs {
     private Map<String, CustomMob> customMobsMap = new HashMap<>();
-
+    private Map<ChatColor, String> formattingMap = new HashMap<>();
     private final PluginLogger pluginLogger;
     private final JavaPlugin plugin;
     private final BetterElo betterElo;
@@ -48,14 +39,14 @@ public class CustomMobs {
         ItemStack helmet, chestplate, leggings, boots, weapon;
         //HashMap< Double,ItemStack> dropTable;
         List<CustomMobsFileManager.DropItem> dropTable;
-        double armor, speed, attackDamage, EMKSchance, regenPercent, knockbackResistance;
+        double armor, speed, attackDamage, EMKSchance, regenPercent, knockbackResistance, eloPoints, eloMultiplier;
         String passengerMobName; // Nowe pole dla nazwy pasażera
         int hp, attackSpeed, defense, regenSeconds;
         Map<String, Object> customMetadata; // Nowe pole do przechowywania niestandardowych metadanych
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -94,10 +85,12 @@ public class CustomMobs {
             this.attackDamage = attackDamage;
             this.customMetadata = customMetadata;
             this.knockbackResistance = knockbackResistance;
+            this.eloPoints = eloPoints;
+            this.eloMultiplier = eloMultiplier;
             //setupMob();
         }
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, int regenSeconds,double regenPercent, double knockbackResistance) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -116,9 +109,11 @@ public class CustomMobs {
             this.attackDamage = attackDamage;
             this.customMetadata = customMetadata;
             this.knockbackResistance = knockbackResistance;
+            this.eloPoints = eloPoints;
+            this.eloMultiplier = eloMultiplier;
             //setupMob();
         }
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.knockbackResistance = knockbackResistance;
@@ -138,6 +133,8 @@ public class CustomMobs {
             this.defense = defense;
             this.attackDamage = attackDamage;
             this.customMetadata = customMetadata;
+            this.eloPoints = eloPoints;
+            this.eloMultiplier = eloMultiplier;
             //setupMob();
         }
 
@@ -166,12 +163,12 @@ public class CustomMobs {
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
                 newMob.spawnMob(spawnLocation);
             } else {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.defense, this.regenSeconds, this.regenPercent, this.knockbackResistance);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.defense, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
                 newMob.spawnMob(spawnLocation);
             }
             return newMob;
@@ -181,7 +178,7 @@ public class CustomMobs {
             CustomMob newMob = null;
             newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
             newMob.spawnMob(spawnLocation);
 
             return newMob;
@@ -213,8 +210,13 @@ public class CustomMobs {
             //plugin.getLogger().info("attackSpeed: "+attackSpeed);
             //entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
 
+            if (customMetadata.containsKey("MobName")){
+                entity.setCustomName(FormatUtil.applyFormatting(customMetadata.get("MobName").toString()));
+            }else{
+                entity.setCustomName(mobName);
+            }
 
-            entity.setCustomName(mobName);
+
             entity.setCustomNameVisible(true);
 
             // Ustawianie niestandardowych metadanych
@@ -229,6 +231,58 @@ public class CustomMobs {
 
 
 
+    }
+    public enum ChatColor {
+        BLACK("&0"),
+        DARK_BLUE("&1"),
+        DARK_GREEN("&2"),
+        DARK_AQUA("&3"),
+        DARK_RED("&4"),
+        DARK_PURPLE("&5"),
+        GOLD("&6"),
+        GRAY("&7"),
+        DARK_GRAY("&8"),
+        BLUE("&9"),
+        GREEN("&a"),
+        AQUA("&b"),
+        RED("&c"),
+        LIGHT_PURPLE("&d"),
+        YELLOW("&e"),
+        WHITE("&f"),
+        OBFUSCATED("&k"),
+        BOLD("&l"),
+        STRIKETHROUGH("&m"),
+        UNDERLINE("&n"),
+        ITALIC("&o"),
+        RESET("&r");
+
+        private final String code;
+
+        ChatColor(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public static String translateAlternateColorCodes(String message) {
+            for (ChatColor color : values()) {
+                message = message.replace(color.getCode(), color.name());
+            }
+            return message;
+        }
+    }
+    public static class FormatUtil {
+        public static String applyFormatting(String input) {
+            return ChatColor.translateAlternateColorCodes(input);
+        }
+    }
+
+    public static void main(String[] args) {
+        String input = "&6&ltest";
+        String formatted = FormatUtil.applyFormatting(input);
+        System.out.println(formatted);  // Wypisze coś w stylu "GOLD BOLD test" jeśli zaimplementujesz odpowiednie zamiany w ChatColor.translateAlternateColorCodes
     }
 
 
@@ -262,7 +316,7 @@ public class CustomMobs {
         String customName = value.asString();
         Component nameComponent;
 
-        nameComponent = Component.text(customName, NamedTextColor.DARK_RED)
+        nameComponent = Component.text(FormatUtil.applyFormatting(customName))
                 .append(Component.text(" HP: " + Math.round(mob.getHealth()) + "/" + Math.round(mob.getMaxHealth()), NamedTextColor.WHITE));
 
 
@@ -533,7 +587,7 @@ public class CustomMobs {
         // Wczytaj customowe moby i przechowaj je w pamięci
         // Dla każdego pliku moba w folderze customMobs
         for (File mobFile : fileManager.getCustomMobFiles()) {
-            if (!mobFile.getName().equals("spawners.yml"))
+            if (!mobFile.getName().equals("customMobs/spawners.yml"))
             {
                 try {
                     CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile);
