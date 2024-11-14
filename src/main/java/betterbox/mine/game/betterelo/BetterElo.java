@@ -3,6 +3,7 @@ package betterbox.mine.game.betterelo;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
+import org.betterbox.elasticBuffer.ElasticBuffer;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -18,6 +19,8 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -40,6 +43,7 @@ import org.checkerframework.checker.units.qual.C;
 public final class BetterElo extends JavaPlugin {
     HashMap<LivingEntity, BukkitTask> mobTasks = new HashMap<>();
     private static BetterElo instance;
+    public ElasticBuffer elasticBuffer;
     private PluginLogger pluginLogger;
     private DataManager dataManager;
     public final Map<Entity, CustomMobs.CustomMob> customMobsMap = new HashMap<>();
@@ -66,6 +70,7 @@ public final class BetterElo extends JavaPlugin {
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
     private NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
+    private boolean isElasticEnabled=false;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -96,7 +101,8 @@ public final class BetterElo extends JavaPlugin {
         // Inicjalizacja PluginLoggera
         Set<PluginLogger.LogLevel> defaultLogLevels = EnumSet.of(PluginLogger.LogLevel.INFO,PluginLogger.LogLevel.DEBUG, PluginLogger.LogLevel.WARNING, PluginLogger.LogLevel.ERROR);
         folderPath = getDataFolder().getAbsolutePath();
-        pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this);
+        pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this,this);
+        loadElasticBuffer();
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
@@ -986,5 +992,44 @@ public final class BetterElo extends JavaPlugin {
         }
         return false;
     }
+    private void loadElasticBuffer(){
+        try{
+            PluginManager pm = Bukkit.getPluginManager();
+            Plugin[] plugins = pm.getPlugins();
+            StringBuilder enabledPlugins = new StringBuilder("Enabled plugins: ");
+            StringBuilder disabledPlugins = new StringBuilder("Disabled plugins: ");
+            for (Plugin plugin : plugins) {
+                if (plugin.isEnabled()) {
+                    enabledPlugins.append(plugin.getName()).append(", ");
+                } else {
+                    disabledPlugins.append(plugin.getName()).append(", ");
+                }
+            }
+            // Zalogowanie włączonych pluginów
+            pluginLogger.log(PluginLogger.LogLevel.INFO, enabledPlugins.toString());
+            // Zalogowanie wyłączonych pluginów
+            pluginLogger.log(PluginLogger.LogLevel.INFO,  "Bukkit.getPluginManager().getPlugin(\"ElasticBuffer\").isEnabled():"+Bukkit.getPluginManager().getPlugin("ElasticBuffer").isEnabled()+",Bukkit.getPluginManager().getPlugin(\"ElasticBuffer\").isNaggable(): "+Bukkit.getPluginManager().getPlugin("ElasticBuffer").isNaggable());
+            pluginLogger.log(PluginLogger.LogLevel.INFO, disabledPlugins.toString());
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "[BetterElo] Initializing basic components...");
+            try {
+                // Opóźnienie o 5 sekund, aby dać ElasticBuffer czas na pełną inicjalizację
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "[BetterElo] Initialization delay interrupted: " + e.getMessage());
+                Thread.currentThread().interrupt(); // Przywrócenie statusu przerwania wątku
+            }
+            elasticBuffer = (ElasticBuffer) pm.getPlugin("ElasticBuffer");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "elasticBuffer: " + elasticBuffer);
+            //assert elasticBuffer != null;
+            elasticBuffer.receiveLog("BetterElo initialized successfully! Starting schedulers", "INFO", getDescription().getName(),null);
+            elasticBuffer.sendLogs();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "LOGS SENT");
+            pluginLogger.isElasticBufferEnabled=true;
+            pluginLogger.elasticBuffer=elasticBuffer;
+        }catch (Exception e){
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "ElasticBufferAPI instance found via ServicesManager, exception: "+e.getMessage());
+        }
+    }
+    public ElasticBuffer getElasticBuffer(){return elasticBuffer;}
 
 }

@@ -7,7 +7,9 @@ author: Grzybol
 depend:
   - PlaceholderAPI
   - WorldGuard
-softdepend: [HolographicDisplays]
+softdepend:
+  - HolographicDisplays
+  - ElasticBuffer
 commands:
   be:
     description: Komenda do ogólnego zarządzania rankingiem graczy.
