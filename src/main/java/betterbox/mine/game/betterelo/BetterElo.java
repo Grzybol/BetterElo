@@ -4,6 +4,7 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.betterbox.elasticBuffer.ElasticBuffer;
+import org.betterbox.elasticBuffer.ElasticBufferAPI;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -203,6 +204,12 @@ public final class BetterElo extends JavaPlugin {
         killAllCustomMobs();
 
         checkMobsExistence();
+
+
+        ElasticBuffer elasticBuffer = ElasticBuffer.getInstance();  // Załóżmy, że ElasticBuffer udostępnia singleton.
+        ElasticBufferAPI api = new ElasticBufferAPI(elasticBuffer);
+        api.log("Test log sent using ElasticBufferAPI from BetterElo","INFO","BetterElo",null);
+        //api.log
 
     }
     public void createPluginFolders() {
@@ -1022,6 +1029,7 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "elasticBuffer: " + elasticBuffer);
             //assert elasticBuffer != null;
             elasticBuffer.receiveLog("BetterElo initialized successfully! Starting schedulers", "INFO", getDescription().getName(),null);
+
             elasticBuffer.sendLogs();
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "LOGS SENT");
             pluginLogger.isElasticBufferEnabled=true;

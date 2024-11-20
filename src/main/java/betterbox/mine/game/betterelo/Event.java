@@ -1166,12 +1166,13 @@ public class  Event implements Listener {
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        String transactionID = UUID.randomUUID().toString();
         long startTime = System.nanoTime();
         Entity damagerEntity = event.getDamager();
         Entity victimEntity = event.getEntity();
 
         if (damagerEntity.hasMetadata("handledDamage")) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!",transactionID);
             return;
         }
         if (damagerEntity instanceof Player){
@@ -1194,7 +1195,7 @@ public class  Event implements Listener {
             Player victim = (Player) event.getEntity();
             int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
             double totalDamage = event.getDamage() + event.getDamage() * ((double) averageDamageBonusPercent /100);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage,transactionID);
             event.setDamage(totalDamage);
             updateLastHitTime(damager);
             updateLastHitTime(victim);
@@ -1211,17 +1212,17 @@ public class  Event implements Listener {
 
             if (lastAttackTime != null && (currentTime - lastAttackTime) < 500) {
                 event.setCancelled(true);
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Player " + damager.getName() + " tried to hit too fast!");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Player " + damager.getName() + " tried to hit too fast!",transactionID);
                 return;
             }
 
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected",transactionID);
 
             int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
             int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus);
-            customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus);
-            removePlayerPlacedBlocksAsync(victimEntity);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus,transactionID);
+            customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus,transactionID);
+            removePlayerPlacedBlocksAsync(victimEntity,transactionID);
 
             lastAttackTimes.put(key, currentTime);
 
@@ -1232,7 +1233,7 @@ public class  Event implements Listener {
 
         }else if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
             int customArmorBonus =betterElo.getMobDefenseAttribute(getPlayerEquippedItems((Player) victimEntity));
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus,transactionID);
             event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
 
         }
@@ -1247,7 +1248,7 @@ public class  Event implements Listener {
                             @Override
                             public void run() {
                                 if (!entity.isDead()) {
-                                    customMobs.updateCustomMobName(entity);
+                                    customMobs.updateCustomMobName(entity,transactionID);
                                 }
                             }
                         }.runTask(BetterElo.getInstance());
@@ -1260,7 +1261,7 @@ public class  Event implements Listener {
         long endTime = System.nanoTime();
         long duration = endTime - startTime;
         double durationInMillis = duration / 1_000_000.0;
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity execution time: " + durationInMillis + " ms",transactionID);
 
 
 
@@ -1274,20 +1275,20 @@ public class  Event implements Listener {
         updateLastHitTime(damager);
         updateLastHitTime(victim);
     }
-    public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent){
+    public void customEntityDamageEvent(EntityDamageByEntityEvent event,int minDamage, int maxDamage, int averageDamageBonusPercent,String transactionID){
         long timer;
         double armor=1,defense=0;
         double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
         int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
         double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", averageDamageBonusPercent: "+averageDamageBonusPercent+", bonusDamage: "+bonusDamage);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", averageDamageBonusPercent: "+averageDamageBonusPercent+", bonusDamage: "+bonusDamage,transactionID);
         CustomMobs.CustomMob customMob = null;
         customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
         if(customMob!=null)
         {
             defense = customMob.defense;
             armor = customMob.armor;
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent  from customMob object - defense: "+defense+", armor: "+armor);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent  from customMob object - defense: "+defense+", armor: "+armor,transactionID);
 
         }
         double defDmgReduction= (1-(0.01*defense));
@@ -1295,9 +1296,9 @@ public class  Event implements Listener {
         if(finalDamage<=0)
             finalDamage=0;
         event.setDamage(finalDamage);
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor,transactionID);
     }
-    public void removePlayerPlacedBlocksAsync(Entity entity) {
+    public void removePlayerPlacedBlocksAsync(Entity entity,String transactionID) {
         // Asynchronicznie przygotowujesz dane
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             List<Block> blocksToRemove = new ArrayList<>();
@@ -1318,7 +1319,7 @@ public class  Event implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 for (Block block : blocksToRemove) {
                     block.setType(Material.AIR);
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Removing player-placed block at " + block.getLocation());
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Removing player-placed block at " + block.getLocation(),transactionID);
                 }
             });
         });

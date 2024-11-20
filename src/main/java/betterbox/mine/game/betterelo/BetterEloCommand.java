@@ -486,9 +486,10 @@ public class BetterEloCommand implements CommandExecutor {
         return true;
     }
     private void handleCustomMobsCommands(CommandSender sender, String mobName, int mobCount){
+        String transactionID = UUID.randomUUID().toString();
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"BetterEloCommand.handleCustomMobsCommands called, sender: "+sender.getName()+", mobName: "+mobName+", mobCount: "+mobCount);
         if(sender.isOp() && sender instanceof Player) {
-        customMobs.spawnModifiedZombie((Player) sender,mobName,mobCount);
+        customMobs.spawnModifiedZombie((Player) sender,mobName,mobCount,transactionID);
     }else{
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
 
