@@ -115,8 +115,8 @@ public class  Event implements Listener {
         }
     }
 
-    private double handleKillEvent(String rankingType, Player victim, Player killer) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
+    private double handleKillEvent(String rankingType, Player victim, Player killer,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer,transactionID);
         double pointsEarned = 0;
 
         if (killer != null && !killer.equals(victim)) {
@@ -125,27 +125,28 @@ public class  Event implements Listener {
             double killerElo = getElo(killer.getUniqueId().toString(), rankingType);
             double maxElo = getMaxElo(rankingType);
             double minElo = dataManager.getMinElo(rankingType);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + " loaded variables: maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victim name: " + victim.getName() + " killerElo:" + killerElo + " killer name: " + killer.getName());
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + " loaded variables: maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victim name: " + victim.getName() + " killerElo:" + killerElo + " killer name: " + killer.getName(),transactionID);
             double basePoints = 100;
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo,transactionID);
             pointsEarned = calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType,transactionID);
 
             // Zapisz informacje do bazy danych
             PlayerKillDatabase playerKillDatabase = new PlayerKillDatabase(pluginLogger);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling saveKillData");
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling saveKillData",transactionID);
             playerKillDatabase.saveKillData(rankingType, victim.getName(), killer.getName(), pointsEarned, killerElo, victimElo);
 
             // Dodaj punkty graczowi, który zabił
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling addPoints with parameters: " + killer.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling addPoints with parameters: " + killer.getUniqueId().toString() + " " + pointsEarned + " " + rankingType,transactionID);
             addPoints(killer, pointsEarned, rankingType);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling subtractPoints with parameters: " + victim.getUniqueId().toString() + " " + pointsEarned + " " + rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling subtractPoints with parameters: " + victim.getUniqueId().toString() + " " + pointsEarned + " " + rankingType,transactionID);
             subtractPoints(victim, pointsEarned, rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.Event.handleKillEvent: rankingType: " + rankingType + ", maxElo:" + maxElo + " minElo: " + minElo + " victimElo:" + victimElo + " victimName: " + victim.getName() + " killerElo:" + killerElo + " killerName: " + killer.getName()+", pointsEarned: "+pointsEarned,transactionID);
         }
         return pointsEarned;
     }
-    private double handleMobKillEvent(String rankingType, CustomMobs.CustomMob victim, Player killer) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
+    private double handleMobKillEvent(String rankingType, CustomMobs.CustomMob victim, Player killer,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer,transactionID);
 
             double pointsEarned = 0;
             double victimElo = victim.eloPoints;
@@ -153,18 +154,19 @@ public class  Event implements Listener {
             double killerElo = getElo(killer.getUniqueId().toString(), rankingType);
             double maxElo = getMaxElo(rankingType);
             double minElo = dataManager.getMinElo(rankingType);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + ", loaded variables: maxElo:" + maxElo + ", minElo: " + minElo + ", victimElo:" + victimElo + ", eloMultiplier: "+eloMultiplier);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + ", loaded variables: maxElo:" + maxElo + ", minElo: " + minElo + ", victimElo:" + victimElo + ", eloMultiplier: "+eloMultiplier,transactionID);
             double basePoints = 100;
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo,transactionID);
             pointsEarned = eloMultiplier * calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType,transactionID);
             addPoints(killer, pointsEarned, rankingType);
+            pluginLogger.log(PluginLogger.LogLevel.INFO, "Event.handleMobKillEvent basePoints " + basePoints + " killerElo " + killerElo + " victimElo(mob) " + victimElo + " maxElo " + maxElo + " minElo " + minElo+", mobName: "+killer.getName()+" pointsEarned: "+pointsEarned,transactionID);
         return pointsEarned;
     }
-    private void handleRankingPointsFromMobKill(Player killer, CustomMobs.CustomMob victim, String ranking) {
+    private void handleRankingPointsFromMobKill(Player killer, CustomMobs.CustomMob victim, String ranking,String transactionID) {
         if (dataManager.getPoints(killer.getUniqueId().toString(), ranking) - victim.eloPoints < 1000) {
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleRankingPointsFromMobKill calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer);
-            double pointsEarned = handleMobKillEvent(ranking, victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleRankingPointsFromMobKill calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer,transactionID);
+            double pointsEarned = handleMobKillEvent(ranking, victim, killer,transactionID);
             if (ranking.equals("main")) {
                 notifyPlayerAboutPoints(killer, pointsEarned, victim.eloMultiplier, true);
             }
@@ -172,14 +174,14 @@ public class  Event implements Listener {
             killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the " + ranking + " ranking is too big! No reward for this one.");
         }
     }
-    private void handleRankingPointsFromMobDeath(CustomMobs.CustomMob killer,Player victim, String ranking) {
+    private void handleRankingPointsFromMobDeath(CustomMobs.CustomMob killer,Player victim, String ranking,String transactionID) {
         if (dataManager.getPoints(victim.getUniqueId().toString(), ranking) - killer.eloPoints < 1000) {
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleRankingPointsFromMobKill calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer);
-            double pointsEarned = handleDeathFromCustomMobEvent(ranking, victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleRankingPointsFromMobKill calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer,transactionID);
+            double pointsEarned = handleDeathFromCustomMobEvent(ranking, victim, killer,transactionID);
         }
     }
-    private double handleDeathFromCustomMobEvent(String rankingType, Player victim, CustomMobs.CustomMob killer) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer);
+    private double handleDeathFromCustomMobEvent(String rankingType, Player victim, CustomMobs.CustomMob killer,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent called with parameters: " + rankingType+" "+victim+" "+killer,transactionID);
 
         double pointsEarned = 0;
         double victimElo = getElo(victim.getUniqueId().toString(), rankingType);
@@ -187,11 +189,11 @@ public class  Event implements Listener {
         double killerElo = killer.eloPoints;
         double maxElo = getMaxElo(rankingType);
         double minElo = dataManager.getMinElo(rankingType);
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + ", loaded variables: maxElo:" + maxElo + ", minElo: " + minElo + ", victimElo:" + victimElo + ", eloMultiplier: "+eloMultiplier);
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: rankingType: " + rankingType + ", loaded variables: maxElo:" + maxElo + ", minElo: " + minElo + ", victimElo:" + victimElo + ", eloMultiplier: "+eloMultiplier,transactionID);
         double basePoints = 100;
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo);
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent calling calculatePointsEarned with parameters: basePoints " + basePoints + " killerElo " + killerElo + " victimElo " + victimElo + " maxElo " + maxElo + " minElo " + minElo,transactionID);
         pointsEarned = eloMultiplier * calculatePointsEarned(basePoints, killerElo, victimElo, maxElo, minElo);
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: pointsEarned: " + pointsEarned + "rankingType: " + rankingType);
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.Event.handleKillEvent: pointsEarned(lost): " + pointsEarned + "rankingType: " + rankingType+", victim: "+victim.getName()+", mob: "+killer.getMobName());
         subtractPoints(victim, pointsEarned, rankingType);
         return pointsEarned;
     }
@@ -245,20 +247,21 @@ public class  Event implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
+        String transactionID = UUID.randomUUID().toString();
         Player victim = event.getEntity();
         if (victim.hasMetadata("handledDeath")) {
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled! victim: "+victim.getName());
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath event already handled! victim: "+victim.getName(),transactionID);
             return;
         }
         victim.setMetadata("handledDeath", new FixedMetadataValue(plugin, true));
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> victim.removeMetadata("handledDeath", plugin), 1L);
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleKillEvent added handledDeath metadata to "+victim.getName());
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.handleKillEvent added handledDeath metadata to "+victim.getName(),transactionID);
         if (cheaters.getCheatersList().contains(victim.getName())) {
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + "  has CHEATER rank in BetterRanks.");
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + "  has CHEATER rank in BetterRanks.",transactionID);
             return;
         }
         if(!isEloAllowed(victim,victim.getLocation())){
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!",transactionID);
             //killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
             return;
         }
@@ -271,22 +274,22 @@ public class  Event implements Listener {
             String[] rankings = {"main", "daily", "weekly", "monthly"};
             boolean eventEnabled = betterElo.isEventEnabled;
             if (killer == null && deathDueToCombat(victim)) {
-                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: killer is null, deathDueToCombat(victim): " + deathDueToCombat(victim) + " victim: " + victim+", calling getLastAttacker(victim)");
+                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: killer is null, deathDueToCombat(victim): " + deathDueToCombat(victim) + " victim: " + victim+", calling getLastAttacker(victim)",transactionID);
                     Player lastAttacker = getLastAttacker(victim);
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: lastAttacker " + lastAttacker);
+                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: lastAttacker " + lastAttacker,transactionID);
                     if (lastAttacker == null) {
                         return;
                     }else{
-                        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath setting killer=lastAttacker ");
+                        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath setting killer=lastAttacker ",transactionID);
                         killer=lastAttacker;
                     }
 
             }else if(killer==null && !deathDueToCombat(victim)){
                 EntityDamageEvent lastDamageCause = victim.getLastDamageCause();
-                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: killer is null, deathDueToCombat(victim)=false, lastDamageCause="+lastDamageCause.toString());
+                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: killer is null, deathDueToCombat(victim)=false, lastDamageCause="+lastDamageCause.toString(),transactionID);
                 if (lastDamageCause instanceof EntityDamageByEntityEvent) {
                     EntityDamageByEntityEvent damageByEntityEvent = (EntityDamageByEntityEvent) lastDamageCause;
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: damageByEntityEvent="+damageByEntityEvent.toString());
+                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: damageByEntityEvent="+damageByEntityEvent.toString(),transactionID);
                     Entity damager = damageByEntityEvent.getDamager();
                     pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: damager="+damager.toString());
                     // Sprawdzenie, czy damager jest projectilem
@@ -296,18 +299,18 @@ public class  Event implements Listener {
 
                         if (shooter instanceof Entity) {
                             damager = (Entity) shooter;
-                            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: shooter="+damager.toString());
+                            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: shooter="+damager.toString(),transactionID);
                         }
                     }
                     CustomMobs.CustomMob customMob =  betterElo.getCustomMobFromEntity(damager);
-                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: customMob="+customMob.toString());
+                    pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath: customMob="+customMob.toString(),transactionID);
                     if (customMob!=null){
-                        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath killer: "+customMob.mobName+", mobElo: "+customMob.eloPoints);
+                        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event.onPlayerDeath killer: "+customMob.mobName+", mobElo: "+customMob.eloPoints,transactionID);
                         for (String ranking : rankings) {
-                            handleRankingPointsFromMobDeath(customMob, victim, ranking);
+                            handleRankingPointsFromMobDeath(customMob, victim, ranking,transactionID);
                         }
                         if (eventEnabled) {
-                            handleRankingPointsFromMobDeath(customMob, victim,  "event");
+                            handleRankingPointsFromMobDeath(customMob, victim,  "event",transactionID);
                         }
                     }
                     return;
@@ -315,21 +318,21 @@ public class  Event implements Listener {
                 }
             }
             if (cheaters.getCheatersList().contains(victim.getName()) || cheaters.getCheatersList().contains(killer.getName())) {
-                pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + " or " + killer + " " + cheaters.getCheatersList().contains(killer.getName()) + " has CHEATER rank in BetterRanks.");
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + " or " + killer + " " + cheaters.getCheatersList().contains(killer.getName()) + " has CHEATER rank in BetterRanks.",transactionID);
                 return;
             }
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer);
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling deathDueToCombat(victim)");
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath: victim: " + victim + " killer: " + killer,transactionID);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling deathDueToCombat(victim)",transactionID);
 
                 String victimUUID = victim.getUniqueId().toString();
                 String killerUUID = killer.getUniqueId().toString();
 
                 for (String ranking : rankings) {
-                    handleRankingPoints(killer, victim, killerUUID, victimUUID, ranking);
+                    handleRankingPoints(killer, victim, killerUUID, victimUUID, ranking,transactionID);
                 }
 
                 if (eventEnabled) {
-                    handleRankingPoints(killer, victim, killerUUID, victimUUID, "event");
+                    handleRankingPoints(killer, victim, killerUUID, victimUUID, "event",transactionID);
                 }
 
                 //PLAYER DEATH FROM CUSTOM MOB
@@ -339,25 +342,25 @@ public class  Event implements Listener {
 
 
         } catch (Exception e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event: onPlayerDeath exception  " + e + " " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event: onPlayerDeath exception  " + e + " " + e.getMessage(),transactionID);
         }
 
         });
     }
-    private void handleRankingPoints(Player killer, Player victim, String killerUUID, String victimUUID, String ranking) {
+    private void handleRankingPoints(Player killer, Player victim, String killerUUID, String victimUUID, String ranking,String transactionID) {
         if (dataManager.getPoints(killerUUID, ranking) - dataManager.getPoints(victimUUID, ranking) < 1000) {
-            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer);
-            double pointsEarned = handleKillEvent(ranking, victim, killer);
+            pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath calling handleKillEvent with parameters: " + ranking + " " + victim + " " + killer,transactionID);
+            double pointsEarned = handleKillEvent(ranking, victim, killer,transactionID);
             if (ranking.equals("main")) {
-                notifyPlayersAboutPoints(killer, victim, pointsEarned);
+                notifyPlayersAboutPoints(killer, victim, pointsEarned,transactionID);
             }
         } else {
-            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the " + ranking + " ranking is too big! No reward for this one.");
+            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Your Elo difference in the " + ranking + " ranking is too big! No reward for this one.",transactionID);
         }
     }
 
-    private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned) {
-        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned);
+    private void notifyPlayersAboutPoints(Player killer, Player victim, double pointsEarned,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: notifyPlayersAboutPoints called with parameters: "+killer+" "+victim+" "+pointsEarned,transactionID);
         DecimalFormat df = new DecimalFormat("#.##");
 
         Duration fadeIn = Duration.ofMillis(300);  // czas pojawiania się
@@ -1052,21 +1055,22 @@ public class  Event implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMobDeath(EntityDeathEvent event) {
+        String transactionID = UUID.randomUUID().toString();
         //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.onMobDeath called");
         LivingEntity entity = event.getEntity();
         CustomMobs.CustomMob customMob;
         if (entity.hasMetadata("DeathHandled")) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mobDeath already processed!");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath mobDeath already processed!",transactionID);
             return; // Zdarzenie śmierci zostało już obsłużone, więc nic nie rób
         }
         //CustomMobs.CustomMob customMob = entity;
         if (entity.hasMetadata("CustomMob")) {
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath CustomMob metadata check passed");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onMobDeath CustomMob metadata check passed",transactionID);
             List<ItemStack> drops = event.getDrops();
             drops.clear(); // Usuwa standardowy drop, jeśli chcesz
             // Tutaj zakładamy, że niestandardowa nazwa moba jest kluczem do dropTable
             if (entity.hasMetadata("MobName")) {
-                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath MobName check passed");
+                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath MobName check passed",transactionID);
                 List<MetadataValue> values = entity.getMetadata("MobName");
                 // Zakładając, że pierwsza wartość jest właściwą wartością dla twojego pluginu
                 String mobName = values.get(0).asString();
@@ -1078,10 +1082,10 @@ public class  Event implements Listener {
                 {
 
 
-                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath customMob.dropTable: "+customMob.dropTable);
+                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath customMob.dropTable: "+customMob.dropTable,transactionID);
                     //HashMap<Double, ItemStack> dropTable = customMob.dropTable;
                     List<CustomMobsFileManager.DropItem> dropTable = customMob.dropTable;
-                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: "+dropTable);
+                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: "+dropTable,transactionID);
 
                     // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
                     for (CustomMobsFileManager.DropItem dropItem : dropTable) {
@@ -1090,7 +1094,7 @@ public class  Event implements Listener {
                         if ( rolledCance< dropChance) { // entry.getKey() to szansa na drop
                             ItemStack item = dropItem.getItemStack();
                             ItemMeta meta = item.getItemMeta();
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus());
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus(),transactionID);
                             if (dropItem.isAvgDmgBonus()) {
 
                                 int AvgDmgBonus = CustomMobs.dropAverageDamage();
@@ -1101,56 +1105,57 @@ public class  Event implements Listener {
                                 }
                                 lore.add("§6§lAverage Damage +"+AvgDmgBonus+"%");
                                 meta.setLore(lore);
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item,transactionID);
                                 item.setItemMeta(meta);
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item));
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item),transactionID);
                                 betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item)+", getAverageDamageAttribute: "+betterElo.getAverageDamageAttribute(item));
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item)+", getAverageDamageAttribute: "+betterElo.getAverageDamageAttribute(item),transactionID);
 
                             }
 
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item,transactionID);
                             drops.add(item);
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath drops.toArray()[0]: "+drops.toArray()[0]);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath drops.toArray()[0]: "+drops.toArray()[0],transactionID);
 
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance,transactionID);
                         }else{
-                            pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance);
+                            pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance,transactionID);
                         }
                     }
+                    pluginLogger.log(PluginLogger.LogLevel.INFO  , "Event.onMobDeath player: "+event.getEntity().getKiller().getName()+", mobName: "+mobName+", rolledDrop: "+formatDroppedItems(drops),transactionID);
                     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     try{
                         Player killer = event.getEntity().getKiller();
                         if(!isEloAllowed(killer,killer.getLocation())){
                             //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
-                            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
+                            killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!",transactionID);
                             return;
                         }
                         String[] rankings = {"main", "daily", "weekly", "monthly"};
                         boolean eventEnabled = betterElo.isEventEnabled;
 
                         for (String ranking : rankings) {
-                            handleRankingPointsFromMobKill(killer, customMob, ranking);
+                            handleRankingPointsFromMobKill(killer, customMob, ranking,transactionID);
                         }
 
                         if (eventEnabled) {
-                            handleRankingPointsFromMobKill(killer, customMob,  "event");
+                            handleRankingPointsFromMobKill(killer, customMob,  "event",transactionID);
                         }
                     }catch (Exception e){
-                        pluginLogger.log(PluginLogger.LogLevel.ERROR  , "Event.onMobDeath exception: "+e.getMessage());
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR  , "Event.onMobDeath exception: "+e.getMessage(),transactionID);
                     }
                     });
 
 
 
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath customMob.mobName: "+customMob.mobName+", customMob.spawnerName: "+customMob.spawnerName);
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"Event.onMobDeath customMob.mobName: "+customMob.mobName+", customMob.spawnerName: "+customMob.spawnerName,transactionID);
                     if(customMob.spawnerName!=null){
 
                         customMobs.decreaseMobCount(customMob.spawnerName);
                     }
                     betterElo.unregisterCustomMob(entity);
                 }else {
-                    pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!");
+                    pluginLogger.log(PluginLogger.LogLevel.WARNING,"Event.onMobDeath customMob object is null!",transactionID);
                 }
             } else {
                 customMob = null;
@@ -1164,6 +1169,26 @@ public class  Event implements Listener {
 
 
     }
+    public static String formatDroppedItems(List<ItemStack> drops) {
+        StringBuilder sb = new StringBuilder();
+        for (ItemStack itemStack : drops) {
+            String itemName;
+            // Sprawdź, czy przedmiot ma niestandardową nazwę
+            if (itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
+                itemName = itemStack.getItemMeta().getDisplayName();
+            } else {
+                // Użyj domyślnej nazwy materiału
+                itemName = itemStack.getType().toString();
+            }
+            int quantity = itemStack.getAmount();
+            sb.append(itemName).append(":").append(quantity).append(", ");
+        }
+        // Usuń ostatni przecinek i spację, jeśli istnieją
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 2);
+        }
+        return sb.toString();
+    }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         String transactionID = UUID.randomUUID().toString();
@@ -1172,7 +1197,7 @@ public class  Event implements Listener {
         Entity victimEntity = event.getEntity();
 
         if (damagerEntity.hasMetadata("handledDamage")) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!",transactionID);
+            //pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event already handled!",transactionID);
             return;
         }
         if (damagerEntity instanceof Player){

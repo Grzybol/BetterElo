@@ -1,6 +1,7 @@
 package betterbox.mine.game.betterelo;
 
 import org.betterbox.elasticBuffer.ElasticBuffer;
+import org.betterbox.elasticBuffer.ElasticBufferAPI;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.BufferedWriter;
@@ -21,6 +22,7 @@ public class PluginLogger {
     public ElasticBuffer elasticBuffer;
     private final BetterElo betterElo;
     public boolean isElasticBufferEnabled=false;
+    public ElasticBufferAPI api;
     // Enumeracja dla poziomów logowania
     public enum LogLevel {
         INFO, WARNING, ERROR,CUSTOM_MOBS, DEBUG, DEBUG_LVL2, DEBUG_LVL3,DEBUG_LVL4,CHEATERS, RANKING_REWARDS ,FLAMETHROWER,DROP,SPAWNERS, ZEPHYR, KILL_EVENT, COMMAND, PLACEHOLDER, BLOCK_BREAK, BLOCK_PLACE, PLAYER_INTERACT, ELYTRA_CHECK, ANTYWEB, REROLL
@@ -72,7 +74,8 @@ public class PluginLogger {
             }
             if(isElasticBufferEnabled){
                 try{
-                    elasticBuffer.receiveLog(message,level.toString(),plugin.getDescription().getName(),null);
+                    api.log(message,level.toString(),plugin.getDescription().getName(),null);
+                    //elasticBuffer.receiveLog(message,level.toString(),plugin.getDescription().getName(),null);
                 }catch (Exception e) {
                     plugin.getLogger().severe("PluginLogger: log: Could not write to log file!" + e.getMessage());
                 }

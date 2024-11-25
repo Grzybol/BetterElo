@@ -1033,6 +1033,7 @@ public final class BetterElo extends JavaPlugin {
             elasticBuffer.sendLogs();
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "LOGS SENT");
             pluginLogger.isElasticBufferEnabled=true;
+            pluginLogger.api= new ElasticBufferAPI(elasticBuffer);
             pluginLogger.elasticBuffer=elasticBuffer;
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "ElasticBufferAPI instance found via ServicesManager, exception: "+e.getMessage());
