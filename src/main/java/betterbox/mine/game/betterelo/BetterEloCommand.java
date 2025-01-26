@@ -58,6 +58,7 @@ public class BetterEloCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        String transactionID = UUID.randomUUID().toString();
         switch (args.length) {
             case 0:
                 if (sender instanceof Player) {
@@ -73,6 +74,20 @@ public class BetterEloCommand implements CommandExecutor {
                 break;
             case 1:
                 switch (args[0].toLowerCase()) {
+                    case "checkitem":
+                        if(sender instanceof Player){
+                            Player player = (Player) sender;
+                            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                            if(itemInHand!=null){
+                                ItemMeta itemMeta = itemInHand.getItemMeta();
+                                if(itemMeta!=null){
+                                    int avgdmg = betterElo.getAverageDamageAttribute(itemInHand);
+                                    int[] dmg = betterElo.getMobDamageAttribute(itemInHand);
+                                    sender.sendMessage("avgdmg: "+avgdmg+" dmg: "+dmg[0]+"-"+dmg[1]);
+                                }
+                            }
+                        }
+                        break;
                     case "enchantitem":
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.onCommand enchantitem called, sender: "+sender);
                         if(!sender.isOp()){
@@ -211,7 +226,7 @@ public class BetterEloCommand implements CommandExecutor {
                         handleSetRewards(sender);
                         break;
                     case "reload":
-                        handleReloadCommand(sender);
+                        handleReloadCommand(sender, transactionID);
                         break;
                     case "event":
                         if(sender.isOp()){
@@ -445,7 +460,7 @@ public class BetterEloCommand implements CommandExecutor {
                                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " MobDefense attribute set with value "+args[2]);
                                         break;
                                     case "mobdamage":
-                                        betterElo.addMobDamageAttribute(item, args[2]);
+                                        betterElo.addMobDamageAttribute(item, args[2],transactionID);
                                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " mobdamage attribute set with value "+args[2]);
                                         break;
                                     case "averagedamage":
@@ -521,18 +536,18 @@ public class BetterEloCommand implements CommandExecutor {
         }
 
     }
-    private boolean handleReloadCommand(CommandSender sender){
+    private boolean handleReloadCommand(CommandSender sender,String transactionID){
         if(sender.hasPermission("betterelo.reload")){
             configManager.ReloadConfig();
-            pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo config.yml reloaded!");
-            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " BetterElo config reloaded!");
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo config.yml reloaded!",transactionID);
+            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " BetterElo config reloaded!",transactionID);
             customMobsFileManager.loadSpawners();
-            pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo spawners.yml reloaded");
-            customMobs.loadCustomMobs();
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo spawners.yml reloaded",transactionID);
+            customMobs.loadCustomMobs(transactionID);
             //customMobsFileManager.loadCustomDrops();
             return true;
         }else {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: sender " + sender + " dont have permission to use /br tl");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterEloCommand: handleReloadCommand: sender " + sender + " dont have permission to use /br tl",transactionID);
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED +"You don't have permission to use this command!");
             return false;
         }

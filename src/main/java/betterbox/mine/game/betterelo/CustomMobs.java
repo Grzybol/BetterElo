@@ -293,7 +293,7 @@ public class CustomMobs {
         this.pluginLogger = pluginLogger;
         this.fileManager = fileManager;
         this.fileRewardManager = fileRewardManager;
-        loadCustomMobs();
+        loadCustomMobs(UUID.randomUUID().toString());
     }
 
     public void spawnModifiedZombie(Player player, String mobName, int mobCount,String transactionID) {
@@ -584,26 +584,26 @@ public class CustomMobs {
     }
 
     // Metoda pomocnicza do zapisywania danych ItemStack, w tym zaklęć
-    public void loadCustomMobs() {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.loadCustomMobs called.");
+    public void loadCustomMobs(String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.loadCustomMobs called.",transactionID);
         // Wczytaj customowe moby i przechowaj je w pamięci
         // Dla każdego pliku moba w folderze customMobs
         for (File mobFile : fileManager.getCustomMobFiles()) {
             if (!mobFile.getName().equals("customMobs/spawners.yml"))
             {
                 try {
-                    CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile);
+                    CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile,transactionID);
                     if (customMob != null) {
                         customMobsMap.put(customMob.getMobName(), customMob);
                     }else
                     {
-                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs could not load custom mob "+customMob);
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs could not load custom mob "+customMob,transactionID);
                     }
                 } catch (Exception e) {
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs exception: " + e.getMessage());
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs exception: " + e.getMessage(),transactionID);
                 }
             }
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.loadCustomMobs spawners.yml file detected, skipping");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.loadCustomMobs spawners.yml file detected, skipping",transactionID);
         }
     }
 

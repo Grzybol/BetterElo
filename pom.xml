@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>4.8.6-SNAPSHOT</version>
+    <version>4.8.47-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BetterElo</name>
@@ -191,7 +191,7 @@
         <dependency>
             <groupId>com.github.Grzybol</groupId>
             <artifactId>ElasticBuffer</artifactId>
-            <version>v1.1.36</version>
+            <version>v1.1.87</version>
             <scope>provided</scope>
         </dependency>
 

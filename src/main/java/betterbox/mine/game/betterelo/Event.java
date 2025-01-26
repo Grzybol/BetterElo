@@ -33,6 +33,8 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -61,8 +63,9 @@ public class  Event implements Listener {
     private int deathEventCounter;
     private final Random random = new Random();
     //public final long cooldownMillis = 1500; // 1.5s
+    public Utils utils;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager,Utils utils) {
         this.dataManager = dataManager;
         this.fileRewardManager = fileRewardManager;
         this.pluginLogger = pluginLogger;
@@ -73,6 +76,7 @@ public class  Event implements Listener {
         this.customMobs = customMobs;
         this.customMobsFileManager = customMobsFileManager;
         this.guiManager = guiManager;
+        this.utils = utils;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -1109,9 +1113,29 @@ public class  Event implements Listener {
                                 item.setItemMeta(meta);
                                 pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item),transactionID);
                                 betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
+                                meta = item.getItemMeta();
                                 pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item)+", getAverageDamageAttribute: "+betterElo.getAverageDamageAttribute(item),transactionID);
 
                             }
+
+
+                            if(dropItem.hasmaxDamage()){
+                                int maxDamage = betterElo.rollDamage(dropItem.getMaxDamage());
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath loadedMaxDamage: "+maxDamage,transactionID);
+                                int minDamage = betterElo.rollDamage(maxDamage);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath minDamage: "+minDamage+", maxDamage: "+maxDamage,transactionID);
+                                List<String> lore = meta.getLore();
+                                if (lore == null) {
+                                    lore = new ArrayList<>();
+                                }
+                                lore.set(0,"§6§lMob Damage "+minDamage+"-"+maxDamage);
+                                meta.setLore(lore);
+                                item.setItemMeta(meta);
+                                betterElo.addMobDamageAttribute(item,minDamage+"-"+maxDamage,transactionID);
+
+                            }
+
+
 
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item,transactionID);
                             drops.add(item);
@@ -1218,7 +1242,7 @@ public class  Event implements Listener {
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
-            int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
+            int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()),transactionID);
             double totalDamage = event.getDamage() + event.getDamage() * ((double) averageDamageBonusPercent /100);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage,transactionID);
             event.setDamage(totalDamage);
@@ -1244,7 +1268,7 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected",transactionID);
 
             int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
-            int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()));
+            int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()),transactionID);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus,transactionID);
             customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus,transactionID);
             removePlayerPlacedBlocksAsync(victimEntity,transactionID);
@@ -1293,7 +1317,7 @@ public class  Event implements Listener {
 
     }
     public void customDamageHandling(Player damager, Player victim, double initialDamage) {
-        int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems(damager));
+        int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems(damager),null);
         double totalDamage = initialDamage + initialDamage * averageDamageBonusPercent;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "customDamageHandling initialDamage: " + initialDamage + ", averageDamageBonusPercent: " + averageDamageBonusPercent + ", totalDamage: " + totalDamage);
         victim.damage(totalDamage, damager);
@@ -1486,7 +1510,26 @@ public class  Event implements Listener {
         }
         return equippedItems;
     }
-    public double getTotalAvgDmgBonus(List<ItemStack> equippedItems){
+    public double getTotalAvgDmgBonus(List<ItemStack> equippedItems) {
+        double totalAverageDamageBonus = 0;
+        if (equippedItems == null) {
+            return totalAverageDamageBonus;
+        }
+        for (ItemStack item : equippedItems) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+                if (dataContainer.has(betterElo.averageDamageKey, PersistentDataType.INTEGER)) {
+                    int damageBonus = dataContainer.get(betterElo.averageDamageKey, PersistentDataType.INTEGER);
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus read damageBonus: " + damageBonus);
+                    totalAverageDamageBonus += damageBonus;
+                }
+            }
+        }
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus total calculated averageDamageBonus: " + totalAverageDamageBonus);
+        return totalAverageDamageBonus;
+    }
+    public double getTotalAvgDmgBonusOld(List<ItemStack> equippedItems){
         double averageDamageBonusPercent = 0;
         if(equippedItems==null){
             return averageDamageBonusPercent;
@@ -1533,16 +1576,84 @@ public class  Event implements Listener {
     }
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
+        String transactionID = UUID.randomUUID().toString();
         Player player = (Player) event.getWhoClicked();
+        String playerName = player.getName();
+        String playerUUID = player.getUniqueId().toString();
         if (player.hasMetadata("avgDmgRerolled")) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick avgDmgRerolled event already handled!");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick avgDmgRerolled event already handled!",transactionID,playerName,playerUUID);
             return;
         }
+
+        // Sprawdzamy, czy event to przeciąganie przedmiotu
+        if (!event.isCancelled()) {
+            ItemStack cursorItem = event.getCursor(); // przedmiot, który gracz trzyma myszką
+            ItemStack destinationItem = event.getCurrentItem(); // przedmiot na miejscu docelowym w ekwipunku
+
+            if (cursorItem != null && isEnchantItem(cursorItem)) {
+                //pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick: Enchant item detected. cursorItem: " + cursorItem.getItemMeta().getLore() + ", hasMobDamageAttribute: " + betterElo.hasMobDamageAttribute(cursorItem) + ", hasAverageDamageAttribute: " + betterElo.hasAverageDamageAttribute(destinationItem) + ", hasMonDamage " + betterElo.hasMobDamageAttribute(destinationItem) + ", lore: " + destinationItem.getItemMeta().getLore(),transactionID,playerName,playerUUID);
+                if (destinationItem != null && betterElo.hasMobDamageAttribute(destinationItem) && betterElo.hasAverageDamageAttribute(destinationItem)) {
+
+                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Mob damage and average damage bonus detected.",transactionID,playerName,playerUUID);
+                        player.setMetadata("avgDmgRerolled", new FixedMetadataValue(plugin, true));
+                        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                            @Override
+                            public void run() {
+                                player.removeMetadata("avgDmgRerolled", plugin);
+                            }
+                        }, 1L);
+
+
+
+                        int avgDmg = CustomMobs.dropAverageDamage();
+                        ItemStack newDestination = destinationItem.clone();
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Rerolling average damage bonus. New bonus: " + avgDmg,transactionID,playerName,playerUUID);
+                        utils.updateAverageDamage(newDestination, avgDmg);
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Item updated with new average damage bonus. newItem avgbonus: " + betterElo.getAverageDamageAttribute(destinationItem),transactionID,playerName,playerUUID);
+
+                    /*
+                    event.setCursor(cursorItem);
+                    if(cursorItem.getAmount() <=1) {
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick: Rerolling average damage bonus. cursorItem amount: " + cursorItem.getAmount(),transactionID,playerName,playerUUID);
+                        event.setCursor(null);
+                    }
+                    else {
+                        cursorItem.setAmount(cursorItem.getAmount() - 1);
+                        event.setCursor(cursorItem);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick: Rerolling average damage bonus. cursorItem amount: " + cursorItem.getAmount(),transactionID,playerName,playerUUID);
+                    }
+
+                     */
+
+                    cursorItem.setAmount(cursorItem.getAmount() - 1);
+                    event.setCursor(cursorItem.getAmount() > 0 ? cursorItem : null);
+                    event.setCurrentItem(newDestination);
+                    event.setCancelled(true);
+
+
+                        // Informacja dla gracza
+                        if (avgDmg > 20) {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GREEN + "" + ChatColor.BOLD + avgDmg + "%");
+                        } else if (avgDmg > 30) {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
+                        } else if (avgDmg > 40) {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
+                        } else {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GREEN + avgDmg + "%");
+                        }
+                        return;
+
+                }
+
+            }
+        }
+
+
         if(event.getCurrentItem()==null){
             return;
         }
         if(event.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE || event.getCurrentItem().getType() == Material.GREEN_WOOL){
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick green wool or blank pane clicked, cancelling..");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick green wool or blank pane clicked, cancelling..",transactionID,playerName,playerUUID);
             event.setCancelled(true);
 
         }
@@ -1552,7 +1663,7 @@ public class  Event implements Listener {
         ItemStack[] savedInventory = playerInventory.getContents();
 
         String title = event.getView().getTitle();
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick called. title:"+title);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick called. title:"+title,transactionID,playerName,playerUUID);
         if (!Arrays.asList("Set Rewards", "Add Items", "Select Top", "AvgDmg bonus change").contains(title)) {
             return;
         }
@@ -1582,7 +1693,7 @@ public class  Event implements Listener {
             case "Select Top":
                 event.setCancelled(true);
                 guiManager.rewardType = currentItem.getItemMeta().getDisplayName();
-                pluginLogger.log("Event.onInventoryClick: rewardType:" + guiManager.rewardType + " periodType:" + guiManager.periodType);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event.onInventoryClick: rewardType:" + guiManager.rewardType + " periodType:" + guiManager.periodType,transactionID,playerName,playerUUID);
                 fileRewardManager.setRewardType(guiManager.periodType, guiManager.rewardType);
                 List<ItemStack> currentRewards = fileRewardManager.loadRewards();
                 inv = Bukkit.createInventory(null, 36, "Add Items");
@@ -1594,21 +1705,21 @@ public class  Event implements Listener {
                 break;
             case "Add Items":
                 //save button check
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items");
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items",transactionID,playerName,playerUUID);
                 if (currentItem.getType() == Material.GREEN_WOOL && (event.getSlot() == 53)) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.",transactionID,playerName,playerUUID);
                     event.setCancelled(true);
                     Inventory inventory = event.getInventory();
                     List<ItemStack> itemsToSave = new ArrayList<>();
                     for (int i = 0; i < inventory.getSize(); i++) {
                         if (i == 53) { // Pomijamy slot przycisku "Save"
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save button, skipping.");
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save button, skipping.",transactionID,playerName,playerUUID);
                             continue;
                         }
                         ItemStack item = inventory.getItem(i);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: " + item);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick save: item: " + item,transactionID,playerName,playerUUID);
                         if (item != null && item.getType() != Material.AIR) {
-                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: " + item);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick no air save: item: " + item,transactionID,playerName,playerUUID);
                             itemsToSave.add(item);
                         }
 
@@ -1616,11 +1727,11 @@ public class  Event implements Listener {
 
                     String fileName = guiManager.periodType + "_" + guiManager.dropTable;
 
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType=" + guiManager.periodType);
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick guiManager.periodType=" + guiManager.periodType,transactionID,playerName,playerUUID);
                     if (guiManager.periodType.equals("dropTable")) {
                         fileName = guiManager.dropTable;
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: " + fileName);
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops(" + fileName + ",itemsToSave)");
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: " + fileName,transactionID,playerName,playerUUID);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops(" + fileName + ",itemsToSave)",transactionID,playerName,playerUUID);
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
                     } else {
                         fileRewardManager.saveCustomDrops(fileName, itemsToSave);
@@ -1628,7 +1739,7 @@ public class  Event implements Listener {
 
                 }
                 if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 35) {
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick Add Items - save called.",transactionID,playerName,playerUUID);
                     event.setCancelled(true);
                     Inventory inventory = event.getInventory();
                     List<ItemStack> itemsToSave = new ArrayList<>();
@@ -1642,22 +1753,22 @@ public class  Event implements Listener {
                     }
 
                     String fileName = guiManager.periodType + "_" + guiManager.rewardType;
-                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards(" + fileName + ",itemsToSave)");
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveRewards(" + fileName + ",itemsToSave)",transactionID,playerName,playerUUID);
                     fileRewardManager.saveRewards(fileName, itemsToSave);
 
                 }
                 break;
             case "AvgDmg bonus change":
-                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll");
+                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll",transactionID,playerName,playerUUID);
 
                 if (currentItem.getType() == Material.GREEN_WOOL && event.getSlot() == 5) {
                     playerInventory.setContents(savedInventory);
                     event.setCancelled(true);
-                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll clicked");
+                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick Average Damage bonus re-roll clicked",transactionID,playerName,playerUUID);
                     Inventory inventory = event.getInventory();
                     ItemStack item0 = inventory.getItem(3);
                     if (item0 != null && item0.hasItemMeta()) {
-                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, betterElo.hasMobDamageAttribute(item0): "+betterElo.hasMobDamageAttribute(item0)+", betterElo.hasAverageDamageAttribute(item0): "+betterElo.hasAverageDamageAttribute(item0));
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, betterElo.hasMobDamageAttribute(item0): "+betterElo.hasMobDamageAttribute(item0)+", betterElo.hasAverageDamageAttribute(item0): "+betterElo.hasAverageDamageAttribute(item0),transactionID,playerName,playerUUID);
                         ItemStack result = item0.clone();
                         ItemMeta resultMeta = result.getItemMeta();
                         List<String> lore = new ArrayList<>(resultMeta.getLore());
@@ -1665,11 +1776,12 @@ public class  Event implements Listener {
                             if (guiManager.checkAndRemoveEnchantItem(player)) {
                                 int avgDmg = CustomMobs.dropAverageDamage();
                                 betterElo.addAverageDamageAttribute(result, avgDmg);
-                                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...");
+                                resultMeta = result.getItemMeta();
+                                pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...",transactionID,playerName,playerUUID);
                                 for (int i = 0; i < lore.size(); i++) {
-                                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i);
+                                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i,transactionID,playerName,playerUUID);
                                     if (lore.get(i).contains("Average Damage")) {
-                                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i+" contains Average Damage, setting avgDmg: "+avgDmg);
+                                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i+" contains Average Damage, setting avgDmg: "+avgDmg,transactionID,playerName,playerUUID);
                                         lore.set(i,"§6§lAverage Damage +"  + avgDmg + "%");
                                     }
                                 }
@@ -1686,9 +1798,9 @@ public class  Event implements Listener {
                             resultMeta.setLore(lore);
                             result.setItemMeta(resultMeta);
                             inventory.setItem(3, result);
-                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick result placed back in slot 3");
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick result placed back in slot 3",transactionID,playerName,playerUUID);
                         }
-                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player has no money for the re-roll.");
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player has no money for the re-roll.",transactionID,playerName,playerUUID);
 
 
                         ItemStack greenWoolItem = inventory.getItem(5);
@@ -1730,7 +1842,10 @@ public class  Event implements Listener {
                 break;
         }
 
+
     }
+
+
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         Player player = (Player) event.getPlayer();
@@ -1799,6 +1914,26 @@ public class  Event implements Listener {
 
 
         }
+    }
+    public boolean isEnchantItem(ItemStack itemStack) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem called, itemStack: " + itemStack);
+
+        if (itemStack == null) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem itemStack is null");
+            return false;
+        }
+
+        ItemStack enchantItemStack = guiManager.getEnchantItem();  // Zakładam, że metoda getEnchantItem zwraca referencyjny ItemStack
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem enchantItemStack: " + enchantItemStack);
+
+        // Sprawdź, czy przekazany itemStack ma ten sam typ i enchanty co enchantItemStack
+        if (itemStack.getType() == enchantItemStack.getType() && itemStack.getEnchantments().equals(enchantItemStack.getEnchantments())) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem item matches the criteria");
+            return true;
+        }
+
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem item does not match the criteria");
+        return false;
     }
 
 
