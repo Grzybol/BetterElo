@@ -324,17 +324,27 @@ public class CustomMobs {
         mob.setCustomNameVisible(true);
     }
 
+
+    public static int dropAverageDamage() {
+        double rand = random.nextDouble();
+        double x = Math.pow(-Math.log(rand), 0.4) * 25; // Adjusted exponential transformation and scale
+        int bonus = (int) x;
+        bonus = Math.min(bonus, 60);
+        return bonus;
+    }
+    /*
     public static int dropAverageDamage() {
         // Używamy funkcji wykładniczej do zmniejszenia prawdopodobieństwa wyższych wartości
-        double x = -Math.log(random.nextDouble()) / 10.0; // Dostosuj parametr 10.0, aby zmienić rozkład
-        //double y = random.
-        int bonus = (int) Math.round(x * 60); // Skalowanie wyniku
+        double x = -Math.log(random.nextDouble()) / 5; // Zmniejszamy stromość rozkładu
+        int bonus = (int) Math.round(x * 70); // Zwiększamy zakres skalowania, ale nadal ograniczamy do 60
 
         // Ograniczamy wartość bonusu do maksymalnie 60%
         bonus = Math.min(bonus, 60);
 
         return bonus;
     }
+
+     */
 
     public void spawnCustomMobFromSpawner() {
         String transactionID = UUID.randomUUID().toString();
