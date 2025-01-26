@@ -327,7 +327,7 @@ public class CustomMobs {
 
     public static int dropAverageDamage() {
         double rand = random.nextDouble();
-        double x = Math.pow(-Math.log(rand), 0.4) * 25; // Adjusted exponential transformation and scale
+        double x = Math.pow(-Math.log(rand), 0.4) * 21; // Adjusted exponential transformation and scale
         int bonus = (int) x;
         bonus = Math.min(bonus, 60);
         return bonus;
