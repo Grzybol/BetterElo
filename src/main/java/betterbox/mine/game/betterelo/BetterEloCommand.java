@@ -801,7 +801,7 @@ public class BetterEloCommand implements CommandExecutor {
             return ;
         }
         Player player = (Player) sender;
-        ItemStack enchantItem = guiManager.getEnchantItem();
+        ItemStack enchantItem = Utils.getEnchantItem();
         player.getInventory().addItem(enchantItem);
     }
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {

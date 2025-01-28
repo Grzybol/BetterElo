@@ -26,7 +26,6 @@ public class CustomMobs {
     private final BetterElo betterElo;
     private final FileRewardManager fileRewardManager;
     private final CustomMobsFileManager fileManager;
-    private static final Random random = new Random();
     private BukkitTask spawnerTask;
     public Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
     public Map<UUID,String> spawnedMobsMap = new HashMap<>();
@@ -325,13 +324,7 @@ public class CustomMobs {
     }
 
 
-    public static int dropAverageDamage() {
-        double rand = random.nextDouble();
-        double x = Math.pow(-Math.log(rand), 0.4) * 21; // Adjusted exponential transformation and scale
-        int bonus = (int) x;
-        bonus = Math.min(bonus, 60);
-        return bonus;
-    }
+
     /*
     public static int dropAverageDamage() {
         // Używamy funkcji wykładniczej do zmniejszenia prawdopodobieństwa wyższych wartości

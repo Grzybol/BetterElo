@@ -264,7 +264,7 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: handleKillEvent: returning 0 points because either  " + victim + " " + cheaters.getCheatersList().contains(victim.getName()) + "  has CHEATER rank in BetterRanks.",transactionID);
             return;
         }
-        if(!isEloAllowed(victim,victim.getLocation())){
+        if(!Utils.isEloAllowed(victim,victim.getLocation())){
             pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!",transactionID);
             //killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
             return;
@@ -508,7 +508,7 @@ public class  Event implements Listener {
             String uuid = player.getUniqueId().toString();
             double base = configManager.blockBase;
 
-            if (!isEloAllowed(player, player.getLocation())) {
+            if (!Utils.isEloAllowed(player, player.getLocation())) {
                 //pluginLogger.log(PluginLogger.LogLevel.DEBUG_LVL2, "Event: onPlayerDeath noElo zone!");
                 //player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!");
                 return;
@@ -1025,37 +1025,6 @@ public class  Event implements Listener {
             return false;
         }
     }
-    public boolean isEloAllowed(Player player, Location location) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed called");
-        try {
-            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(location.getWorld());
-
-            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            RegionManager regions = container.get(weWorld);
-
-            if (regions == null) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed No regions in world.");
-                return true; // Jeśli nie ma regionów, domyślnie zezwalaj na Elo
-            } else {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed Found regions: " + regions);
-            }
-
-            LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapPlayer(player);
-
-            ApplicableRegionSet regionSet = regions.getApplicableRegions(BukkitAdapter.asBlockVector(location));
-
-            // Zmieniamy sprawdzanie z flagi PVP na Twoją niestandardową flagę noElo
-            StateFlag.State EloState = regionSet.queryState(localPlayer, BetterElo.IS_ELO_ALLOWED);
-            boolean isEloAllowed = EloState != StateFlag.State.DENY; // Jeśli flaga noElo jest ustawiona na DENY, Elo nie jest dozwolone
-
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.isEloAllowed Elo Allowed at location: " + location + " is " + isEloAllowed);
-
-            return isEloAllowed;
-        } catch (Exception e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.isEloAllowed: " + e.toString());
-            return false;
-        }
-    }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMobDeath(EntityDeathEvent event) {
@@ -1101,7 +1070,7 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus(),transactionID);
                             if (dropItem.isAvgDmgBonus()) {
 
-                                int AvgDmgBonus = CustomMobs.dropAverageDamage();
+                                int AvgDmgBonus = Utils.dropAverageDamage();
 
                                 List<String> lore = meta.getLore();
                                 if (lore == null) {
@@ -1146,11 +1115,11 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance,transactionID);
                         }
                     }
-                    pluginLogger.log(PluginLogger.LogLevel.INFO  , "Event.onMobDeath player: "+event.getEntity().getKiller().getName()+", mobName: "+mobName+", rolledDrop: "+formatDroppedItems(drops),transactionID);
+                    pluginLogger.log(PluginLogger.LogLevel.INFO  , "Event.onMobDeath player: "+event.getEntity().getKiller().getName()+", mobName: "+mobName+", rolledDrop: "+Utils.formatDroppedItems(drops),transactionID);
                     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     try{
                         Player killer = event.getEntity().getKiller();
-                        if(!isEloAllowed(killer,killer.getLocation())){
+                        if(!Utils.isEloAllowed(killer,killer.getLocation())){
                             //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
                             killer.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "No elo reward in this zone!",transactionID);
                             return;
@@ -1193,26 +1162,7 @@ public class  Event implements Listener {
 
 
     }
-    public static String formatDroppedItems(List<ItemStack> drops) {
-        StringBuilder sb = new StringBuilder();
-        for (ItemStack itemStack : drops) {
-            String itemName;
-            // Sprawdź, czy przedmiot ma niestandardową nazwę
-            if (itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
-                itemName = itemStack.getItemMeta().getDisplayName();
-            } else {
-                // Użyj domyślnej nazwy materiału
-                itemName = itemStack.getType().toString();
-            }
-            int quantity = itemStack.getAmount();
-            sb.append(itemName).append(":").append(quantity).append(", ");
-        }
-        // Usuń ostatni przecinek i spację, jeśli istnieją
-        if (sb.length() > 0) {
-            sb.setLength(sb.length() - 2);
-        }
-        return sb.toString();
-    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         String transactionID = UUID.randomUUID().toString();
@@ -1242,7 +1192,7 @@ public class  Event implements Listener {
         if (damagerEntity instanceof Player && victimEntity instanceof Player && !event.isCancelled()) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
-            int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()),transactionID);
+            int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(Utils.getPlayerEquippedItems((Player) event.getDamager()),transactionID);
             double totalDamage = event.getDamage() + event.getDamage() * ((double) averageDamageBonusPercent /100);
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onEntityDamageByEntity event.getDamage(): "+event.getDamage()+", averageDamageBonusPercent: "+averageDamageBonusPercent+", totalDamage: "+totalDamage,transactionID);
             event.setDamage(totalDamage);
@@ -1268,7 +1218,7 @@ public class  Event implements Listener {
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity custom mob damage by player detected",transactionID);
 
             int[] damageRange = betterElo.getMobDamageAttribute(damager.getInventory().getItemInMainHand());
-            int avgBonus = betterElo.getAverageDamageAttribute(getPlayerEquippedItems((Player) event.getDamager()),transactionID);
+            int avgBonus = betterElo.getAverageDamageAttribute(Utils.getPlayerEquippedItems((Player) event.getDamager()),transactionID);
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.onEntityDamageByEntity damageRange: "+damageRange.toString()+", avgBonus: "+avgBonus,transactionID);
             customEntityDamageEvent(event,damageRange[0],damageRange[1],avgBonus,transactionID);
             removePlayerPlacedBlocksAsync(victimEntity,transactionID);
@@ -1281,7 +1231,7 @@ public class  Event implements Listener {
             }, 1L);
 
         }else if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
-            int customArmorBonus =betterElo.getMobDefenseAttribute(getPlayerEquippedItems((Player) victimEntity));
+            int customArmorBonus =betterElo.getMobDefenseAttribute(Utils.getPlayerEquippedItems((Player) victimEntity));
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus,transactionID);
             event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
 
@@ -1317,7 +1267,7 @@ public class  Event implements Listener {
 
     }
     public void customDamageHandling(Player damager, Player victim, double initialDamage) {
-        int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(getPlayerEquippedItems(damager),null);
+        int averageDamageBonusPercent = betterElo.getAverageDamageAttribute(Utils.getPlayerEquippedItems(damager),null);
         double totalDamage = initialDamage + initialDamage * averageDamageBonusPercent;
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "customDamageHandling initialDamage: " + initialDamage + ", averageDamageBonusPercent: " + averageDamageBonusPercent + ", totalDamage: " + totalDamage);
         victim.damage(totalDamage, damager);
@@ -1373,207 +1323,6 @@ public class  Event implements Listener {
             });
         });
     }
-    public int customArmorBonus (Player player){
-        int CustomArmorBonus=0;
-        List<ItemStack> equippedItems = getPlayerEquippedItems(player);
-        if(equippedItems==null){
-            return CustomArmorBonus;
-        }
-        for (ItemStack item : equippedItems){
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null && meta.hasLore()) {
-                List<String> lore = meta.getLore();
-                for (String line : lore) {
-                    if (line.startsWith("§6§lMob Defense ")) {
-                        try {
-                            String percentString = line.replace("§6§lMob Defense ", "").replace("%", "");
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customArmorBonus percentString: " + percentString);
-                            CustomArmorBonus += Integer.parseInt(percentString);
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customArmorBonus added CustomArmorBonus: " + CustomArmorBonus);
-                        } catch (NumberFormatException e) {
-                            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
-                        }
-                    }
-
-                }
-            }
-        }
-        return CustomArmorBonus;
-    }
-
-    public void customEntityDamageEvent(EntityDamageByEntityEvent event){
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent triggered");
-
-        if (event.getDamager() instanceof Player) {
-            Player player = (Player) event.getDamager();
-            ItemStack itemInHand = player.getInventory().getItemInMainHand();
-            List<ItemStack> equippedItems = getPlayerEquippedItems(player);
-
-            if (itemInHand.hasItemMeta()) {
-                ItemMeta meta = itemInHand.getItemMeta();
-                if (meta != null && meta.hasLore()) {
-                    List<String> lore = meta.getLore();
-                    if (lore != null) {
-                        double averageDamageBonusPercent = 0;
-                        int minDamage = 0;
-                        int maxDamage = 0;
-
-                        boolean validDamageLoreFound = false;
-                        boolean validAverageDamage = false;
-
-                        averageDamageBonusPercent = getTotalAvgDmgBonus(equippedItems);
-                        for (String line : lore) {
-                            if (line.startsWith("§6§lMob Damage") || line.startsWith("Mob Damage")) {
-                                try {
-                                    String[] parts = line.split("Mob Damage ")[1].split("-");
-                                    minDamage = Integer.parseInt(parts[0]);
-                                    maxDamage = Integer.parseInt(parts[1]);
-                                    validDamageLoreFound = true;
-                                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing damage range from lore: " + line);
-                                }
-                            }
-
-                        }
-
-                            double averageDamage = (double) (minDamage + maxDamage) / 2; // Średnia wartość obrażeń
-                            int bonusDamage = (int) (averageDamage * (averageDamageBonusPercent / 100.0)); // Obliczenie bonusu
-                            double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", bonusAverageDamage: "+bonusDamage);
-                            double armor=1, defense=0;
-                            if (event.getEntity().hasMetadata("armor")) {
-                                List<MetadataValue> values = event.getEntity().getMetadata("armor");
-                                armor = values.get(0).asDouble();  // Uzyskanie wartości armor
-                                if(armor==0){
-                                    armor=1;
-                                }
-                            }
-                        if (event.getEntity().hasMetadata("defense")) {
-                            List<MetadataValue> values = event.getEntity().getMetadata("defense");
-                            defense = values.get(0).asDouble();  // Uzyskanie wartości defense
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense from metadata: "+defense);
-                            if (defense>=100){
-                                pluginLogger.log(PluginLogger.LogLevel.WARNING, "Damage event: Mob has defense higher than 100! setting def=0:");
-                                defense=0;
-                            }
-                        }else{
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense metadata not found for mob: "+event.getEntity().getMetadata("MobName"));
-                        }
-                        CustomMobs.CustomMob customMob = null;
-                        customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
-                        if(customMob!=null)
-                        {
-                            defense = customMob.defense;
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent defense from customMob object: "+defense);
-                        }
-                            double defDmgReduction= (1-(0.01*defense));
-                            double finalDamage =((totalDamage-armor)*defDmgReduction);
-                            if(finalDamage<=0)
-                                finalDamage=0;
-
-                            event.setDamage(finalDamage);
-                            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor);
-                            return;
-
-                    }
-                }
-            }
-            player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo] " + ChatColor.DARK_RED + "Only items with "+ChatColor.GOLD + ChatColor.BOLD +"Mob Damage"+ ChatColor.DARK_RED +" effect can attack mobs!");
-
-        }
-        event.setCancelled(true);
-
-        //pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Damage event cancelled due to no valid item lore");
-    }
-
-
-    public List<ItemStack> getPlayerEquippedItems(Player player) {
-        EntityEquipment equipment = player.getEquipment();
-        List<ItemStack> equippedItems = new ArrayList<>();
-
-        if (equipment != null) {
-            // Dodawanie przedmiotu trzymanego w głównej ręce
-            if (equipment.getItemInMainHand() != null) {
-                equippedItems.add(equipment.getItemInMainHand());
-            }
-            // Dodawanie przedmiotu trzymanego w pomocniczej ręce
-            if (equipment.getItemInOffHand() != null) {
-                equippedItems.add(equipment.getItemInOffHand());
-            }
-            // Dodawanie elementów zbroi
-            for (ItemStack item : equipment.getArmorContents()) {
-                if (item != null) {
-                    equippedItems.add(item);
-                }
-            }
-
-        }
-        return equippedItems;
-    }
-    public double getTotalAvgDmgBonus(List<ItemStack> equippedItems) {
-        double totalAverageDamageBonus = 0;
-        if (equippedItems == null) {
-            return totalAverageDamageBonus;
-        }
-        for (ItemStack item : equippedItems) {
-            if (item != null && item.hasItemMeta()) {
-                ItemMeta meta = item.getItemMeta();
-                PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-                if (dataContainer.has(betterElo.averageDamageKey, PersistentDataType.INTEGER)) {
-                    int damageBonus = dataContainer.get(betterElo.averageDamageKey, PersistentDataType.INTEGER);
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus read damageBonus: " + damageBonus);
-                    totalAverageDamageBonus += damageBonus;
-                }
-            }
-        }
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus total calculated averageDamageBonus: " + totalAverageDamageBonus);
-        return totalAverageDamageBonus;
-    }
-    public double getTotalAvgDmgBonusOld(List<ItemStack> equippedItems){
-        double averageDamageBonusPercent = 0;
-        if(equippedItems==null){
-            return averageDamageBonusPercent;
-        }
-            for (ItemStack item : equippedItems){
-                ItemMeta meta = item.getItemMeta();
-                if (meta != null && meta.hasLore()) {
-                    List<String> lore = meta.getLore();
-                    for (String line : lore) {
-                        if (line.startsWith("§6§lAverage Damage +")) {
-                            try {
-                                String percentString = line.replace("§6§lAverage Damage +", "").replace("%", "");
-                                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus percentString: " + percentString);
-                                averageDamageBonusPercent += Integer.parseInt(percentString);
-                                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus added averageDamageBonusPercent: " + averageDamageBonusPercent);
-                            } catch (NumberFormatException e) {
-                                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error parsing average damage bonus from lore: " + line);
-                            }
-                        }
-
-                    }
-                }
-            }
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus  total averageDamageBonusPercent: " + averageDamageBonusPercent);
-            return averageDamageBonusPercent;
-    }
-    public boolean isValidAverageDamage (ArrayList<ItemStack> equippedItems){
-        boolean isValidAverageDamage = false;
-            for (ItemStack item : equippedItems){
-                ItemMeta meta = item.getItemMeta();
-                if (meta != null && meta.hasLore()) {
-                    List<String> lore = meta.getLore();
-                    for (String line : lore) {
-                        if (line.startsWith("§6§lAverage Damage +")) {
-                            isValidAverageDamage = true;pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus  total isValidAverageDamage: " + isValidAverageDamage);
-                            return isValidAverageDamage;
-                        }
-
-                    }
-                }
-            }
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.TotalAvgDmgBonus  total isValidAverageDamage: " + isValidAverageDamage);
-        return isValidAverageDamage;
-    }
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
         String transactionID = UUID.randomUUID().toString();
@@ -1590,7 +1339,7 @@ public class  Event implements Listener {
             ItemStack cursorItem = event.getCursor(); // przedmiot, który gracz trzyma myszką
             ItemStack destinationItem = event.getCurrentItem(); // przedmiot na miejscu docelowym w ekwipunku
 
-            if (cursorItem != null && isEnchantItem(cursorItem)) {
+            if (cursorItem != null && Utils.isEnchantItem(cursorItem)) {
                 //pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick: Enchant item detected. cursorItem: " + cursorItem.getItemMeta().getLore() + ", hasMobDamageAttribute: " + betterElo.hasMobDamageAttribute(cursorItem) + ", hasAverageDamageAttribute: " + betterElo.hasAverageDamageAttribute(destinationItem) + ", hasMonDamage " + betterElo.hasMobDamageAttribute(destinationItem) + ", lore: " + destinationItem.getItemMeta().getLore(),transactionID,playerName,playerUUID);
                 if (destinationItem != null && betterElo.hasMobDamageAttribute(destinationItem) && betterElo.hasAverageDamageAttribute(destinationItem)) {
 
@@ -1605,7 +1354,7 @@ public class  Event implements Listener {
 
 
 
-                        int avgDmg = CustomMobs.dropAverageDamage();
+                        int avgDmg = Utils.dropAverageDamage();
                         ItemStack newDestination = destinationItem.clone();
                         pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Rerolling average damage bonus. New bonus: " + avgDmg,transactionID,playerName,playerUUID);
                         utils.updateAverageDamage(newDestination, avgDmg);
@@ -1632,14 +1381,16 @@ public class  Event implements Listener {
 
 
                         // Informacja dla gracza
-                        if (avgDmg > 20) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GREEN + "" + ChatColor.BOLD + avgDmg + "%");
-                        } else if (avgDmg > 30) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
-                        } else if (avgDmg > 40) {
+                        if (avgDmg >= 50) {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
+                        } else if (avgDmg >= 40) {
                             event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
-                        } else {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GREEN + avgDmg + "%");
+                        } else if (avgDmg >= 30) {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
+                        } else if (avgDmg >= 20) {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.BOLD + avgDmg + "%");
+                        }else {
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + avgDmg + "%");
                         }
                         return;
 
@@ -1773,8 +1524,8 @@ public class  Event implements Listener {
                         ItemMeta resultMeta = result.getItemMeta();
                         List<String> lore = new ArrayList<>(resultMeta.getLore());
                         if (betterElo.hasMobDamageAttribute(item0) && betterElo.hasAverageDamageAttribute(item0)) {
-                            if (guiManager.checkAndRemoveEnchantItem(player)) {
-                                int avgDmg = CustomMobs.dropAverageDamage();
+                            if (Utils.checkAndRemoveEnchantItem(player)) {
+                                int avgDmg = Utils.dropAverageDamage();
                                 betterElo.addAverageDamageAttribute(result, avgDmg);
                                 resultMeta = result.getItemMeta();
                                 pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...",transactionID,playerName,playerUUID);
@@ -1915,26 +1666,7 @@ public class  Event implements Listener {
 
         }
     }
-    public boolean isEnchantItem(ItemStack itemStack) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem called, itemStack: " + itemStack);
 
-        if (itemStack == null) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem itemStack is null");
-            return false;
-        }
-
-        ItemStack enchantItemStack = guiManager.getEnchantItem();  // Zakładam, że metoda getEnchantItem zwraca referencyjny ItemStack
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem enchantItemStack: " + enchantItemStack);
-
-        // Sprawdź, czy przekazany itemStack ma ten sam typ i enchanty co enchantItemStack
-        if (itemStack.getType() == enchantItemStack.getType() && itemStack.getEnchantments().equals(enchantItemStack.getEnchantments())) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem item matches the criteria");
-            return true;
-        }
-
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem item does not match the criteria");
-        return false;
-    }
 
 
 

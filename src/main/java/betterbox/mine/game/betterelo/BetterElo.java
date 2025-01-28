@@ -150,7 +150,7 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
         customMobs.startSpawnerScheduler();
 
-        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager, customMobs, this);
+        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager, customMobs, this,utils);
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
