@@ -31,9 +31,10 @@ public class GuiManager{
     private CustomMobs customMobs;
     private JavaPlugin plugin;
     private Random random = new Random();
+    private static Utils utils;
 
     private final DataManager dataManager;
-    public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager, CustomMobsFileManager mobsFileManager, CustomMobs customMobs, JavaPlugin plugin) {
+    public GuiManager(FileRewardManager fileRewardManager, PluginLogger pluginLogger, BetterElo mainClass, DataManager dataManager, CustomMobsFileManager mobsFileManager, CustomMobs customMobs, JavaPlugin plugin, Utils utils) {
         this.fileRewardManager = fileRewardManager;
         this.dataManager = dataManager;
         this.pluginLogger = pluginLogger;
@@ -41,6 +42,7 @@ public class GuiManager{
         this.mobsFileManager=mobsFileManager;
         this.customMobs = customMobs;
         this.plugin = plugin;
+        this.utils = utils;
     }
     public void openSubGui(Player player) {
         Inventory subInv = Bukkit.createInventory(null, 9, "Select Top");
@@ -131,7 +133,7 @@ public class GuiManager{
     public boolean checkAndRemoveBetterCoins(Player player) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveBetterCoins called, player : "+player);
         Inventory inventory = player.getInventory();
-        ItemStack betterCoinStack = getBetterCoinStack();
+        ItemStack betterCoinStack = Utils.getBetterCoinStack();
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveBetterCoins betterCoinStack: "+betterCoinStack);
         // Sprawdź, czy gracz ma co najmniej 64 BetterCoin w ekwipunku
         if (inventory.containsAtLeast(betterCoinStack, 64)) {
@@ -143,60 +145,8 @@ public class GuiManager{
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveBetterCoins 64 BetterCoin not found");
         return false;
     }
-    public boolean checkAndRemoveEnchantItem(Player player) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem called, player : "+player);
-        Inventory inventory = player.getInventory();
-        ItemStack enchantItemStack = getEnchantItem();
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem betterCoinStack: "+enchantItemStack);
-        // Sprawdź, czy gracz ma co najmniej 64 BetterCoin w ekwipunku
-        if (inventory.containsAtLeast(enchantItemStack, 1)) {
-            // Usuń 64 sztuki BetterCoin z ekwipunku gracza
-            inventory.removeItem(enchantItemStack);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item found, removing : "+enchantItemStack);
-            return true;
-        }
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item not found");
-        return false;
-    }
-    public ItemStack getEnchantItem(){
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getEnchantItem called");
-        Material material = Material.GHAST_TEAR;
-        int amount = 1;
 
-        ItemStack stack = new ItemStack(material, amount);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(ChatColor.DARK_PURPLE+""+ ChatColor.BOLD+"Enchant Item");
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getEnchantItem meta.getDisplayName(): "+meta.getDisplayName());
-            //Component displayNameComponent = new Component("BetterCoin");
-            List<String> lore = List.of(ChatColor.GRAY+ "Removes current the Average Damage bonus",ChatColor.GRAY+ " from the item and adds new one.");
-            meta.setLore(lore);
-            // Dodajemy niestandardowy enchant, który nie wpływa na działanie itemu
-            meta.addEnchant(Enchantment.LUCK, 1, true);
 
-            // Ukrywamy wszystkie informacje o zaklęciach na itemie
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
-            stack.setItemMeta(meta);
-        }
-        return stack;
-    }
 
-    private ItemStack getBetterCoinStack() {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getBetterCoinStack called");
-        Material material = Material.HONEYCOMB;
-        int amount = 64;
-
-        ItemStack stack = new ItemStack(material, amount);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(ChatColor.GOLD+"BetterCoin");
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.getBetterCoinStack meta.getDisplayName(): "+meta.getDisplayName());
-            //Component displayNameComponent = new Component("BetterCoin");
-            List<String> lore = List.of(ChatColor.YELLOW+ "Valuable currency you can use to buy items.");
-            meta.setLore(lore);
-            stack.setItemMeta(meta);
-        }
-        return stack;
-    }
 }

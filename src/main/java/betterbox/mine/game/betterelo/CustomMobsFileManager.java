@@ -88,6 +88,7 @@ public class CustomMobsFileManager {
         private double dropChance;
         private ItemStack itemStack;
         private boolean avgDmgBonus;
+        private int maxDamage;
 
         public DropItem(double dropChance, ItemStack itemStack, boolean avgDmgBonus) {
             this.dropChance = dropChance;
@@ -95,6 +96,12 @@ public class CustomMobsFileManager {
             this.avgDmgBonus = avgDmgBonus;
         }
 
+        public DropItem(double dropChance, ItemStack itemStack, boolean avgDmgBonus, int maxDamage) {
+            this.dropChance = dropChance;
+            this.maxDamage = maxDamage;
+            this.itemStack = itemStack;
+            this.avgDmgBonus = avgDmgBonus;
+        }
         public double getDropChance() {
             return dropChance;
         }
@@ -113,6 +120,14 @@ public class CustomMobsFileManager {
 
         public boolean isAvgDmgBonus() {
             return avgDmgBonus;
+        }
+
+        public int getMaxDamage() {
+            return maxDamage;
+        }
+
+        public boolean hasmaxDamage() {
+            return maxDamage>0;
         }
 
         public void setAvgDmgBonus(boolean avgDmgBonus) {
@@ -285,12 +300,13 @@ public class CustomMobsFileManager {
         }
     }
 
-    public CustomMobs.CustomMob loadCustomMob(JavaPlugin plugin, FileRewardManager dropFileManager, File mobFile) {
+    public CustomMobs.CustomMob loadCustomMob(JavaPlugin plugin, FileRewardManager dropFileManager, File mobFile, String transactionID) {
+        //String transactionID = UUID.randomUUID().toString();
         //File customMobsFolder = new File(plugin.getDataFolder(), "customMobs");
         //File mobFile = new File(customMobsFolder, mobName + ".yml");
 
         if (!mobFile.exists()) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Mob file '" + mobFile.toString() + "' not found.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Mob file '" + mobFile.toString() + "' not found.",transactionID);
             //plugin.getLogger().warning("Plik dla mobka " + mobFile.toString() + " nie istnieje!");
             return null;
         }
@@ -303,9 +319,9 @@ public class CustomMobsFileManager {
             ItemStack leggings=null;
             ItemStack boots=null;
             ItemStack weapon=null;
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob entityTypeString: "+entityTypeString);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob entityTypeString: "+entityTypeString,transactionID);
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON") || entityTypeString.equals("HUSK")) {// Wczytanie wyposażenia z pliku
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON",transactionID);
                  helmet = loadItemStack(mobData, "equipment.helmet");
                  chestplate = loadItemStack(mobData, "equipment.chestplate");
                  leggings = loadItemStack(mobData, "equipment.leggings");
@@ -325,45 +341,45 @@ public class CustomMobsFileManager {
 
             if(mobData.contains("attackSpeed")){
                 attackSpeed = mobData.getInt("attackSpeed");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded AttackSpeed:" + attackSpeed,transactionID);
             }
             if(mobData.contains("defense")){
                 defense = mobData.getInt("defense");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded defense:" + defense);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded defense:" + defense,transactionID);
             }
             if(mobData.contains("armor")){
                 armor = mobData.getDouble("armor");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded armor:" + armor);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded armor:" + armor,transactionID);
             }
             if(mobData.contains("passengerMobName")){
                 passengerMobName = mobData.getString("passengerMobName");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded passengerMobName:" + passengerMobName);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded passengerMobName:" + passengerMobName,transactionID);
             }
             if(mobData.contains("regenSeconds")){
                 regenSeconds = mobData.getInt("regenSeconds");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded regenSeconds:" + regenSeconds);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded regenSeconds:" + regenSeconds,transactionID);
             }
             if(mobData.contains("regenPercent")){
                 regenPercent = mobData.getInt("regenPercent");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded regenPercent:" + regenPercent);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded regenPercent:" + regenPercent,transactionID);
             }
             if(mobData.contains("knockbackResistance")){
                 knockbackResistance = mobData.getDouble("knockbackResistance");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded knockbackResistance:" + knockbackResistance);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded knockbackResistance:" + knockbackResistance,transactionID);
             }
             if(mobData.contains("eloPoints")){
                 eloPoints = mobData.getDouble("eloPoints");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded eloPoints:" + eloPoints);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded eloPoints:" + eloPoints,transactionID);
             }
             if(mobData.contains("eloMultiplier")){
                 eloMultiplier = mobData.getDouble("eloMultiplier");
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded eloMultiplier:" + eloMultiplier);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob loaded eloMultiplier:" + eloMultiplier,transactionID);
             }
 
             String mobName = mobData.getString("mobName");
             String dropTableName = mobData.getString("dropTable");
 
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropTablename: "+dropTableName+", passengerMobName: "+passengerMobName+", regenSeconds: "+regenSeconds+", regenPercent: "+regenPercent+", knockbackResistance: "+knockbackResistance+", eloPoints: "+eloPoints+", eloMultiplier: "+eloMultiplier);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropTablename: "+dropTableName+", passengerMobName: "+passengerMobName+", regenSeconds: "+regenSeconds+", regenPercent: "+regenPercent+", knockbackResistance: "+knockbackResistance+", eloPoints: "+eloPoints+", eloMultiplier: "+eloMultiplier,transactionID);
             EntityType entityType = EntityType.valueOf(entityTypeString);
 
             // Wczytanie niestandardowych metadanych i ustawienie spawnerName
@@ -374,33 +390,34 @@ public class CustomMobsFileManager {
             // Zakładamy, że LivingEntity jest nullem, ponieważ tworzymy moba bez konkretnej encji w świecie
             CustomMobs.CustomMob customMob=null;
             if (entityTypeString.equals("SKELETON")||entityTypeString.equals("ZOMBIE")|| entityTypeString.equals("STRAY")|| entityTypeString.equals("WITHER_SKELETON")|| entityTypeString.equals("HUSK")){
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON or STRAY");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob mob is ZOMBIE or SKELETON or STRAY",transactionID);
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense,null, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
                 if(passengerMobName!=null) {
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: " + passengerMobName);
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: " + passengerMobName,transactionID);
                     customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, helmet, chestplate, leggings, boots,weapon, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense, passengerMobName, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
                 }
                 }else if(passengerMobName!=null){
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: "+passengerMobName);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob passengerMobName: "+passengerMobName,transactionID);
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense,passengerMobName, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
             }
             else{
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob normal mob");
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobsFileManager.loadCustomMob normal mob",transactionID);
                 customMob = new CustomMobs.CustomMob(plugin, this, mobName, entityType, armor, hp, speed, attackDamage,attackSpeed, customMetadata, dropTableName,  defense, regenSeconds,regenPercent,knockbackResistance, eloPoints, eloMultiplier);
 
             }
 
-            pluginLogger.log(PluginLogger.LogLevel.DROP,"CustomMobsFileManager.loadCustomMob customMob.dropTablename: "+customMob.dropTableName);
+            pluginLogger.log(PluginLogger.LogLevel.DROP,"CustomMobsFileManager.loadCustomMob customMob.dropTablename: "+customMob.dropTableName,transactionID);
 
             return customMob;
         }catch (Exception e){
-            pluginLogger.log(PluginLogger.LogLevel.ERROR,"CustomMobsFileManager.loadCustomMob exception: " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR,"CustomMobsFileManager.loadCustomMob exception: " + e.getMessage(),transactionID);
         }
         return null;
 
     }
 
     private ItemStack loadItemStack(YamlConfiguration mobData, String path) {
+        String transactionID = UUID.randomUUID().toString();
         if (!mobData.contains(path + ".type")) return null; // Zabezpieczenie przed brakiem danych
 
         Material material = Material.valueOf(mobData.getString(path + ".type"));
@@ -418,7 +435,7 @@ public class CustomMobsFileManager {
 
                 }
                 }catch (Exception e){
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid enchant "+key.toLowerCase()+" in "+mobData.getString("mobName"));
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid enchant "+key.toLowerCase()+" in "+mobData.getString("mobName"),transactionID);
                 }
             }
         }
@@ -429,7 +446,7 @@ public class CustomMobsFileManager {
                 itemStack.setItemMeta(meta);
             }
         }catch (Exception e){
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "cannot read unbreakable from file. Exception: "+e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "cannot read unbreakable from file. Exception: "+e.getMessage(),transactionID);
         }
 
         // Wczytanie atrybutów armor i damage
@@ -443,12 +460,13 @@ public class CustomMobsFileManager {
             }
             itemStack.setItemMeta(meta);
         } catch (Exception e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error reading attributes from file. Exception: " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error reading attributes from file. Exception: " + e.getMessage(),transactionID);
         }
 
         return itemStack;
     }
     public List<File> getCustomMobFiles() {
+
         List<File> customMobFiles = new ArrayList<>();
         File customMobsFolder = new File(plugin.getDataFolder(), "customMobs");
 
@@ -511,11 +529,12 @@ public class CustomMobsFileManager {
     }
 
     public List<DropItem> loadCustomDropsv2(String dropTableName) {
-        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops called, dropTableName: " + dropTableName);
+        String transactionID = UUID.randomUUID().toString();
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops called, dropTableName: " + dropTableName,transactionID);
         List<DropItem> drops = new ArrayList<>();
         File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
         if (!dropTableFile.exists()) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!",transactionID);
             return drops;
         }
 
@@ -524,24 +543,30 @@ public class CustomMobsFileManager {
         dropTableConfig.getKeys(false).forEach(key -> {
             String itemPath = dropTableConfig.getString(key + ".itemPath");
             double dropChance = dropTableConfig.getDouble(key + ".dropChance");
+            int maxDamage = dropTableConfig.getInt(key + ".maxDamage");
             boolean avgDmgBonus = dropTableConfig.getBoolean(key + ".avgDmgBonus");
-            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance+", avgDmgBonus: "+avgDmgBonus);
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath+", dropChance: "+dropChance+", avgDmgBonus: "+avgDmgBonus,transactionID);
             File itemFile = new File(plugin.getDataFolder(), itemPath);
             if (itemFile.exists()) {
                 try {
                     FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
                     ItemStack itemStack = itemConfig.getItemStack("item");
                     if (itemStack != null) {
-                        DropItem dropItem = new DropItem(dropChance, itemStack, avgDmgBonus);
+                        DropItem dropItem;
+                        if(maxDamage>0){
+                            dropItem = new DropItem(dropChance, itemStack, avgDmgBonus,maxDamage);
+                        }else {
+                            dropItem = new DropItem(dropChance, itemStack, avgDmgBonus);
+                        }
                         drops.add(dropItem);
-                        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops item: " + itemStack);
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops item: " + itemStack,transactionID);
                     }
                 } catch (Exception e) {
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage());
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage(),transactionID);
                 }
             }
         });
-        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops drops: " + drops);
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops drops: " + drops,transactionID);
         return drops;
     }
 

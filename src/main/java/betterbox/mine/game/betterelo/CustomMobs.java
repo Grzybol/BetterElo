@@ -26,7 +26,6 @@ public class CustomMobs {
     private final BetterElo betterElo;
     private final FileRewardManager fileRewardManager;
     private final CustomMobsFileManager fileManager;
-    private static final Random random = new Random();
     private BukkitTask spawnerTask;
     public Map<String, Long> spawnerLastSpawnTimes = new HashMap<>(); // Mapa przechowująca czas ostatniego respa mobów z każdego spawnera
     public Map<UUID,String> spawnedMobsMap = new HashMap<>();
@@ -293,24 +292,24 @@ public class CustomMobs {
         this.pluginLogger = pluginLogger;
         this.fileManager = fileManager;
         this.fileRewardManager = fileRewardManager;
-        loadCustomMobs();
+        loadCustomMobs(UUID.randomUUID().toString());
     }
 
-    public void spawnModifiedZombie(Player player, String mobName, int mobCount) {
+    public void spawnModifiedZombie(Player player, String mobName, int mobCount,String transactionID) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnModifiedZombie called, player: " + player.getName() + ", mobName: " + mobName + ", mobCount: " + mobCount);
         Location playerLocation = player.getLocation();
         //World world = player.getWorld();
         for (int i = 0; i < mobCount; i++) {
-            spawnCustomMob(playerLocation, mobName);
+            spawnCustomMob(playerLocation, mobName,transactionID);
         }
     }
 
-    public void updateCustomMobName(LivingEntity mob) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName called, mob.getName(): " + mob.getName());
+    public void updateCustomMobName(LivingEntity mob,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName called, mob.getName(): " + mob.getName(),transactionID);
         if (!mob.hasMetadata("MobName")) {
             return;
         }
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName mobName: " + mob.getName() + ", currentHP: " + mob.getHealth() + ", maxHP: " + mob.getMaxHealth());
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName mobName: " + mob.getName() + ", currentHP: " + mob.getHealth() + ", maxHP: " + mob.getMaxHealth(),transactionID);
         List<MetadataValue> values = mob.getMetadata("MobName");
         MetadataValue value = values.get(0);
         String customName = value.asString();
@@ -324,11 +323,13 @@ public class CustomMobs {
         mob.setCustomNameVisible(true);
     }
 
+
+
+    /*
     public static int dropAverageDamage() {
         // Używamy funkcji wykładniczej do zmniejszenia prawdopodobieństwa wyższych wartości
-        double x = -Math.log(random.nextDouble()) / 10.0; // Dostosuj parametr 10.0, aby zmienić rozkład
-        //double y = random.
-        int bonus = (int) Math.round(x * 60); // Skalowanie wyniku
+        double x = -Math.log(random.nextDouble()) / 5; // Zmniejszamy stromość rozkładu
+        int bonus = (int) Math.round(x * 70); // Zwiększamy zakres skalowania, ale nadal ograniczamy do 60
 
         // Ograniczamy wartość bonusu do maksymalnie 60%
         bonus = Math.min(bonus, 60);
@@ -336,19 +337,22 @@ public class CustomMobs {
         return bonus;
     }
 
+     */
+
     public void spawnCustomMobFromSpawner() {
+        String transactionID = UUID.randomUUID().toString();
         Map<String, CustomMobsFileManager.SpawnerData> spawnersData = fileManager.spawnersData;
-        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnCustomMobFromSpawner called. Loaded spawners: " + spawnersData);
+        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnCustomMobFromSpawner called. Loaded spawners: " + spawnersData,transactionID);
         // Sprawdzenie, czy istnieją spawnerzy w pliku
         if (spawnersData.isEmpty()) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "No spawners found in spawners.yml.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "No spawners found in spawners.yml.",transactionID);
             return;
         }
 
         long currentTime = System.currentTimeMillis();
 
         for (Map.Entry<String, CustomMobsFileManager.SpawnerData> entry : spawnersData.entrySet()) {
-            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner checking spawner: " + entry);
+            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner checking spawner: " + entry,transactionID);
             String spawnerName = entry.getKey();
             CustomMobsFileManager.SpawnerData spawnerData = entry.getValue();
             Location location = getLocationFromString(spawnerData.location);
@@ -364,8 +368,8 @@ public class CustomMobs {
             location.add(0, 1, 0);
 
             // Sprawdzenie cooldownu
-            if (!canSpawnMobs(spawnerName, fileManager.getSpawnerCooldown(spawnerName))) {
-                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner " + spawnerName + " is on cooldown. Current spawnedMobCount: " + spawnerData.spawnedMobCount);
+            if (!canSpawnMobs(spawnerName, fileManager.getSpawnerCooldown(spawnerName),transactionID)) {
+                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "Spawner " + spawnerName + " is on cooldown. Current spawnedMobCount: " + spawnerData.spawnedMobCount,transactionID);
                 continue; // Skip spawning if on cooldown
             }
 
@@ -380,36 +384,37 @@ public class CustomMobs {
                     String mobName = fileManager.getSpawnerMobName(spawnerName);
                     //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots);
                     if (remainingSlots == 0) {
-                        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner 0 remaining slots for " + spawnerName);
+                        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner 0 remaining slots for " + spawnerName,transactionID);
                         continue;
                     }
 
                     int mobsToSpawn = Math.min(mobCount, remainingSlots);
                     int spawnedMobs = 0;
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner " + spawnerName + ", maxMobs: " + maxMobs + ", remaining slots: " + remainingSlots + ", mobsToSpawn: " + mobsToSpawn + ", spawnerData.spawnedMobCount: " + spawnerData.spawnedMobCount);
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner " + spawnerName + ", maxMobs: " + maxMobs + ", remaining slots: " + remainingSlots + ", mobsToSpawn: " + mobsToSpawn + ", spawnerData.spawnedMobCount: " + spawnerData.spawnedMobCount,transactionID);
                     for (int i = 0; i < mobsToSpawn; i++) {
-                        spawnCustomMob(location, spawnerName, mobName);
+                        spawnCustomMob(location, spawnerName, mobName,transactionID);
                         spawnerData.spawnedMobCount++;
                         spawnedMobs++;
                     }
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner spawnedMobs: " + spawnedMobs);
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner spawnedMobs: " + spawnedMobs,transactionID);
                     // Ustawianie czasu ostatniego respa mobów z tego spawnera
                     spawnerLastSpawnTimes.put(spawnerName, currentTime);
                 } else {
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid world specified for spawner " + spawnerName);
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid world specified for spawner " + spawnerName,transactionID);
                 }
             } else {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid location specified for spawner " + spawnerName);
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid location specified for spawner " + spawnerName,transactionID);
             }
         }
     }
 
     public void spawnerForceSpawn(String spawnerName) {
+        String transactionID = UUID.randomUUID().toString();
         //pluginLogger.log(PluginLogger.LogLevel.INFO, "CustomMobs.spawnerForceSpawn called with " + spawnerName+" spawnedMobsMap"+spawnedMobsMap.toString());
 
         Map<String, CustomMobsFileManager.SpawnerData> spawnersData = fileManager.spawnersData;
         if (spawnedMobsMap == null || spawnedMobsMap.isEmpty()) {
-            pluginLogger.log(PluginLogger.LogLevel.WARNING, "CustomMobs.spawnerForceSpawn. The spawnedMobsMap is empty or null.");
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "CustomMobs.spawnerForceSpawn. The spawnedMobsMap is empty or null.",transactionID);
         }else {
             try {
 
@@ -417,26 +422,26 @@ public class CustomMobs {
                 //CustomMob customMob = betterElo.getCustomMobFromEntity(entity) ;
                 while (iterator.hasNext()) {
                     Map.Entry<UUID, String> entry = iterator.next();
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn. Checking key " + entry.getKey() + " with value " + entry.getValue());
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn. Checking key " + entry.getKey() + " with value " + entry.getValue(),transactionID);
                     if (spawnerName.equals(entry.getValue())) {
-                        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn.  " + spawnerName + " matching key " + entry.getKey() + ", value " + entry.getValue());
+                        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn.  " + spawnerName + " matching key " + entry.getKey() + ", value " + entry.getValue(),transactionID);
                         Entity entity = Bukkit.getServer().getEntity(entry.getKey());
                         if (entity != null && !entity.isDead()) {
                             entity.remove(); // Usuwa encję z świata
 
                             iterator.remove();  // Bezpieczne usuwanie wpisu podczas iteracji
-                            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn. Removing living mob from spawner" + spawnerName);
+                            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn. Removing living mob from spawner" + spawnerName,transactionID);
                         }
                     }
                 }
             } catch (Exception e) {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnerForceSpawn exception: " + e.getMessage());
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnerForceSpawn exception: " + e.getMessage(),transactionID);
             }
         }
         pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn called. Loaded spawners: " + spawnersData);
         // Sprawdzenie, czy istnieją spawnerzy w pliku
         if (spawnersData.isEmpty()) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "No spawners found in spawners.yml.");
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "No spawners found in spawners.yml.",transactionID);
             return;
         }
 
@@ -444,10 +449,10 @@ public class CustomMobs {
 
         for (Map.Entry<String, CustomMobsFileManager.SpawnerData> entry : spawnersData.entrySet()) {
             if(!entry.getKey().equals(spawnerName)){
-                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn checking spawner: " + entry);
+                pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn checking spawner: " + entry,transactionID);
                 continue;
             }
-            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawner: " + spawnerName+" found.");
+            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawner: " + spawnerName+" found.",transactionID);
             CustomMobsFileManager.SpawnerData spawnerData = entry.getValue();
             Location location = getLocationFromString(spawnerData.location);
 
@@ -461,22 +466,22 @@ public class CustomMobs {
                     String mobName = fileManager.getSpawnerMobName(spawnerName);
                     //pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnZombieFromSpawner "+spawnerName+", maxMobs: "+maxMobs+", remaining slots: "+remainingSlots);
                     int spawnedMobs = 0;
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn " + spawnerName + ", spawnerData.spawnedMobCount: " + spawnerData.spawnedMobCount);
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn " + spawnerName + ", spawnerData.spawnedMobCount: " + spawnerData.spawnedMobCount,transactionID);
                     for (int i = 0; i < mobCount; i++) {
-                        spawnCustomMob(location, spawnerName, mobName);
+                        spawnCustomMob(location, spawnerName, mobName,transactionID);
                         spawnerData.spawnedMobCount++;
                         spawnedMobs++;
                     }
-                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawnedMobs: " + spawnedMobs);
+                    pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawnedMobs: " + spawnedMobs,transactionID);
                     // Ustawianie czasu ostatniego respa mobów z tego spawnera
                     spawnerLastSpawnTimes.put(spawnerName, currentTime);
                 } else {
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid world specified for spawner " + spawnerName);
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid world specified for spawner " + spawnerName,transactionID);
                 }
             } else {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid location specified for spawner " + spawnerName);
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Invalid location specified for spawner " + spawnerName,transactionID);
             }
-            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawnedMobsMap"+spawnedMobsMap.toString());
+            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.spawnerForceSpawn spawnedMobsMap"+spawnedMobsMap.toString(),transactionID);
         }
     }
 
@@ -513,15 +518,15 @@ public class CustomMobs {
             spawnerTask.cancel();
         }
     }
-    private boolean canSpawnMobs(String spawnerName, int cooldown) {
-        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs " + spawnerName + " cooldown: "+cooldown);
+    private boolean canSpawnMobs(String spawnerName, int cooldown,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs " + spawnerName + " cooldown: "+cooldown,transactionID);
         if (!spawnerLastSpawnTimes.containsKey(spawnerName)) {
-            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs check passed, spawner not on the list, return true");
+            pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs check passed, spawner not on the list, return true",transactionID);
             return true;
         }
         long lastUsage = spawnerLastSpawnTimes.get(spawnerName);
         long currentTime = System.currentTimeMillis();
-        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs spawnerName: "+spawnerName+", lastUsage: "+lastUsage+", currentTime: "+currentTime+", timeleft: "+(cooldown-((currentTime-lastUsage)/1000)));
+        pluginLogger.log(PluginLogger.LogLevel.SPAWNERS, "CustomMobs.canSpawnMobs spawnerName: "+spawnerName+", lastUsage: "+lastUsage+", currentTime: "+currentTime+", timeleft: "+(cooldown-((currentTime-lastUsage)/1000)),transactionID);
         return (currentTime - lastUsage) >= (cooldown*1000L);
     }
     public void decreaseMobCount(String spawnerName) {
@@ -582,26 +587,26 @@ public class CustomMobs {
     }
 
     // Metoda pomocnicza do zapisywania danych ItemStack, w tym zaklęć
-    public void loadCustomMobs() {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.loadCustomMobs called.");
+    public void loadCustomMobs(String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS,"CustomMobs.loadCustomMobs called.",transactionID);
         // Wczytaj customowe moby i przechowaj je w pamięci
         // Dla każdego pliku moba w folderze customMobs
         for (File mobFile : fileManager.getCustomMobFiles()) {
             if (!mobFile.getName().equals("customMobs/spawners.yml"))
             {
                 try {
-                    CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile);
+                    CustomMob customMob = fileManager.loadCustomMob(plugin, fileRewardManager, mobFile,transactionID);
                     if (customMob != null) {
                         customMobsMap.put(customMob.getMobName(), customMob);
                     }else
                     {
-                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs could not load custom mob "+customMob);
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs could not load custom mob "+customMob,transactionID);
                     }
                 } catch (Exception e) {
-                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs exception: " + e.getMessage());
+                    pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.loadCustomMobs exception: " + e.getMessage(),transactionID);
                 }
             }
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.loadCustomMobs spawners.yml file detected, skipping");
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.loadCustomMobs spawners.yml file detected, skipping",transactionID);
         }
     }
 
@@ -615,8 +620,8 @@ public class CustomMobs {
         return null;  // Zwróć null, jeśli encja nie jest ustawiona
     }
 
-    public void spawnCustomMob(Location location, String spawnerName, String mobName) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", spawnerName: "+spawnerName+", location: "+location);
+    public void spawnCustomMob(Location location, String spawnerName, String mobName,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", spawnerName: "+spawnerName+", location: "+location,transactionID);
         CustomMob templateMob = customMobsMap.get(mobName);
         if (templateMob != null) {
             Location adjustedLocation = adjustLocationToAirAbove(location);
@@ -628,9 +633,9 @@ public class CustomMobs {
                 newMob.spawnerName = spawnerName;
                 CustomMob passengerTemplateMob = customMobsMap.get(templateMob.passengerMobName);
                 if(passengerTemplateMob!=null) {
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob spawning newMob.passengerMobName: "+newMob.passengerMobName);
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob spawning newMob.passengerMobName: "+newMob.passengerMobName,transactionID);
                     CustomMob newPassengerMob = passengerTemplateMob.cloneForSpawn(adjustedLocation, passengerTemplateMob.entityType.toString());
-                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.passengerMobName: "+newMob.passengerMobName+" spawned, adding as passenger");
+                    pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.passengerMobName: "+newMob.passengerMobName+" spawned, adding as passenger",transactionID);
                     newMob.entity.addPassenger(newPassengerMob.entity);
                     newPassengerMob.customMetadata.put("SpawnerName", spawnerName);
                     newPassengerMob.spawnerName = spawnerName;
@@ -641,22 +646,22 @@ public class CustomMobs {
                 newMob.customMetadata.put("SpawnerName", spawnerName);
                 newMob.spawnerName = spawnerName;
             }
-            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable);
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName);
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobs.spawnCustomMob newMob.dropTablename: "+newMob.dropTableName+",  newMob.dropTable: "+newMob.dropTable,transactionID);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob newMob.spawnerName: "+newMob.spawnerName,transactionID);
             try{
                 spawnedMobsMap.put(newMob.entity.getUniqueId(), spawnerName);
-                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Mob spawned with UUID: " + newMob.entity.getUniqueId() + ", spawnerName:" + newMob.spawnerName);
+                pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Mob spawned with UUID: " + newMob.entity.getUniqueId() + ", spawnerName:" + newMob.spawnerName,transactionID);
             }catch (Exception e){
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob  exception: "+e.getMessage());
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob  exception: "+e.getMessage(),transactionID);
             }
         } else {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName);
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobs.spawnCustomMob failed, mob not found: " + mobName,transactionID);
         }
     }
-    public void spawnCustomMob(Location location, String mobName) {
+    public void spawnCustomMob(Location location, String mobName,String transactionID) {
 
         CustomMob templateMob = customMobsMap.get(mobName);
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", location: "+location+", mobtype: "+templateMob.entityType.toString());
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.spawnCustomMob called, mobName: " + mobName+", location: "+location+", mobtype: "+templateMob.entityType.toString(),transactionID);
         if (templateMob != null) {
             Location adjustedLocation = adjustLocationToAirAbove(location);
             CustomMob newMob = null;

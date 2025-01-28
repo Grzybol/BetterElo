@@ -4,6 +4,7 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
 import org.betterbox.elasticBuffer.ElasticBuffer;
+import org.betterbox.elasticBuffer.ElasticBufferAPI;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -69,8 +70,9 @@ public final class BetterElo extends JavaPlugin {
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
-    private NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
+    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
     private boolean isElasticEnabled=false;
+    public Utils utils;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -103,6 +105,7 @@ public final class BetterElo extends JavaPlugin {
         folderPath = getDataFolder().getAbsolutePath();
         pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this,this);
         loadElasticBuffer();
+        Utils utils = new Utils(this,pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
@@ -147,12 +150,12 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Starting spawners scheduler...");
         customMobs.startSpawnerScheduler();
 
-        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager, customMobs, this);
+        guiManager = new GuiManager(fileRewardManager, pluginLogger, this, dataManager, customMobsFileManager, customMobs, this,utils);
         // Rejestracja komendy
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager,utils);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
@@ -203,6 +206,12 @@ public final class BetterElo extends JavaPlugin {
         killAllCustomMobs();
 
         checkMobsExistence();
+
+
+        ElasticBuffer elasticBuffer = ElasticBuffer.getInstance();  // Załóżmy, że ElasticBuffer udostępnia singleton.
+        ElasticBufferAPI api = new ElasticBufferAPI(elasticBuffer);
+        api.log("Test log sent using ElasticBufferAPI from BetterElo","INFO","BetterElo",null);
+        //api.log
 
     }
     public void createPluginFolders() {
@@ -873,8 +882,8 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDefenseAttribute null item!"+item);
         }
     }
-    public void addMobDamageAttribute(ItemStack item, String value){
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value);
+    public void addMobDamageAttribute(ItemStack item, String value,String transactionID){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value,transactionID);
         if (item != null) {
             if(!item.hasItemMeta()){
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
@@ -883,9 +892,9 @@ public final class BetterElo extends JavaPlugin {
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
             item.setItemMeta(meta);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute value "+value+" was added to the item "+item);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute value "+value+" was added to the item "+item,transactionID);
         }else{
-            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item);
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item,transactionID);
         }
     }
     public void addAverageDamageAttribute(ItemStack item, int value){
@@ -934,7 +943,7 @@ public final class BetterElo extends JavaPlugin {
         return totalDefense;
     }
 
-    public int getAverageDamageAttribute(List<ItemStack> wornItems) {
+    public int getAverageDamageAttribute(List<ItemStack> wornItems, String transactionID) {
         int totalDamage = 0;
 
         for (ItemStack item : wornItems) {
@@ -942,11 +951,13 @@ public final class BetterElo extends JavaPlugin {
                 ItemMeta meta = item.getItemMeta();
                 PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
                 if (dataContainer.has(averageDamageKey, PersistentDataType.INTEGER)) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.getAverageDamageAttribute: adding damage: "+dataContainer.get(averageDamageKey, PersistentDataType.INTEGER),transactionID);
                     totalDamage += dataContainer.get(averageDamageKey, PersistentDataType.INTEGER);
                 }
             }
         }
 
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.getAverageDamageAttribute: totalDamage: "+totalDamage,transactionID);
         return totalDamage;
     }
     public int getAverageDamageAttribute(ItemStack item) {
@@ -1022,14 +1033,43 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "elasticBuffer: " + elasticBuffer);
             //assert elasticBuffer != null;
             elasticBuffer.receiveLog("BetterElo initialized successfully! Starting schedulers", "INFO", getDescription().getName(),null);
+
             elasticBuffer.sendLogs();
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "LOGS SENT");
             pluginLogger.isElasticBufferEnabled=true;
+            pluginLogger.api= new ElasticBufferAPI(elasticBuffer);
             pluginLogger.elasticBuffer=elasticBuffer;
         }catch (Exception e){
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "ElasticBufferAPI instance found via ServicesManager, exception: "+e.getMessage());
         }
     }
     public ElasticBuffer getElasticBuffer(){return elasticBuffer;}
+
+    public static int rollDamage(int maxValue) {
+        //pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.rollDamage called with maxValue: "+maxValue);
+        double[] weights = new double[maxValue - maxValue / 2 + 1];
+        double totalWeight = 0;
+        double mean = 3 * maxValue / 4.5;  // Peak at 3/4 of maxValue
+        double stdDev = maxValue / 12.0;   // Standard deviation
+
+        for (int x = maxValue / 2; x <= maxValue; x++) {
+            double exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
+            weights[x - maxValue / 2] = Math.exp(exponent);
+            totalWeight += weights[x - maxValue / 2];
+        }
+
+        Random random = new Random();
+        double randomValue = random.nextDouble() * totalWeight;
+        double cumulativeWeight = 0;
+
+        for (int x = maxValue / 2; x <= maxValue; x++) {
+            cumulativeWeight += weights[x - maxValue / 2];
+            if (randomValue <= cumulativeWeight) {
+                return x;
+            }
+        }
+
+        return maxValue;  // Shouldn't be reached
+    }
 
 }
