@@ -11,10 +11,13 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import io.papermc.paper.event.entity.EntityMoveEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -24,6 +27,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -50,6 +54,7 @@ public class  Event implements Listener {
     private final JavaPlugin plugin;
     private final PluginLogger pluginLogger;
     private final BetterElo betterElo;
+    private static Economy econ = null;
     private Map<String, Long> lastAttackTimes = new HashMap<>();
     private BetterRanksCheaters cheaters;
     private ExtendedConfigManager configManager;
@@ -65,8 +70,9 @@ public class  Event implements Listener {
     //public final long cooldownMillis = 1500; // 1.5s
     public Utils utils;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager,Utils utils) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager,Utils utils, Economy econ) {
         this.dataManager = dataManager;
+        this.econ = econ;
         this.fileRewardManager = fileRewardManager;
         this.pluginLogger = pluginLogger;
         this.betterElo = betterElo;
@@ -576,6 +582,7 @@ public class  Event implements Listener {
     }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        String transactionID = UUID.randomUUID().toString();
 
         /*
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
@@ -591,12 +598,32 @@ public class  Event implements Listener {
 
          */
 
-        pluginLogger.log(PluginLogger.LogLevel.PLAYER_INTERACT,"Event.onPlayerInteract called");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event.onPlayerInteract called",transactionID);
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         int removeradius = 0;
 
 
+        if (itemInHand != null && itemInHand.hasItemMeta()) {
+            ItemMeta meta = itemInHand.getItemMeta();
+            if (meta.hasDisplayName()) {
+                String displayName = ChatColor.stripColor(meta.getDisplayName());
+
+                if (displayName.equals("Coin") || displayName.equals("BetterCoin")) {
+                    double amountToAdd = displayName.equals("Coin") ? 0.01 * itemInHand.getAmount() : 1.0 * itemInHand.getAmount();
+                    EconomyResponse r = BetterElo.getEconomy().depositPlayer(player, amountToAdd);
+                    if(r.transactionSuccess()) {
+                        player.getInventory().setItemInMainHand(null);  // Usuwa item z ręki
+                        player.sendMessage("Added $" + r.amount + " to your account. New balance: $" + r.balance);
+                        pluginLogger.log(PluginLogger.LogLevel.INFO, "Event.onPlayerInteract: Added $" + r.amount + " to " + player.getName() + "'s account. New balance: $" + r.balance,transactionID,player.getName(), player.getUniqueId().toString(),amountToAdd);
+                    } else {
+                        player.sendMessage("Transaction failed: " + r.errorMessage);
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.onPlayerInteract: Transaction failed: " + r.errorMessage,transactionID);
+                    }
+                }
+            }
+        }
+        /*
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             double flamethrowerCooldown = (double) (configManager.flamethrowerCooldown) /1000;
             if (canUseFlamethrower(player)) {
@@ -609,6 +636,8 @@ public class  Event implements Listener {
             }
 
         }
+
+         */
         pluginLogger.log(PluginLogger.LogLevel.PLAYER_INTERACT, "Event.checking canUseZephyr");
         if(canUseZephyr(player) && event.getAction() == Action.RIGHT_CLICK_AIR) {
             pluginLogger.log(PluginLogger.LogLevel.PLAYER_INTERACT, "Event.canUseZephyr  passed");
@@ -724,6 +753,69 @@ public class  Event implements Listener {
         }
 
 
+    }
+    @EventHandler
+    public void onItemPickup(EntityPickupItemEvent event) {
+        String transactionID = UUID.randomUUID().toString();
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (player.hasMetadata("handledPickup")) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onItemPickup: event already handled! player: "+player.getName(),transactionID);
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                player.removeMetadata("handledPickup", BetterElo.getInstance());
+                            }
+                        }.runTask(BetterElo.getInstance());
+                    }
+                }.runTaskLaterAsynchronously(BetterElo.getInstance(), 1L);
+                return;
+            }
+            player.setMetadata("handledPickup", new FixedMetadataValue(plugin, true));
+            ItemStack item = event.getItem().getItemStack();
+            ItemMeta meta = item.getItemMeta();
+            if (player.hasMetadata("addMoneyOnPickup") && !player.getMetadata("addMoneyOnPickup").get(0).asBoolean()) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onItemPickup: addMoneyOnPickup is false, returning",transactionID);
+                return; // Jeżeli funkcja jest wyłączona, przerwij obsługę eventu
+            }
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            player.removeMetadata("handledPickup", BetterElo.getInstance());
+                        }
+                    }.runTask(BetterElo.getInstance());
+                }
+            }.runTaskLaterAsynchronously(BetterElo.getInstance(), 1L);
+
+
+            if (meta != null && meta.hasDisplayName()) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onItemPickup: Item pickup event triggered. Player: " + player.getName(),transactionID);
+                String displayName = ChatColor.stripColor(meta.getDisplayName());
+
+                if (displayName.equals("Coin") || displayName.equals("BetterCoin")) {
+                    pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onItemPickup: Coin/BetterCoin pickup event triggered. Player: " + player.getName(),transactionID);
+                    double amountToAdd = displayName.equals("Coin") ? 0.01 * item.getAmount() : 1.0 * item.getAmount();
+                    EconomyResponse r = BetterElo.getEconomy().depositPlayer(player, amountToAdd);
+
+                    if (r.transactionSuccess()) {
+                        pluginLogger.log(PluginLogger.LogLevel.INFO, "Event.onItemPickup: Added $" + r.amount + " to " + player.getName() + "'s account. New balance: $" + r.balance,transactionID,player.getName(), player.getUniqueId().toString(),amountToAdd);
+                        event.getItem().remove();  // Usuwa item z ziemi
+                        event.setCancelled(true);  // Zapobiega dodaniu itemu do ekwipunku gracza
+                        //player.sendMessage("Added $" + r.amount + " to your account. New balance: $" + r.balance);
+                    } else {
+                        player.sendMessage("Transaction failed: " + r.errorMessage);
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.onItemPickup: Transaction failed: " + r.errorMessage,transactionID);
+                    }
+                }
+            }
+        }
     }
     private static void launchFireworkEffect(Player player) {
 
@@ -1070,7 +1162,7 @@ public class  Event implements Listener {
                             pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus(),transactionID);
                             if (dropItem.isAvgDmgBonus()) {
 
-                                int AvgDmgBonus = Utils.dropAverageDamage();
+                                int AvgDmgBonus = Utils.dropAverageDamage(transactionID);
 
                                 List<String> lore = meta.getLore();
                                 if (lore == null) {
@@ -1323,6 +1415,18 @@ public class  Event implements Listener {
             });
         });
     }
+    @EventHandler
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+        Entity entity = event.getRightClicked();
+
+        // Sprawdza, czy gracz jest operatorem i czy trzyma shift
+        if (player.isOp() && player.isSneaking()) {
+            // Usuwa entity, jeżeli warunki są spełnione
+            entity.remove();
+            player.sendMessage("Usunięto entity!");
+        }
+    }
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryClick(InventoryClickEvent event) {
         String transactionID = UUID.randomUUID().toString();
@@ -1354,7 +1458,7 @@ public class  Event implements Listener {
 
 
 
-                        int avgDmg = Utils.dropAverageDamage();
+                        int avgDmg = Utils.dropAverageDamage(transactionID);
                         ItemStack newDestination = destinationItem.clone();
                         pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Rerolling average damage bonus. New bonus: " + avgDmg,transactionID,playerName,playerUUID);
                         utils.updateAverageDamage(newDestination, avgDmg);
@@ -1525,7 +1629,7 @@ public class  Event implements Listener {
                         List<String> lore = new ArrayList<>(resultMeta.getLore());
                         if (betterElo.hasMobDamageAttribute(item0) && betterElo.hasAverageDamageAttribute(item0)) {
                             if (Utils.checkAndRemoveEnchantItem(player)) {
-                                int avgDmg = Utils.dropAverageDamage();
+                                int avgDmg = Utils.dropAverageDamage(transactionID);
                                 betterElo.addAverageDamageAttribute(result, avgDmg);
                                 resultMeta = result.getItemMeta();
                                 pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...",transactionID,playerName,playerUUID);

@@ -7,6 +7,7 @@ author: Grzybol
 depend:
   - PlaceholderAPI
   - WorldGuard
+  - Vault
 softdepend:
   - HolographicDisplays
   - ElasticBuffer
@@ -71,6 +72,9 @@ commands:
   be setattribute:
     description: Add attribute to the item in hand.
     usage: /be setattribute mobdefense/mobdamage/averagedamage X
+  be autobank:
+    description: Adds money to bank on pickup
+    usage: /be autobank
 permissions:
   betterelo.setrewards:
     description: Daje dostęp do komendy /be setrewards.
@@ -101,6 +105,12 @@ permissions:
     default: op
   betterelo.reroll:
     description: Grants access to /be reroll
+    default: op
+  betterelo.setattribute:
+    description: Grants access to /be setattribute
+    default: op
+  betterelo.autobank:
+    description: Grants access to /be autobank
     default: op
 
 

@@ -60,7 +60,7 @@ public class Utils {
             }
         }
     }
-    public static int dropAverageDamage() {
+    public static int dropAverageDamage(String transactionID) {
         double rand = random.nextDouble();
         double x = Math.pow(-Math.log(rand), 0.44) * 18; // Adjusted exponential transformation and scale
         int bonus = (int) x;
@@ -68,7 +68,9 @@ public class Utils {
         if(bonus==0){
             bonus=1;
         }
+        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Utils.dropAverageDamage bonus: " + bonus,transactionID,bonus);
         return bonus;
+
     }
     public static List<ItemStack> getPlayerEquippedItems(Player player) {
         EntityEquipment equipment = player.getEquipment();

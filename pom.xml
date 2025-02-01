@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>4.9.1-SNAPSHOT</version>
+    <version>4.9.12-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BetterElo</name>
@@ -105,10 +105,6 @@
 
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-        <repository>
             <id>codemc-repo</id>
             <url>https://repo.codemc.io/repository/maven-public/</url>
         </repository>
@@ -128,11 +124,19 @@
             <id>sk89q-repo</id>
             <url>https://maven.enginehub.org/repo/</url>
         </repository>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
 
-        
         <dependency>
             <groupId>me.filoghost.holographicdisplays</groupId>
             <artifactId>holographicdisplays-api</artifactId>
@@ -191,9 +195,14 @@
         <dependency>
             <groupId>com.github.Grzybol</groupId>
             <artifactId>ElasticBuffer</artifactId>
-            <version>v1.1.87</version>
+            <version>v1.2.1</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

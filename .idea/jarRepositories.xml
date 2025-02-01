@@ -2,6 +2,11 @@
 <project version="4">
   <component name="RemoteRepositoriesConfiguration">
     <remote-repository>
+      <option name="id" value="essentials-repo" />
+      <option name="name" value="essentials-repo" />
+      <option name="url" value="https://repo.essentialsx.net/snapshots/" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="CraftationGaming" />
       <option name="name" value="CraftationGaming" />
       <option name="url" value="https://raw.githubusercontent.com/RockinChaos/repository/maven-public/" />
@@ -25,6 +30,11 @@
       <option name="id" value="codemc-repo" />
       <option name="name" value="codemc-repo" />
       <option name="url" value="https://repo.codemc.io/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="spigot-repo" />
+      <option name="name" value="spigot-repo" />
+      <option name="url" value="https://hub.spigotmc.org/nexus/content/repositories/snapshots/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="papermc-repo" />
