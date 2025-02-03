@@ -1486,15 +1486,15 @@ public class  Event implements Listener {
 
                         // Informacja dla gracza
                         if (avgDmg >= 50) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 40) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 30) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 20) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString+ ChatColor.BOLD + avgDmg + "%");
                         }else {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + avgDmg + "%");
                         }
                         return;
 

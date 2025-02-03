@@ -74,7 +74,7 @@ public final class BetterElo extends JavaPlugin {
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
-    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
+    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey,enchanteItemKey;
     private boolean isElasticEnabled=false;
     public Utils utils;
     private static Economy econ = null;
@@ -99,6 +99,7 @@ public final class BetterElo extends JavaPlugin {
         this.mobDefenseKey = new NamespacedKey(this, "mob_defense");
         this.mobDamageKey = new NamespacedKey(this, "mob_damage");
         this.averageDamageKey = new NamespacedKey(this, "average_damage");
+        this.enchanteItemKey = new NamespacedKey(this, "enchant_item");
         instance = this;
         createPluginFolders();
         createExampleDropTablesFiles();
@@ -986,6 +987,7 @@ public final class BetterElo extends JavaPlugin {
         return totalDefense;
     }
 
+
     public int getAverageDamageAttribute(List<ItemStack> wornItems, String transactionID) {
         int totalDamage = 0;
 
@@ -1021,6 +1023,16 @@ public final class BetterElo extends JavaPlugin {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean isEnchantItem(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(enchanteItemKey, PersistentDataType.INTEGER)) {
                 return true;
             }
         }

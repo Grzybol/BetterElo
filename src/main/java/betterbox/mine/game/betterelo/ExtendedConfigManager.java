@@ -30,6 +30,7 @@ public class ExtendedConfigManager {
     public int fireworkCooldown = 1500;
     public int zephyrCooldown = 1500;
     public String currentBonusString = "§6§lCurrent Bonus: ";
+    public String newAvgBonusString = "New Average Damage Bonus: ";
     public int flamethrowerCooldown = 1500;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
@@ -319,6 +320,23 @@ public class ExtendedConfigManager {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Mob_Defense_Lore section not found in config! Creating new section..");
             plugin.getConfig().createSection("Mob_Defense_Lore");
             plugin.getConfig().set("Mob_Defense_Lore", "§6§lMob Defense ");
+            plugin.saveConfig();
+        }
+        newAvgBonusString = plugin.getConfig().getString("New_Average_Bonus_String");
+        if (plugin.getConfig().contains("New_Average_Bonus_String")){
+            if (plugin.getConfig().isString("New_Average_Bonus_String")){
+                newAvgBonusString = plugin.getConfig().getString("New_Average_Bonus_String");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: New_Average_Bonus_String incorrect! Restoring default");
+                plugin.getConfig().set("New_Average_Bonus_String", "New Average Damage Bonus: ");
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: New_Average_Bonus_String section not found in config! Creating new section..");
+            plugin.getConfig().createSection("New_Average_Bonus_String");
+            plugin.getConfig().set("New_Average_Bonus_String", "New Average Damage Bonus: ");
             plugin.saveConfig();
         }
 

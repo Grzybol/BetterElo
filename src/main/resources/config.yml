@@ -41,6 +41,7 @@ Mob_Defense_Lore: "&6&lMob Defense "
 Average_Damage_Lore: "&6&lAverage Damage +"
 Current_Bonus_String: "&6&lCurrent Bonus: "
 Enchant_Item_Name: "&57&lEnchant Item"
+New_Average_Bonus_String: "New Bonus: " #no formatting here
 Enchant_Item_Lore:
 - "&7Removes current the Average Damage bonus"
 - "&7from the item and adds new one."

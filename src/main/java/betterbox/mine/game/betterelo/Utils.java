@@ -8,6 +8,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -21,9 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Utils {
     static PluginLogger pluginLogger;
@@ -114,15 +113,27 @@ public class Utils {
                 List<String> lore = new ArrayList<>(itemMeta.getLore());
 
 
-                pluginLogger.log(PluginLogger.LogLevel.REROLL, "updateAverageDamage, re-rolling average damage...");
+                Iterator<String> iterator = lore.iterator();
+                boolean updated = false;
 
-                for (int i = 0; i < lore.size(); i++) {
-                    pluginLogger.log(PluginLogger.LogLevel.REROLL, "updateAverageDamage lore i=" + i);
-                    if (lore.get(i).contains("Average Damage")) {
-                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "updateAverageDamage lore i=" + i + " contains Average Damage, setting avgDmg: " + avgDmg);
-                        lore.set(i, "§6§lAverage Damage +" + avgDmg + "%");
+                while (iterator.hasNext()) {
+                    String line = iterator.next();
+                    if (line.contains("Average Damage") || line.contains(conf.averageDamageLore)) {
+                        if (!updated) {
+                            // Update the first occurrence
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: " + line + " -> " + conf.averageDamageLore + avgDmg + "%");
+                            int index = lore.indexOf(line);
+                            lore.set(index, conf.averageDamageLore + avgDmg + "%");
+                            updated = true;
+                        } else {
+                            // Remove any additional occurrences
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Removing extra Average Damage line: " + line);
+                            iterator.remove();
+                        }
                     }
                 }
+
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.updateAverageDamage lore: " + Arrays.toString(lore.toArray())+", lore again: "+lore);
 
                 itemMeta.setLore(lore);
                 item.setItemMeta(itemMeta);
@@ -201,7 +212,9 @@ public class Utils {
         }
         return stack;
     }
-    public static boolean checkAndRemoveEnchantItem(Player player) {
+
+    /*
+    public static boolean checkAndRemoveEnchantItemOld(Player player) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem called, player : "+player);
         Inventory inventory = player.getInventory();
         ItemStack enchantItemStack = getEnchantItem();
@@ -214,8 +227,27 @@ public class Utils {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item not found");
         return false;
     }
-    public static ItemStack getEnchantItem(){
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.getEnchantItem called");
+     */
+
+    public static boolean checkAndRemoveEnchantItem(Player player) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem called, player : " + player);
+
+        Inventory inventory = player.getInventory();
+
+        for (ItemStack item : inventory.getContents()) {
+            if (item != null && isEnchantItem(item)) {
+                inventory.removeItem(new ItemStack(item.getType(), 1));
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item found, removing : " + item);
+                return true;
+            }
+        }
+
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.checkAndRemoveEnchantItem 1 Enchant Item not found");
+        return false;
+    }
+
+    public static ItemStack getEnchantItem(String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.getEnchantItem called",transactionID);
         Material material = Material.GHAST_TEAR;
         int amount = 1;
 
@@ -224,7 +256,7 @@ public class Utils {
         if (meta != null) {
             try {
                 meta.setDisplayName(conf.enchantItemName);
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.getEnchantItem meta.getDisplayName(): " + meta.getDisplayName());
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.getEnchantItem meta.getDisplayName(): " + meta.getDisplayName(),   transactionID);
                 //Component displayNameComponent = new Component("BetterCoin");
                 //List<String> lore = ;
                 meta.setLore(conf.enchantItemLore);
@@ -235,14 +267,31 @@ public class Utils {
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
                 stack.setItemMeta(meta);
+                addEnchantItemAttribute(stack);
             }
             catch (Exception e){
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "GuiManager.getEnchantItem: "+e.toString());
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "GuiManager.getEnchantItem: "+e.toString(),transactionID);
             }
         }
         return stack;
     }
-    public static boolean isEnchantItem(ItemStack itemStack) {
+    public static void addEnchantItemAttribute(ItemStack item){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addEnchantItemAttribute called with item: "+item);
+        if (item != null) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(betterElo.enchanteItemKey, PersistentDataType.INTEGER, 1);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addEnchantItemAttribute value 1 was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addEnchantItemAttribute null item!"+item);
+        }
+    }
+    /*
+    public static boolean isEnchantItemOld(ItemStack itemStack) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem called, itemStack: " + itemStack);
 
         if (itemStack == null) {
@@ -260,6 +309,18 @@ public class Utils {
         }
 
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "GuiManager.isEnchantItem item does not match the criteria");
+        return false;
+    }
+     */
+
+    public static boolean isEnchantItem(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(betterElo.enchanteItemKey, PersistentDataType.INTEGER)) {
+                return true;
+            }
+        }
         return false;
     }
     public static String formatDroppedItems(List<ItemStack> drops) {

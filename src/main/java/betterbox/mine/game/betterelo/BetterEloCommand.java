@@ -119,7 +119,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
                             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
                             break;
                         }
-                        createEncahntItem(sender);
+                        createEncahntItem(sender,transactionID);
                         break;
                     case "reroll":
                         if (sender.isOp() || sender.hasPermission("betterelo.reroll")) {
@@ -831,8 +831,8 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    private void createEncahntItem(CommandSender sender) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.createEncahntItem called, sender: " + sender);
+    private void createEncahntItem(CommandSender sender,String transactionID) {
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.createEncahntItem called, sender: " + sender, transactionID);
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " This command can only be used by online players.");
             return;
@@ -840,13 +840,14 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
         Player player = (Player) sender;
         ItemStack enchantItem = null;
         try {
-            enchantItem = Utils.getEnchantItem();
+            enchantItem = Utils.getEnchantItem(transactionID);
             player.getInventory().addItem(enchantItem);
         } catch (Exception e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand.createEncahntItem exception " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand.createEncahntItem exception " + e.getMessage(),transactionID,player.getName(),player.getUniqueId().toString());
         }
 
         player.getInventory().addItem(enchantItem);
+        pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand.createEncahntItem: EnchantItem added to " + player.getName(),transactionID,player.getName(),player.getUniqueId().toString());
     }
 
     public void addAntywebLore(Player player, ItemStack itemStack, int radius) {
