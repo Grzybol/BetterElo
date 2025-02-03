@@ -838,7 +838,14 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
             return;
         }
         Player player = (Player) sender;
-        ItemStack enchantItem = Utils.getEnchantItem();
+        ItemStack enchantItem = null;
+        try {
+            enchantItem = Utils.getEnchantItem();
+            player.getInventory().addItem(enchantItem);
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterEloCommand.createEncahntItem exception " + e.getMessage());
+        }
+
         player.getInventory().addItem(enchantItem);
     }
 

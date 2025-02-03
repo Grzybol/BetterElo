@@ -110,13 +110,13 @@ public final class BetterElo extends JavaPlugin {
         folderPath = getDataFolder().getAbsolutePath();
         pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this,this);
         loadElasticBuffer();
-        Utils utils = new Utils(this,pluginLogger);
+        configManager = new ExtendedConfigManager(this, pluginLogger);
+        Utils utils = new Utils(this,pluginLogger,configManager);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"https://github.com/Grzybol/BetterElo");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Loading config.yml");
-        configManager = new ExtendedConfigManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano loggera.");
         PKDB = new PlayerKillDatabase(pluginLogger);
         // Przekazujemy pluginLogger do innych klas
@@ -899,6 +899,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(configManager.mobDefenseLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
             item.setItemMeta(meta);
@@ -914,6 +920,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(configManager.mobDamageLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
             item.setItemMeta(meta);
@@ -929,6 +941,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(configManager.averageDamageLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);
             item.setItemMeta(meta);

@@ -278,11 +278,15 @@ public class CustomMobs {
         }
     }
 
+    //Przykład użycia
+    /*
     public static void main(String[] args) {
         String input = "&6&ltest";
         String formatted = FormatUtil.applyFormatting(input);
         System.out.println(formatted);  // Wypisze coś w stylu "GOLD BOLD test" jeśli zaimplementujesz odpowiednie zamiany w ChatColor.translateAlternateColorCodes
     }
+
+     */
 
 
 
