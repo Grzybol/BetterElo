@@ -1,5 +1,7 @@
 package betterbox.mine.game.betterelo;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -174,6 +176,23 @@ public class FileRewardManager {
                 File itemFile = new File(customDropsFolder, itemFileName);
                 itemFile.createNewFile();
                 FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
+                // Serialize item meta
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    // Convert display name and lore to plain strings
+                    if (meta.hasDisplayName()) {
+                        String displayName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
+                        itemConfig.set("displayName", displayName);
+                    }
+
+                    if (meta.hasLore()) {
+                        List<String> loreStrings = new ArrayList<>();
+                        for (Component loreLine : meta.lore()) {
+                            loreStrings.add(PlainTextComponentSerializer.plainText().serialize(loreLine));
+                        }
+                        itemConfig.set("lore", loreStrings);
+                    }
+                }
                 itemConfig.set("item", item);
                 itemConfig.save(itemFile);
 
@@ -184,12 +203,9 @@ public class FileRewardManager {
                 String itemNameString = item.getType().toString();
                 dropTableConfig.set("Item" + index + ".itemName", itemNameString); // Tutaj można ustawić faktyczną szansę na drop
                 dropTableConfig.set("Item" + index + ".avgDmgBonus", false); // Tutaj można ustawić faktyczną szansę na drop
-                if(item.getItemMeta().hasLore()) {
-                    String itemDisplayName = item.getItemMeta().displayName().toString();
-                    dropTableConfig.set("Item" + index + ".displayName", itemDisplayName); // Tutaj można ustawić faktyczną szansę na drop
-                    if(item.getItemMeta().hasLore()) {
-                        dropTableConfig.set("Item" + index + ".description", item.getItemMeta().lore().get(1)); // Tutaj można ustawić faktyczną szansę na drop
-                    }
+                if (meta != null && meta.hasDisplayName()) {
+                    String itemDisplayName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
+                    dropTableConfig.set("Item" + index + ".displayName", itemDisplayName);
                 }
 
 

@@ -36,6 +36,15 @@ antyweb_elo_cost: 0.1
 Infinite_firework_cooldown: 450
 Flamethrower_cooldown: 1500
 Zephyr_cooldown: 1500
+Mob_Damage_Lore: "&6&lMob Damage "
+Mob_Defense_Lore: "&6&lMob Defense "
+Average_Damage_Lore: "&6&lAverage Damage +"
+Current_Bonus_String: "&6&lCurrent Bonus: "
+Enchant_Item_Name: "&57&lEnchant Item"
+New_Average_Bonus_String: "New Bonus: " #no formatting here
+Enchant_Item_Lore:
+- "&7Removes current the Average Damage bonus"
+- "&7from the item and adds new one."
 event_items_with_username:
 - DIAMOND_PICKAXE
 - DIAMOND_AXE

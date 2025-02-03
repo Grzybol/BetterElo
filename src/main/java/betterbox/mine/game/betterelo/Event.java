@@ -1168,7 +1168,7 @@ public class  Event implements Listener {
                                 if (lore == null) {
                                     lore = new ArrayList<>();
                                 }
-                                lore.add("§6§lAverage Damage +"+AvgDmgBonus+"%");
+                                lore.add(configManager.averageDamageLore+AvgDmgBonus+"%");
                                 meta.setLore(lore);
                                 pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item,transactionID);
                                 item.setItemMeta(meta);
@@ -1189,7 +1189,7 @@ public class  Event implements Listener {
                                 if (lore == null) {
                                     lore = new ArrayList<>();
                                 }
-                                lore.set(0,"§6§lMob Damage "+minDamage+"-"+maxDamage);
+                                lore.set(0,configManager.mobDamageLore+minDamage+"-"+maxDamage);
                                 meta.setLore(lore);
                                 item.setItemMeta(meta);
                                 betterElo.addMobDamageAttribute(item,minDamage+"-"+maxDamage,transactionID);
@@ -1486,15 +1486,15 @@ public class  Event implements Listener {
 
                         // Informacja dla gracza
                         if (avgDmg >= 50) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 40) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 30) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 20) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString+ ChatColor.BOLD + avgDmg + "%");
                         }else {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + "New average damage bonus: " + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + avgDmg + "%");
                         }
                         return;
 
@@ -1635,9 +1635,10 @@ public class  Event implements Listener {
                                 pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick reroll, player paid, re-rolling...",transactionID,playerName,playerUUID);
                                 for (int i = 0; i < lore.size(); i++) {
                                     pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i,transactionID,playerName,playerUUID);
-                                    if (lore.get(i).contains("Average Damage")) {
+                                    //if (destinationItem != null && betterElo.hasMobDamageAttribute(destinationItem) && betterElo.hasAverageDamageAttribute(destinationItem))
+                                    if (lore.get(i).contains(configManager.averageDamageLore)) {
                                         pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i+" contains Average Damage, setting avgDmg: "+avgDmg,transactionID,playerName,playerUUID);
-                                        lore.set(i,"§6§lAverage Damage +"  + avgDmg + "%");
+                                        lore.set(i,configManager.averageDamageLore  + avgDmg + "%");
                                     }
                                 }
                             }
@@ -1663,12 +1664,12 @@ public class  Event implements Listener {
                         if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
                             ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
                             List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
-                            String avgDmgLine = lore.stream().filter(line -> line.contains("Average Damage")).findFirst().orElse("Average Damage +0%");
+                            String avgDmgLine = lore.stream().filter(line -> line.contains(configManager.averageDamageLore)).findFirst().orElse(configManager.averageDamageLore+"+0%");
 
                             // Ustalanie indeksów dla "current bonus:" i wartości
                             int bonusIndex = -1;
                             for (int i = 0; i < greenWoolLore.size(); i++) {
-                                if (greenWoolLore.get(i).equals("current bonus:")) {
+                                if (greenWoolLore.get(i).equals(configManager.currentBonusString)) {
                                     bonusIndex = i;
                                     break;
                                 }
@@ -1679,7 +1680,7 @@ public class  Event implements Listener {
                                 greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
                             } else if (bonusIndex == -1) {
                                 // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
-                                greenWoolLore.add("current bonus:");
+                                greenWoolLore.add(configManager.currentBonusString);
                                 greenWoolLore.add("<" + avgDmgLine + ">");
                             } else {
                                 // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość

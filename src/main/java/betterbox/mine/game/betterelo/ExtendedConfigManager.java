@@ -1,5 +1,6 @@
 package betterbox.mine.game.betterelo;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,9 +21,16 @@ public class ExtendedConfigManager {
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
     public Double blockBase = 0.1;
+    public String mobDamageLore = "§6§lMob Damage ";
+    public String averageDamageLore = "§6§lAverage Damage +";
+    public String enchantItemName = (ChatColor.DARK_PURPLE+""+ ChatColor.BOLD+"Enchant Item");
+    public List<String> enchantItemLore = List.of(ChatColor.GRAY+ "Removes current the Average Damage bonus",ChatColor.GRAY+ " from the item and adds new one.");
+    public String mobDefenseLore = "§6§lMob Defense ";
     public Double antywebCost = 0.1;
     public int fireworkCooldown = 1500;
     public int zephyrCooldown = 1500;
+    public String currentBonusString = "§6§lCurrent Bonus: ";
+    public String newAvgBonusString = "New Average Damage Bonus: ";
     public int flamethrowerCooldown = 1500;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
@@ -202,7 +210,135 @@ public class ExtendedConfigManager {
             plugin.getConfig().set("Zephyr_cooldown", 1500);
             plugin.saveConfig();
         }
+        //Zephyr cooldown
+        mobDamageLore = plugin.getConfig().getString("Mob_Damage_Lore");
+        if (plugin.getConfig().contains("Mob_Damage_Lore")){
+            if (plugin.getConfig().isString("Mob_Damage_Lore")){
+                mobDamageLore = plugin.getConfig().getString("Mob_Damage_Lore");
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "ConfigManager: ReloadConfig: Mob_Damage_Lore: "+mobDamageLore);
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Mob_Damage_Lore incorrect! Restoring default");
+                plugin.getConfig().set("Mob_Damage_Lore", "§6§lMob Damage ");
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Mob_Damage_Lore section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Mob_Damage_Lore");
+            plugin.getConfig().set("Mob_Damage_Lore", "§6§lMob Damage ");
+            plugin.saveConfig();
+        }
 
+        averageDamageLore = plugin.getConfig().getString("Average_Damage_Lore");
+        if (plugin.getConfig().contains("Average_Damage_Lore")){
+            if (plugin.getConfig().isString("Average_Damage_Lore")){
+                averageDamageLore = plugin.getConfig().getString("Average_Damage_Lore");
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "ConfigManager: ReloadConfig: Average_Damage_Lore: "+averageDamageLore);
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Average_Damage_Lore incorrect! Restoring default");
+                plugin.getConfig().set("Average_Damage_Lore", "§6§lAverage Damage +");
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Average_Damage_Lore section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Average_Damage_Lore");
+            plugin.getConfig().set("Average_Damage_Lore", "§6§lAverage Damage +");
+
+            plugin.saveConfig();
+        }
+
+        enchantItemLore = plugin.getConfig().getStringList("Enchant_Item_Lore");
+        if (plugin.getConfig().contains("Enchant_Item_Lore")){
+            if (plugin.getConfig().isList("Enchant_Item_Lore")){
+                enchantItemLore = plugin.getConfig().getStringList("Enchant_Item_Lore");
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "ConfigManager: ReloadConfig: Enchant_Item_Lore: "+enchantItemLore.toString());
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Enchant_Item_Lore incorrect! Restoring default");
+                plugin.getConfig().set("Enchant_Item_Lore", List.of(ChatColor.GRAY+ "Removes current the Average Damage bonus",ChatColor.GRAY+ " from the item and adds new one."));
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Enchant_Item_Lore section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Enchant_Item_Lore");
+            plugin.getConfig().set("Enchant_Item_Lore", List.of(ChatColor.GRAY+ "Removes current the Average Damage bonus",ChatColor.GRAY+ " from the item and adds new one."));
+            plugin.saveConfig();
+        }
+        enchantItemName = plugin.getConfig().getString("Enchant_Item_Name");
+        if (plugin.getConfig().contains("Enchant_Item_Name")){
+            if (plugin.getConfig().isString("Enchant_Item_Name")){
+                enchantItemName = plugin.getConfig().getString("Enchant_Item_Name");
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "ConfigManager: ReloadConfig: Enchant_Item_Name: "+enchantItemName);
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Enchant_Item_Name incorrect! Restoring default");
+                plugin.getConfig().set("Enchant_Item_Name", (ChatColor.DARK_PURPLE+""+ ChatColor.BOLD+"Enchant Item"));
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Enchant_Item_Name section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Enchant_Item_Name");
+            plugin.getConfig().set("Enchant_Item_Name", (ChatColor.DARK_PURPLE+""+ ChatColor.BOLD+"Enchant Item"));
+            plugin.saveConfig();
+        }
+        currentBonusString = plugin.getConfig().getString("Current_Bonus_String");
+        if (plugin.getConfig().contains("Current_Bonus_String")){
+            if (plugin.getConfig().isString("Current_Bonus_String")){
+                currentBonusString = plugin.getConfig().getString("Current_Bonus_String");
+                pluginLogger.log(PluginLogger.LogLevel.INFO, "ConfigManager: ReloadConfig: Current_Bonus_String: "+currentBonusString);
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Current_Bonus_String incorrect! Restoring default");
+                plugin.getConfig().set("Current_Bonus_String", "§6§lCurrent Bonus: ");
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Current_Bonus_String section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Current_Bonus_String");
+            plugin.getConfig().set("Current_Bonus_String", "§6§lCurrent Bonus: ");
+            plugin.saveConfig();
+        }
+
+        mobDefenseLore = plugin.getConfig().getString("Mob_Defense_Lore");
+        if (plugin.getConfig().contains("Mob_Defense_Lore")){
+            if (plugin.getConfig().isString("Mob_Defense_Lore")){
+                mobDefenseLore = plugin.getConfig().getString("Mob_Defense_Lore");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Mob_Defense_Lore incorrect! Restoring default");
+                plugin.getConfig().set("Mob_Defense_Lore", "§6§lMob Defense ");
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Mob_Defense_Lore section not found in config! Creating new section..");
+            plugin.getConfig().createSection("Mob_Defense_Lore");
+            plugin.getConfig().set("Mob_Defense_Lore", "§6§lMob Defense ");
+            plugin.saveConfig();
+        }
+        newAvgBonusString = plugin.getConfig().getString("New_Average_Bonus_String");
+        if (plugin.getConfig().contains("New_Average_Bonus_String")){
+            if (plugin.getConfig().isString("New_Average_Bonus_String")){
+                newAvgBonusString = plugin.getConfig().getString("New_Average_Bonus_String");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: New_Average_Bonus_String incorrect! Restoring default");
+                plugin.getConfig().set("New_Average_Bonus_String", "New Average Damage Bonus: ");
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: New_Average_Bonus_String section not found in config! Creating new section..");
+            plugin.getConfig().createSection("New_Average_Bonus_String");
+            plugin.getConfig().set("New_Average_Bonus_String", "New Average Damage Bonus: ");
+            plugin.saveConfig();
+        }
 
 
 
@@ -243,6 +379,8 @@ public class ExtendedConfigManager {
             // Możesz tutaj przypisać wczytaną listę do zmiennej klasy, jeśli potrzebujesz
             this.eventItemsPlaceholder = eventItemsWithUsername;
         }
+
+
 
 
 

@@ -74,7 +74,7 @@ public final class BetterElo extends JavaPlugin {
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
-    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
+    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey,enchanteItemKey;
     private boolean isElasticEnabled=false;
     public Utils utils;
     private static Economy econ = null;
@@ -99,6 +99,7 @@ public final class BetterElo extends JavaPlugin {
         this.mobDefenseKey = new NamespacedKey(this, "mob_defense");
         this.mobDamageKey = new NamespacedKey(this, "mob_damage");
         this.averageDamageKey = new NamespacedKey(this, "average_damage");
+        this.enchanteItemKey = new NamespacedKey(this, "enchant_item");
         instance = this;
         createPluginFolders();
         createExampleDropTablesFiles();
@@ -110,13 +111,13 @@ public final class BetterElo extends JavaPlugin {
         folderPath = getDataFolder().getAbsolutePath();
         pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this,this);
         loadElasticBuffer();
-        Utils utils = new Utils(this,pluginLogger);
+        configManager = new ExtendedConfigManager(this, pluginLogger);
+        Utils utils = new Utils(this,pluginLogger,configManager);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"https://github.com/Grzybol/BetterElo");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Loading config.yml");
-        configManager = new ExtendedConfigManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano loggera.");
         PKDB = new PlayerKillDatabase(pluginLogger);
         // Przekazujemy pluginLogger do innych klas
@@ -899,6 +900,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(configManager.mobDefenseLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
             item.setItemMeta(meta);
@@ -914,6 +921,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(configManager.mobDamageLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
             item.setItemMeta(meta);
@@ -929,6 +942,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(configManager.averageDamageLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);
             item.setItemMeta(meta);
@@ -968,6 +987,7 @@ public final class BetterElo extends JavaPlugin {
         return totalDefense;
     }
 
+
     public int getAverageDamageAttribute(List<ItemStack> wornItems, String transactionID) {
         int totalDamage = 0;
 
@@ -1003,6 +1023,16 @@ public final class BetterElo extends JavaPlugin {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean isEnchantItem(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(enchanteItemKey, PersistentDataType.INTEGER)) {
                 return true;
             }
         }
