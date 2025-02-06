@@ -937,6 +937,21 @@ public final class BetterElo extends JavaPlugin {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item,transactionID);
         }
     }
+    public void addMobDamageAttributeNoLore(ItemStack item, String value,String transactionID){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value,transactionID);
+        if (item != null) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute value "+value+" was added to the item "+item,transactionID);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item,transactionID);
+        }
+    }
     public void addAverageDamageAttribute(ItemStack item, int value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
         if (item != null) {

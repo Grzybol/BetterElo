@@ -1202,7 +1202,7 @@ public class  Event implements Listener {
                                 lore.set(0,configManager.mobDamageLore+minDamage+"-"+maxDamage);
                                 meta.setLore(lore);
                                 item.setItemMeta(meta);
-                                betterElo.addMobDamageAttribute(item,minDamage+"-"+maxDamage,transactionID);
+                                betterElo.addMobDamageAttributeNoLore(item,minDamage+"-"+maxDamage,transactionID);
 
                             }
 
