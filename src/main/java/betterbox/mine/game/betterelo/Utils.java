@@ -19,8 +19,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
@@ -29,10 +32,12 @@ public class Utils {
     static BetterElo betterElo;
     private static final Random random = new Random();
     private static ExtendedConfigManager conf;
-    public Utils(BetterElo plugin,PluginLogger pluginLogger, ExtendedConfigManager conf) {
+    private static JavaPlugin plugin;
+    public Utils(BetterElo betterElo, PluginLogger pluginLogger, ExtendedConfigManager conf, JavaPlugin plugin) {
         this.pluginLogger = pluginLogger;
         this.conf = conf;
-        this.betterElo = plugin;
+        this.betterElo = betterElo;
+        this.plugin = plugin;
         pluginLogger.log(PluginLogger.LogLevel.INFO, "Utils constructor called");
         updateLanguageStringsInConfig();
 
@@ -104,9 +109,9 @@ public class Utils {
         conf.averageDamageLore = FormatUtil.applyFormatting(conf.averageDamageLore);
         conf.mobDamageLore = FormatUtil.applyFormatting(conf.mobDamageLore);
     }
-    public void updateAverageDamage(ItemStack item,int avgDmg) {
+    public void updateAverageDamageOld(ItemStack item,int avgDmg,String transactionID) {
         if (item != null && item.hasItemMeta()) {
-            pluginLogger.log(PluginLogger.LogLevel.REROLL, "updateAverageDamage called, betterElo.hasMobDamageAttribute(item): " + betterElo.hasMobDamageAttribute(item) + ", betterElo.hasAverageDamageAttribute(item): " + betterElo.hasAverageDamageAttribute(item));
+            pluginLogger.log(PluginLogger.LogLevel.REROLL, "updateAverageDamage called, betterElo.hasMobDamageAttribute(item): " + betterElo.hasMobDamageAttribute(item) + ", betterElo.hasAverageDamageAttribute(item): " + betterElo.hasAverageDamageAttribute(item),transactionID,avgDmg);
 
             if (betterElo.hasMobDamageAttribute(item) && betterElo.hasAverageDamageAttribute(item)) {
                 ItemMeta itemMeta = item.getItemMeta();
@@ -115,25 +120,26 @@ public class Utils {
 
                 Iterator<String> iterator = lore.iterator();
                 boolean updated = false;
+                List<String> linesToRemove = new ArrayList<>();
 
                 while (iterator.hasNext()) {
                     String line = iterator.next();
                     if (line.contains("Average Damage") || line.contains(conf.averageDamageLore)) {
                         if (!updated) {
                             // Update the first occurrence
-                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: " + line + " -> " + conf.averageDamageLore + avgDmg + "%");
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: " + line + " -> " + conf.averageDamageLore + avgDmg + "%",transactionID,avgDmg);
                             int index = lore.indexOf(line);
                             lore.set(index, conf.averageDamageLore + avgDmg + "%");
                             updated = true;
                         } else {
                             // Remove any additional occurrences
-                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Removing extra Average Damage line: " + line);
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Removing extra Average Damage line: " + line,transactionID);
                             iterator.remove();
                         }
                     }
                 }
 
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.updateAverageDamage lore: " + Arrays.toString(lore.toArray())+", lore again: "+lore);
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.updateAverageDamage lore: " + Arrays.toString(lore.toArray())+", lore again: "+lore,transactionID);
 
                 itemMeta.setLore(lore);
                 item.setItemMeta(itemMeta);
@@ -141,6 +147,52 @@ public class Utils {
             }
         }
     }
+    public void updateAverageDamage(ItemStack item, int avgDmg, String transactionID) {
+        if (item != null && item.hasItemMeta()) {
+            pluginLogger.log(PluginLogger.LogLevel.REROLL, "updateAverageDamage called, betterElo.hasMobDamageAttribute(item): "
+                    + betterElo.hasMobDamageAttribute(item)
+                    + ", betterElo.hasAverageDamageAttribute(item): "
+                    + betterElo.hasAverageDamageAttribute(item), transactionID, avgDmg);
+
+            if (betterElo.hasMobDamageAttribute(item) && betterElo.hasAverageDamageAttribute(item)) {
+                ItemMeta itemMeta = item.getItemMeta();
+                List<String> lore = new ArrayList<>(itemMeta.getLore());
+
+                boolean updated = false;
+                List<Integer> indicesToRemove = new ArrayList<>(); // Store indices of duplicates
+
+                for (int i = 0; i < lore.size(); i++) {
+                    String line = lore.get(i);
+
+                    if (line.contains("Average Damage") || line.contains(conf.averageDamageLore)) {
+                        if (!updated) {
+                            // Update first occurrence
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: "
+                                    + line + " -> " + conf.averageDamageLore + avgDmg + "%", transactionID, avgDmg);
+                            lore.set(i, conf.averageDamageLore + avgDmg + "%");
+                            updated = true;
+                        } else {
+                            // Mark duplicates for removal
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Marking extra Average Damage line for removal: " + line, transactionID);
+                            indicesToRemove.add(i);
+                        }
+                    }
+                }
+
+                // Remove duplicate entries in reverse order to avoid index shifting issues
+                for (int i = indicesToRemove.size() - 1; i >= 0; i--) {
+                    lore.remove((int) indicesToRemove.get(i));
+                }
+
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.updateAverageDamage final lore: " + lore, transactionID);
+
+                itemMeta.setLore(lore);
+                item.setItemMeta(itemMeta);
+                betterElo.addAverageDamageAttributeNoLore(item, avgDmg);
+            }
+        }
+    }
+
     public static int dropAverageDamage(String transactionID) {
         double rand = random.nextDouble();
         double x = Math.pow(-Math.log(rand), 0.44) * 18; // Adjusted exponential transformation and scale
@@ -373,6 +425,21 @@ public class Utils {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "Event.isEloAllowed: " + e.toString());
             return false;
         }
+    }
+    public static void toggleMoneyPickup(Player player) {
+        // Pobieramy bieżącą wartość. Jeśli brak metadanych, uznajemy, że wartość wynosi false
+        boolean currentValue = false;
+        if (!player.getMetadata("addMoneyOnPickup").isEmpty()) {
+            currentValue = player.getMetadata("addMoneyOnPickup").get(0).asBoolean();
+        }
+        // Przełączanie wartości
+        boolean newValue = !currentValue;
+        player.setMetadata("addMoneyOnPickup", new FixedMetadataValue(plugin, newValue));
+        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA +"Automatic money pickup " +(newValue ? ChatColor.GREEN+"ENABLED" : ChatColor.RED+"DISABLED") + ".");
+    }
+    public static void enableMoneyPickup(Player player) {
+        player.setMetadata("addMoneyOnPickup", new FixedMetadataValue(plugin, true));
+        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA +"Automatic money pickup "+ChatColor.GREEN+"ENABLED");
     }
 
 }

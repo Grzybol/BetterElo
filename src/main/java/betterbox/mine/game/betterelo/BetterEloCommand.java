@@ -42,8 +42,9 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
     private Hologram hologramEvent;
     private CustomMobs customMobs;
     private BukkitTask eventHoloTask;
+    private final Lang lang;
 
-    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager, Event event, PlayerKillDatabase PKDB, CustomMobs customMobs, CustomMobsFileManager customMobsFileManager) {
+    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager, Event event, PlayerKillDatabase PKDB, CustomMobs customMobs, CustomMobsFileManager customMobsFileManager, Lang lang) {
         this.dataManager = dataManager;
         this.plugin = plugin;
         this.customMobs = customMobs;
@@ -54,21 +55,12 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
         this.event = event;
         this.customMobsFileManager = customMobsFileManager;
         this.PKDB = PKDB;
+        this.lang = lang;
 
 
     }
 
-    public void toggleMoneyPickup(Player player) {
-        // Pobieramy bieżącą wartość. Jeśli brak metadanych, uznajemy, że wartość wynosi false
-        boolean currentValue = false;
-        if (!player.getMetadata("addMoneyOnPickup").isEmpty()) {
-            currentValue = player.getMetadata("addMoneyOnPickup").get(0).asBoolean();
-        }
-        // Przełączanie wartości
-        boolean newValue = !currentValue;
-        player.setMetadata("addMoneyOnPickup", new FixedMetadataValue(plugin, newValue));
-        player.sendMessage("Automatic money pickup " + (newValue ? "enabled" : "disabled") + ".");
-    }
+
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -92,8 +84,18 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
                         if (sender instanceof Player) {
                             Player player = (Player) sender;
                             if (sender.hasPermission("betterelo.autobank")) {
-                                toggleMoneyPickup(player);
-                                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Automatic money pickup " + (player.getMetadata("addMoneyOnPickup").get(0).asBoolean() ? ChatColor.GREEN + "enabled" : ChatColor.RED + "disabled") + ".");
+                                Utils.toggleMoneyPickup(player);
+                                //player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + "Automatic money pickup " + (player.getMetadata("addMoneyOnPickup").get(0).asBoolean() ? ChatColor.GREEN + "enabled" : ChatColor.RED + "disabled") + ".");
+                            } else {
+                                noPermission(sender);
+                            }
+                        }
+                        break;
+                    case "language":
+                        if (sender instanceof Player) {
+                            Player player = (Player) sender;
+                            if (sender.isOp()) {
+                                lang.loadLangFile();
                             } else {
                                 noPermission(sender);
                             }
@@ -160,7 +162,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
                         }
                         break;
                     case "info":
-                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Better Elo system for BetterBox.");
+                        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Better Elo system for BetterBox and BetterServer.");
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Author: " + plugin.getDescription().getAuthors());
                         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Version: " + plugin.getDescription().getVersion());
                         break;
@@ -779,9 +781,14 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
         long monthlyTimeLeft = betterElo.getRemainingTimeForRewards("monthly");
 
 
+        player.sendMessage(ChatColor.GREEN +lang.remainingTimeMessage+" | " +lang.dailyTranslation + formatTime(dailyTimeLeft)+" | "+lang.weeklyTranslation + formatTime(weeklyTimeLeft)+" | "+lang.monthlyTranslation + formatTime(monthlyTimeLeft));
+
+        /*
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for daily rewards: " + ChatColor.GREEN + formatTime(dailyTimeLeft));
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for weekly rewards: " + ChatColor.GREEN + formatTime(weeklyTimeLeft));
         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for monthly rewards: " + ChatColor.GREEN + formatTime(monthlyTimeLeft));
+
+         */
         if (betterElo.isEventEnabled) {
             long eventTimeLeft = betterElo.getRemainingTimeForRewards("event");
             player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Remaining time for event rewards: " + ChatColor.GREEN + formatTime(eventTimeLeft));
@@ -810,7 +817,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand: Player " + sender.getName() + " issued command /be droptable " + dropTableName);
         if (!sender.hasPermission("betterelo.droptable") || !sender.isOp()) {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand: Player " + sender.getName() + " was denied access to command /be droptable");
-            sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command!");
+            noPermission(sender);
             return;
         }
         pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterEloCommand: Player " + sender.getName() + " was granted access to command /be droptable");
@@ -938,7 +945,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
                 Location targetLocation = player.getTargetBlock(null, 100).getLocation();
                 customMobsFileManager.saveSpawner(targetLocation, spawnerName, mobName, spawnerCooldown, mobCount, maxMobs);
             } else {
-                player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission!");
+                noPermission(sender);
             }
         } else {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand:handleAddSpawnerCommand this is only-player command!");
@@ -946,7 +953,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
     }
 
     private void noPermission(CommandSender sender) {
-        sender.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]" + ChatColor.DARK_RED + " You don't have permission to use that command");
+        sender.sendMessage(ChatColor.RED + lang.noPermissionMessage);
     }
 
     @Override
@@ -979,6 +986,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
                 tabCompleteList.add("enchantitem");
                 tabCompleteList.add("forcespawn");
                 tabCompleteList.add("setattribute");
+                tabCompleteList.add("language");
             }
             if (player.hasPermission("betterelo.autobank")) {
                 tabCompleteList.add("autobank");
