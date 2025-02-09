@@ -70,10 +70,12 @@ public class  Event implements Listener {
     //public final long cooldownMillis = 1500; // 1.5s
     public Utils utils;
     private final Lang lang;
+    private final MobNameUtil mobNameUtil;
 
-    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager,Utils utils, Economy econ, Lang lang) {
+    public Event(DataManager dataManager, PluginLogger pluginLogger, JavaPlugin plugin, BetterRanksCheaters cheaters, ExtendedConfigManager configManager, BetterElo betterElo, CustomMobs customMobs, FileRewardManager fileRewardManager, GuiManager guiManager, CustomMobsFileManager customMobsFileManager,Utils utils, Economy econ, Lang lang, MobNameUtil mobNameUtil) {
         this.dataManager = dataManager;
         this.econ = econ;
+        this.mobNameUtil = mobNameUtil;
         this.fileRewardManager = fileRewardManager;
         this.lang = lang;
         this.pluginLogger = pluginLogger;
@@ -185,11 +187,14 @@ public class  Event implements Listener {
             if (ranking.equals("main")) {
                 notifyPlayerAboutPoints(killer, pointsEarned, victim.eloMultiplier, true);
             }
-        } else {
+        } /*
+        else {
             if (ranking.equals("main")) {
                 killer.sendMessage(ChatColor.DARK_RED + lang.eloDifferenceTooBig);
             }
         }
+        */
+
     }
     private void handleRankingPointsFromMobDeath(CustomMobs.CustomMob killer,Player victim, String ranking,String transactionID) {
         if (dataManager.getPoints(victim.getUniqueId().toString(), ranking) - killer.eloPoints < 1000) {
@@ -1342,6 +1347,9 @@ public class  Event implements Listener {
         if (victimEntity instanceof LivingEntity) {
             LivingEntity entity = (LivingEntity) event.getEntity();
             if (entity.hasMetadata("CustomMob")) {
+                CustomMobs.CustomMob customMob =  betterElo.getCustomMobFromEntity(entity);
+                double eloPints = customMob.eloPoints;
+
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -1349,7 +1357,8 @@ public class  Event implements Listener {
                             @Override
                             public void run() {
                                 if (!entity.isDead()) {
-                                    customMobs.updateCustomMobName(entity,transactionID);
+                                    //mobNameUtil.updateCustomMobName(entity,eloPints,transactionID);
+                                    customMobs.updateCustomMobName(entity,eloPints,transactionID);
                                 }
                             }
                         }.runTask(BetterElo.getInstance());

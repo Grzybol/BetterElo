@@ -1,5 +1,7 @@
 package betterbox.mine.game.betterelo;
 
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import com.sk89q.worldguard.WorldGuard;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -70,6 +72,7 @@ public final class BetterElo extends JavaPlugin {
     private BetterEloCommand betterEloCommand;
     private ExtendedConfigManager configManager;
     public Map<String, Boolean> rewardStates = new HashMap<>();
+    private ProtocolManager protocolManager;
     public boolean useHolographicDisplays;
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
@@ -79,6 +82,7 @@ public final class BetterElo extends JavaPlugin {
     public Utils utils;
     private static Economy econ = null;
     public Lang lang;
+    private MobNameUtil mobNameUtil;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -90,6 +94,11 @@ public final class BetterElo extends JavaPlugin {
             getLogger().info("Custom WorldGuard flags registered.");
         } catch (Exception e) {
             getLogger().info("NoElo flag registration exception: " + e);
+        }
+        try {
+            protocolManager = ProtocolLibrary.getProtocolManager();
+        } catch (Exception e) {
+            getLogger().severe("Error while getting ProtocolManager: " + e.getMessage());
         }
     }
 
@@ -115,6 +124,19 @@ public final class BetterElo extends JavaPlugin {
         configManager = new ExtendedConfigManager(this, pluginLogger);
         utils = new Utils(this,pluginLogger,configManager,this);
         lang = new Lang(this, pluginLogger);
+        try {
+            protocolManager = ProtocolLibrary.getProtocolManager();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"protocolManager: "+protocolManager);
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error while getting ProtocolManager: " + e.getMessage());
+        }
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"protocolManager: "+protocolManager);
+        if (protocolManager == null) {
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"❌ ProtocolLib is NOT loaded! Check if it's installed.");
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"✅ ProtocolLib is loaded!");
+        }
+        mobNameUtil = new MobNameUtil(this,pluginLogger,protocolManager);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
@@ -168,7 +190,7 @@ public final class BetterElo extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager,utils,econ,lang);
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager,utils,econ,lang,mobNameUtil);
         getServer().getPluginManager().registerEvents(event, this);
         getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager,lang));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");

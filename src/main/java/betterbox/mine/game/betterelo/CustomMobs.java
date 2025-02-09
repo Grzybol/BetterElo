@@ -210,9 +210,9 @@ public class CustomMobs {
             //entity.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(attackSpeed);
 
             if (customMetadata.containsKey("MobName")){
-                entity.setCustomName(FormatUtil.applyFormatting(customMetadata.get("MobName").toString()));
+                entity.setCustomName(FormatUtil.applyFormatting(customMetadata.get("MobName").toString())+" Elo: "+eloPoints);
             }else{
-                entity.setCustomName(mobName);
+                entity.setCustomName(mobName+" Elo: "+eloPoints);
             }
 
 
@@ -308,7 +308,7 @@ public class CustomMobs {
         }
     }
 
-    public void updateCustomMobName(LivingEntity mob,String transactionID) {
+    public void updateCustomMobName(LivingEntity mob,double eloPoints, String transactionID) {
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "CustomMobs.updateZombieCustomName called, mob.getName(): " + mob.getName(),transactionID);
         if (!mob.hasMetadata("MobName")) {
             return;
@@ -320,7 +320,8 @@ public class CustomMobs {
         Component nameComponent;
 
         nameComponent = Component.text(FormatUtil.applyFormatting(customName))
-                .append(Component.text(" HP: " + Math.round(mob.getHealth()) + "/" + Math.round(mob.getMaxHealth()), NamedTextColor.WHITE));
+                //.append(Component.text(" HP: " + Math.round(mob.getHealth()) + "/" + Math.round(mob.getMaxHealth())+" Elo: "+eloPoints, NamedTextColor.WHITE));
+                .append(Component.text(" Elo: "+eloPoints+" HP: " + Math.round(mob.getHealth()) + "/" + Math.round(mob.getMaxHealth()), NamedTextColor.WHITE));
 
 
         mob.customName(nameComponent);
