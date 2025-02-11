@@ -247,6 +247,7 @@ public final class BetterElo extends JavaPlugin {
         ElasticBufferAPI api = new ElasticBufferAPI(elasticBuffer);
         api.log("Test log sent using ElasticBufferAPI from BetterElo","INFO","BetterElo",null);
         //api.log
+        loadAndKillCustomMobsFromCache();
 
     }
     private boolean setupEconomy() {
@@ -398,13 +399,14 @@ public final class BetterElo extends JavaPlugin {
         //customMobs.stopSpawnerScheduler();
     }
     public void saveCustomMobsToCache() {
+        String transactionID =  UUID.randomUUID().toString();
         List<String> mobNames = new ArrayList<>();
         for (World world : Bukkit.getWorlds()) {
             for (Entity entity : world.getEntities()) {
                 if (entity.hasMetadata("CustomMob")) {
                     String customName = entity.getName();
                     if (!customName.isEmpty()) {
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache saving entity "+customName);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache saving entity "+customName,transactionID);
                         mobNames.add(customName);
                     }
                 }
@@ -414,28 +416,29 @@ public final class BetterElo extends JavaPlugin {
         File cacheFile = new File(getDataFolder(), "customMobsCache.yml");
         YamlConfiguration cacheConfig = YamlConfiguration.loadConfiguration(cacheFile);
         cacheConfig.set("customMobNames", mobNames);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache data to save: " + mobNames);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache data to save: " + mobNames,transactionID);
 
         try {
             cacheConfig.save(cacheFile);
         } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.saveCustomMobsToCache IOException: " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.saveCustomMobsToCache IOException: " + e.getMessage(),transactionID);
         }
     }
     public void loadAndKillCustomMobsFromCache() {
+        String transactionID =  UUID.randomUUID().toString();
         File cacheFile = new File(getDataFolder(), "customMobsCache.yml");
         YamlConfiguration cacheConfig = YamlConfiguration.loadConfiguration(cacheFile);
         List<String> mobNames = cacheConfig.getStringList("customMobNames");
         int killedMobsCount = 0;
 
         if (mobNames == null || mobNames.isEmpty()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache cache is empty!");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache cache is empty!",transactionID);
             return;
         } // Jeśli nie ma danych, zakończ metodę
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache mobs from cache: "+mobNames);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache mobs from cache: "+mobNames,transactionID);
         for (World world : Bukkit.getWorlds()) {
             for (Entity entity : world.getEntities()) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache checking entity "+entity.getName());
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache checking entity "+entity.getName(),transactionID);
                 //entity.getName();
                 if (mobNames.contains(entity.getName())) {
                     entity.remove();
@@ -445,14 +448,14 @@ public final class BetterElo extends JavaPlugin {
             }
         }
 
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.loadAndKillCustomMobsFromCache killed " + killedMobsCount + " mobs");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.loadAndKillCustomMobsFromCache killed " + killedMobsCount + " mobs",transactionID);
 
         // Opcjonalnie: wyczyść plik cache po wczytaniu
         cacheConfig.set("customMobNames", new ArrayList<String>());
         try {
             cacheConfig.save(cacheFile);
         } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.loadAndKillCustomMobsFromCache IOException: " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.loadAndKillCustomMobsFromCache IOException: " + e.getMessage(),transactionID);
         }
     }
 
@@ -817,16 +820,13 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.killAllCustomMobs killed "+killedMobCount+" custom mobs.");
     }
     public void removeAndKillAllCustomMobs() {
+        String transactionID =  UUID.randomUUID().toString();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.removeAndKillAllCustomMobs calleed.   customMobsMap: "+customMobsMap,transactionID);
         for (CustomMobs.CustomMob customMob : customMobsMap.values()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.removeAndKillAllCustomMobs calleed.   customMob: "+customMob+", MobName: "+customMob.mobName,transactionID);
             // Sprawdzanie, czy encja jest nadal żywa przed próbą jej zabicia
             if (customMob.entity != null && !customMob.entity.isDead()) {
-                customMob.entity.remove(); // Usuwa encję z świata
-
-            }
-        }
-        for (CustomMobs.CustomMob customMob : customMobsMap.values()) {
-            // Sprawdzanie, czy encja jest nadal żywa przed próbą jej zabicia
-            if (customMob.entity != null && !customMob.entity.isDead()) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.removeAndKillAllCustomMobs calleed.   entity: "+customMob.entity+", customMob: "+customMob+", MobName: "+customMob.mobName,transactionID);
                 customMob.entity.remove(); // Usuwa encję z świata
 
             }
@@ -834,12 +834,12 @@ public final class BetterElo extends JavaPlugin {
         customMobsMap.clear(); // Czyści mapę po usunięciu wszystkich encji
     }
     public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
         schedulePercentageHealthRegeneration(customMob.entity, customMob.regenSeconds, customMob.regenPercent);
         customMobsMap.put(entity, customMob);
     }
     public void unregisterCustomMob(Entity entity) {
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
         customMobsMap.remove(entity);
         if (mobTasks.containsKey(entity)) {
             mobTasks.get(entity).cancel(); // Anuluje zadanie

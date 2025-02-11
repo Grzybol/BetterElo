@@ -1393,12 +1393,13 @@ public class  Event implements Listener {
         double totalDamage = minDamage + random.nextInt(maxDamage - minDamage + 1) + bonusDamage; // Całkowite obrażenia
         pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent minDamage: "+minDamage+", maxDamage: "+maxDamage+", averageDamage: "+averageDamage+", averageDamageBonusPercent: "+averageDamageBonusPercent+", bonusDamage: "+bonusDamage,transactionID);
         CustomMobs.CustomMob customMob = null;
+        Player player = (Player) event.getDamager();
         customMob =  betterElo.getCustomMobFromEntity(event.getEntity());
         if(customMob!=null)
         {
             defense = customMob.defense;
             armor = customMob.armor;
-            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent  from customMob object - defense: "+defense+", armor: "+armor,transactionID);
+            pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent  from customMob object - defense: "+defense+", armor: "+armor,transactionID,player.getName(),player.getUniqueId().toString());
 
         }
         double defDmgReduction= (1-(0.01*defense));
@@ -1406,7 +1407,7 @@ public class  Event implements Listener {
         if(finalDamage<=0)
             finalDamage=0;
         event.setDamage(finalDamage);
-        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor,transactionID);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.customEntityDamageEvent finalDamage: "+finalDamage+",  totalDamage: " + totalDamage+", bonusDamage: "+bonusDamage+", defDmgReduction(1-(0.01*defense)): "+defDmgReduction+", armor: "+armor,transactionID,player.getName(),player.getUniqueId().toString(),finalDamage);
     }
     public void removePlayerPlacedBlocksAsync(Entity entity,String transactionID) {
         // Asynchronicznie przygotowujesz dane
@@ -1479,7 +1480,7 @@ public class  Event implements Listener {
 
                         int avgDmg = Utils.dropAverageDamage(transactionID);
                         ItemStack newDestination = destinationItem.clone();
-                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Rerolling average damage bonus. New bonus: " + avgDmg,transactionID,playerName,playerUUID);
+                        pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Rerolling average damage bonus. New bonus: " + avgDmg,transactionID,playerName,playerUUID,avgDmg);
                         utils.updateAverageDamage(newDestination, avgDmg, transactionID);
                         pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick: Item updated with new average damage bonus. newItem avgbonus: " + betterElo.getAverageDamageAttribute(destinationItem),transactionID,playerName,playerUUID);
 
