@@ -122,8 +122,8 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this,this);
         loadElasticBuffer();
         configManager = new ExtendedConfigManager(this, pluginLogger);
-        utils = new Utils(this,pluginLogger,configManager,this);
         lang = new Lang(this, pluginLogger);
+        utils = new Utils(this,pluginLogger,configManager,this,lang);
         try {
             protocolManager = ProtocolLibrary.getProtocolManager();
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"protocolManager: "+protocolManager);
@@ -834,12 +834,12 @@ public final class BetterElo extends JavaPlugin {
         customMobsMap.clear(); // Czyści mapę po usunięciu wszystkich encji
     }
     public void registerCustomMob(Entity entity, CustomMobs.CustomMob customMob) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.registerCustomMob calleed.   entity: "+entity+", customMob: "+customMob);
         schedulePercentageHealthRegeneration(customMob.entity, customMob.regenSeconds, customMob.regenPercent);
         customMobsMap.put(entity, customMob);
     }
     public void unregisterCustomMob(Entity entity) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
+        pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "BetterElo.unregisterCustomMob calleed.   entity: "+entity);
         customMobsMap.remove(entity);
         if (mobTasks.containsKey(entity)) {
             mobTasks.get(entity).cancel(); // Anuluje zadanie
@@ -928,7 +928,7 @@ public final class BetterElo extends JavaPlugin {
             if (lore == null) {
                 lore = new ArrayList<>();
             }
-            lore.add(configManager.mobDefenseLore+value);
+            lore.add(lang.mobDefenseLore+value);
             meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
@@ -949,7 +949,7 @@ public final class BetterElo extends JavaPlugin {
             if (lore == null) {
                 lore = new ArrayList<>();
             }
-            lore.add(configManager.mobDamageLore+value);
+            lore.add(lang.mobDamageLore+value);
             meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
@@ -985,7 +985,7 @@ public final class BetterElo extends JavaPlugin {
             if (lore == null) {
                 lore = new ArrayList<>();
             }
-            lore.add(configManager.averageDamageLore+value+"%");
+            lore.add(lang.averageDamageLore+value+"%");
             meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);

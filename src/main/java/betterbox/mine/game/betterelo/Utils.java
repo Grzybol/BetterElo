@@ -33,13 +33,17 @@ public class Utils {
     private static final Random random = new Random();
     private static ExtendedConfigManager conf;
     private static JavaPlugin plugin;
-    public Utils(BetterElo betterElo, PluginLogger pluginLogger, ExtendedConfigManager conf, JavaPlugin plugin) {
+    private static Lang lang;
+    public Utils(BetterElo betterElo, PluginLogger pluginLogger, ExtendedConfigManager conf, JavaPlugin plugin, Lang lang) {
         this.pluginLogger = pluginLogger;
         this.conf = conf;
         this.betterElo = betterElo;
         this.plugin = plugin;
+        this.lang = lang;
         pluginLogger.log(PluginLogger.LogLevel.INFO, "Utils constructor called");
+
         updateLanguageStringsInConfig();
+
 
     }
     public enum ColorCode {
@@ -97,17 +101,17 @@ public class Utils {
     }
     public void updateLanguageStringsInConfig() {
         pluginLogger.log(PluginLogger.LogLevel.INFO, "Utils.updateLanguageStringsInConfig called");
-        conf.enchantItemName = FormatUtil.applyFormatting(conf.enchantItemName);
+        lang.enchantItemName = FormatUtil.applyFormatting(lang.enchantItemName);
         List<String> newEnchantItemLore = new ArrayList<>();
-        for (String line : conf.enchantItemLore) {
+        for (String line : lang.enchantItemLore) {
             newEnchantItemLore.add(FormatUtil.applyFormatting(line));
         }
-        conf.enchantItemLore = newEnchantItemLore;
-        conf.enchantItemName = FormatUtil.applyFormatting(conf.enchantItemName);
-        conf.currentBonusString = FormatUtil.applyFormatting(conf.currentBonusString);
-        conf.mobDefenseLore = FormatUtil.applyFormatting(conf.mobDefenseLore);
-        conf.averageDamageLore = FormatUtil.applyFormatting(conf.averageDamageLore);
-        conf.mobDamageLore = FormatUtil.applyFormatting(conf.mobDamageLore);
+        lang.enchantItemLore = newEnchantItemLore;
+        lang.enchantItemName = FormatUtil.applyFormatting(lang.enchantItemName);
+        lang.currentBonusString = FormatUtil.applyFormatting(lang.currentBonusString);
+        lang.mobDefenseLore = FormatUtil.applyFormatting(lang.mobDefenseLore);
+        lang.averageDamageLore = FormatUtil.applyFormatting(lang.averageDamageLore);
+        lang.mobDamageLore = FormatUtil.applyFormatting(lang.mobDamageLore);
     }
     public void updateAverageDamageOld(ItemStack item,int avgDmg,String transactionID) {
         if (item != null && item.hasItemMeta()) {
@@ -124,12 +128,12 @@ public class Utils {
 
                 while (iterator.hasNext()) {
                     String line = iterator.next();
-                    if (line.contains("Average Damage") || line.contains(conf.averageDamageLore)) {
+                    if (line.contains("Average Damage") || line.contains(lang.averageDamageLore)) {
                         if (!updated) {
                             // Update the first occurrence
-                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: " + line + " -> " + conf.averageDamageLore + avgDmg + "%",transactionID,avgDmg);
+                            pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: " + line + " -> " + lang.averageDamageLore + avgDmg + "%",transactionID,avgDmg);
                             int index = lore.indexOf(line);
-                            lore.set(index, conf.averageDamageLore + avgDmg + "%");
+                            lore.set(index, lang.averageDamageLore + avgDmg + "%");
                             updated = true;
                         } else {
                             // Remove any additional occurrences
@@ -164,12 +168,12 @@ public class Utils {
                 for (int i = 0; i < lore.size(); i++) {
                     String line = lore.get(i);
 
-                    if (line.contains("Average Damage") || line.contains(conf.averageDamageLore)) {
+                    if (line.contains("Average Damage") || line.contains(lang.averageDamageLore)) {
                         if (!updated) {
                             // Update first occurrence
                             pluginLogger.log(PluginLogger.LogLevel.REROLL, "Updating existing Average Damage line: "
-                                    + line + " -> " + conf.averageDamageLore + avgDmg + "%", transactionID, avgDmg);
-                            lore.set(i, conf.averageDamageLore + avgDmg + "%");
+                                    + line + " -> " + lang.averageDamageLore + avgDmg + "%", transactionID, avgDmg);
+                            lore.set(i, lang.averageDamageLore + avgDmg + "%");
                             updated = true;
                         } else {
                             // Mark duplicates for removal
@@ -307,11 +311,11 @@ public class Utils {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             try {
-                meta.setDisplayName(conf.enchantItemName);
+                meta.setDisplayName(lang.enchantItemName);
                 pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Utils.getEnchantItem meta.getDisplayName(): " + meta.getDisplayName(),   transactionID);
                 //Component displayNameComponent = new Component("BetterCoin");
                 //List<String> lore = ;
-                meta.setLore(conf.enchantItemLore);
+                meta.setLore(lang.enchantItemLore);
                 // Dodajemy niestandardowy enchant, który nie wpływa na działanie itemu
                 meta.addEnchant(Enchantment.LUCK, 1, true);
 

@@ -1162,84 +1162,101 @@ public class  Event implements Listener {
                 {
 
 
+                    /*
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath customMob.dropTable: "+customMob.dropTable,transactionID);
                     //HashMap<Double, ItemStack> dropTable = customMob.dropTable;
                     List<CustomMobsFileManager.DropItem> dropTable = customMob.dropTable;
                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: "+dropTable,transactionID);
 
-                    // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
-                    for (CustomMobsFileManager.DropItem dropItem : dropTable) {
-                        double rolledCance = Math.random();
-                        double dropChance = dropItem.getDropChance()/100;
-                        if ( rolledCance< dropChance) { // entry.getKey() to szansa na drop
-                            ItemStack item = dropItem.getItemStack();
-                            ItemMeta meta = item.getItemMeta();
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): "+dropItem.isAvgDmgBonus(),transactionID);
-                            if (dropItem.isAvgDmgBonus()) {
-
-                                int AvgDmgBonus = Utils.dropAverageDamage(transactionID);
-
-                                List<String> lore = meta.getLore();
-                                if (lore == null) {
-                                    lore = new ArrayList<>();
-                                }
-                                lore.add(configManager.averageDamageLore+AvgDmgBonus+"%");
-                                meta.setLore(lore);
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item,transactionID);
-                                item.setItemMeta(meta);
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item),transactionID);
-                                betterElo.addAverageDamageAttribute(item,AvgDmgBonus);
-                                meta = item.getItemMeta();
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: "+AvgDmgBonus+", hasAverageDamageAttribute(item):"+betterElo.hasAverageDamageAttribute(item)+", getAverageDamageAttribute: "+betterElo.getAverageDamageAttribute(item),transactionID);
-
-                            }
-
-
-                            if(dropItem.hasmaxDamage()){
-                                int maxDamage = betterElo.rollDamage(dropItem.getMaxDamage());
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath loadedMaxDamage: "+maxDamage,transactionID);
-                                int minDamage = betterElo.rollDamage(maxDamage);
-                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath minDamage: "+minDamage+", maxDamage: "+maxDamage,transactionID);
-                                List<String> lore = meta.getLore();
-                                if (lore == null) {
-                                    lore = new ArrayList<>();
-                                }
-                                lore.set(0,configManager.mobDamageLore+minDamage+"-"+maxDamage);
-                                meta.setLore(lore);
-                                item.setItemMeta(meta);
-                                betterElo.addMobDamageAttributeNoLore(item,minDamage+"-"+maxDamage,transactionID);
-
-                            }
-
-
-
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: "+item,transactionID);
-                            drops.add(item);
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath drops.toArray()[0]: "+drops.toArray()[0],transactionID);
-
-                            pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: "+dropChance+", rolledChance: "+rolledCance,transactionID);
-                        }else{
-                            pluginLogger.log(PluginLogger.LogLevel.DROP,"Event.onMobDeath Item from dropTable not added, chance failed. dropChance: "+dropChance+", rolledChance: "+rolledCance,transactionID);
+                     */
+                    List<List<CustomMobsFileManager.DropItem>> allDropTables = customMob.dropTableLists; // Assuming getAllDropTables returns List<List<DropItem>>
+                    Player killer=null;
+                    String killerUUID=null;
+                    Entity killerEntity = entity.getKiller();
+                    if (killerEntity != null) {
+                        if (killerEntity instanceof Player) {
+                            killer = (Player) killerEntity;
+                            killerUUID = entity.getKiller().getUniqueId().toString();
+                        } else {
+                            killer = null;
                         }
                     }
-                    pluginLogger.log(PluginLogger.LogLevel.INFO  , "Event.onMobDeath player: "+event.getEntity().getKiller().getName()+", mobName: "+mobName+", rolledDrop: "+Utils.formatDroppedItems(drops),transactionID);
+                    // Process each drop table
+                    for (List<CustomMobsFileManager.DropItem> dropTable : allDropTables) {
+                        pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropTable: " + dropTable, transactionID);
+                        // Iteracja przez dropTable i decydowanie, czy dodawać przedmiot
+                        for (CustomMobsFileManager.DropItem dropItem : dropTable) {
+                            double rolledCance = Math.random();
+                            double dropChance = dropItem.getDropChance() / 100;
+                            if (rolledCance < dropChance) { // entry.getKey() to szansa na drop
+                                ItemStack item = dropItem.getItemStack();
+                                ItemMeta meta = item.getItemMeta();
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath dropItem.isAvgDmgBonus(): " + dropItem.isAvgDmgBonus(), transactionID);
+                                if (dropItem.isAvgDmgBonus()) {
+
+                                    int AvgDmgBonus = Utils.dropAverageDamage(transactionID);
+
+                                    List<String> lore = meta.getLore();
+                                    if (lore == null) {
+                                        lore = new ArrayList<>();
+                                    }
+                                    lore.add(lang.averageDamageLore + AvgDmgBonus + "%");
+                                    meta.setLore(lore);
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: " + item, transactionID);
+                                    item.setItemMeta(meta);
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: " + AvgDmgBonus + ", hasAverageDamageAttribute(item):" + betterElo.hasAverageDamageAttribute(item), transactionID);
+                                    betterElo.addAverageDamageAttribute(item, AvgDmgBonus);
+                                    meta = item.getItemMeta();
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath AvgDmgBonus: " + AvgDmgBonus + ", hasAverageDamageAttribute(item):" + betterElo.hasAverageDamageAttribute(item) + ", getAverageDamageAttribute: " + betterElo.getAverageDamageAttribute(item), transactionID);
+
+                                }
+
+
+                                if (dropItem.hasmaxDamage()) {
+                                    int maxDamage = betterElo.rollDamage(dropItem.getMaxDamage());
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath loadedMaxDamage: " + maxDamage, transactionID);
+                                    int minDamage = betterElo.rollDamage(maxDamage);
+                                    pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath minDamage: " + minDamage + ", maxDamage: " + maxDamage, transactionID);
+                                    List<String> lore = meta.getLore();
+                                    if (lore == null) {
+                                        lore = new ArrayList<>();
+                                    }
+                                    lore.set(0, lang.mobDamageLore + minDamage + "-" + maxDamage);
+                                    meta.setLore(lore);
+                                    item.setItemMeta(meta);
+                                    betterElo.addMobDamageAttributeNoLore(item, minDamage + "-" + maxDamage, transactionID);
+
+                                }
+
+
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: " + item, transactionID, killer.getName(), killerUUID);
+                                drops.add(item);
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath drops.toArray()[0]: " + drops.toArray()[0], transactionID, killer.getName(), killerUUID);
+
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Added  item from dropTable to the drops. dropChance: " + dropChance + ", rolledChance: " + rolledCance, transactionID, killer.getName(), killerUUID);
+                            } else {
+                                pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath Item from dropTable not added, chance failed. dropChance: " + dropChance + ", rolledChance: " + rolledCance, transactionID, killer.getName(), killerUUID);
+                            }
+                        }
+                    }
+                    pluginLogger.log(PluginLogger.LogLevel.INFO  , "Event.onMobDeath player: "+event.getEntity().getKiller().getName()+", mobName: "+mobName+", rolledDrop: "+Utils.formatDroppedItems(drops),transactionID,killer.getName(),killerUUID);
                     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     try{
-                        Player killer = event.getEntity().getKiller();
-                        if(!Utils.isEloAllowed(killer,killer.getLocation())){
+                        Player killer2 = event.getEntity().getKiller();
+                        if(!Utils.isEloAllowed(killer2,killer2.getLocation())){
                             //pluginLogger.log(PluginLogger.LogLevel.KILL_EVENT, "Event: onPlayerDeath noElo zone!");
-                            killer.sendMessage(ChatColor.RED+lang.noEloZoneMessage);
+                            killer2.sendMessage(ChatColor.RED+lang.noEloZoneMessage);
                             return;
                         }
                         String[] rankings = {"main", "daily", "weekly", "monthly"};
                         boolean eventEnabled = betterElo.isEventEnabled;
 
                         for (String ranking : rankings) {
-                            handleRankingPointsFromMobKill(killer, customMob, ranking,transactionID);
+                            handleRankingPointsFromMobKill(killer2, customMob, ranking,transactionID);
                         }
 
                         if (eventEnabled) {
-                            handleRankingPointsFromMobKill(killer, customMob,  "event",transactionID);
+                            handleRankingPointsFromMobKill(killer2, customMob,  "event",transactionID);
                         }
                     }catch (Exception e){
                         pluginLogger.log(PluginLogger.LogLevel.ERROR  , "Event.onMobDeath exception: "+e.getMessage(),transactionID);
@@ -1506,15 +1523,15 @@ public class  Event implements Listener {
 
                         // Informacja dla gracza
                         if (avgDmg >= 50) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + lang.newAvgBonusString + ChatColor.DARK_RED + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 40) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + lang.newAvgBonusString + ChatColor.RED + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 30) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + lang.newAvgBonusString + ChatColor.GOLD + "" + ChatColor.BOLD + avgDmg + "%");
                         } else if (avgDmg >= 20) {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString+ ChatColor.BOLD + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + lang.newAvgBonusString+ ChatColor.BOLD + avgDmg + "%");
                         }else {
-                            event.getWhoClicked().sendMessage(ChatColor.GREEN + configManager.newAvgBonusString + avgDmg + "%");
+                            event.getWhoClicked().sendMessage(ChatColor.GREEN + lang.newAvgBonusString + avgDmg + "%");
                         }
                         return;
 
@@ -1607,9 +1624,9 @@ public class  Event implements Listener {
                         fileName = guiManager.dropTable;
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick droptable: " + fileName,transactionID,playerName,playerUUID);
                         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "Event.onInventoryClick calling fileRewardManager.saveCustomDrops(" + fileName + ",itemsToSave)",transactionID,playerName,playerUUID);
-                        fileRewardManager.saveCustomDrops(fileName, itemsToSave);
+                        customMobsFileManager.saveCustomDrops(fileName, itemsToSave);
                     } else {
-                        fileRewardManager.saveCustomDrops(fileName, itemsToSave);
+                        customMobsFileManager.saveCustomDrops(fileName, itemsToSave);
                     }
 
                 }
@@ -1656,9 +1673,9 @@ public class  Event implements Listener {
                                 for (int i = 0; i < lore.size(); i++) {
                                     pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i,transactionID,playerName,playerUUID);
                                     //if (destinationItem != null && betterElo.hasMobDamageAttribute(destinationItem) && betterElo.hasAverageDamageAttribute(destinationItem))
-                                    if (lore.get(i).contains(configManager.averageDamageLore)) {
+                                    if (lore.get(i).contains(lang.averageDamageLore)) {
                                         pluginLogger.log(PluginLogger.LogLevel.REROLL, "Event.onInventoryClick lore i="+i+" contains Average Damage, setting avgDmg: "+avgDmg,transactionID,playerName,playerUUID);
-                                        lore.set(i,configManager.averageDamageLore  + avgDmg + "%");
+                                        lore.set(i,lang.averageDamageLore  + avgDmg + "%");
                                     }
                                 }
                             }
@@ -1684,12 +1701,12 @@ public class  Event implements Listener {
                         if (greenWoolItem != null && greenWoolItem.hasItemMeta()) {
                             ItemMeta greenWoolMeta = greenWoolItem.getItemMeta();
                             List<String> greenWoolLore = greenWoolMeta.hasLore() ? new ArrayList<>(greenWoolMeta.getLore()) : new ArrayList<>();
-                            String avgDmgLine = lore.stream().filter(line -> line.contains(configManager.averageDamageLore)).findFirst().orElse(configManager.averageDamageLore+"+0%");
+                            String avgDmgLine = lore.stream().filter(line -> line.contains(lang.averageDamageLore)).findFirst().orElse(lang.averageDamageLore+"+0%");
 
                             // Ustalanie indeksów dla "current bonus:" i wartości
                             int bonusIndex = -1;
                             for (int i = 0; i < greenWoolLore.size(); i++) {
-                                if (greenWoolLore.get(i).equals(configManager.currentBonusString)) {
+                                if (greenWoolLore.get(i).equals(lang.currentBonusString)) {
                                     bonusIndex = i;
                                     break;
                                 }
@@ -1700,7 +1717,7 @@ public class  Event implements Listener {
                                 greenWoolLore.set(bonusIndex + 1, "<" + avgDmgLine + ">");
                             } else if (bonusIndex == -1) {
                                 // Dodajemy nowe linie jeśli "current bonus:" nie istnieje
-                                greenWoolLore.add(configManager.currentBonusString);
+                                greenWoolLore.add(lang.currentBonusString);
                                 greenWoolLore.add("<" + avgDmgLine + ">");
                             } else {
                                 // Jeśli "current bonus:" jest na końcu listy, dodajemy wartość

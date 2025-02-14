@@ -37,7 +37,9 @@ public class CustomMobs {
         LivingEntity entity;
         ItemStack helmet, chestplate, leggings, boots, weapon;
         //HashMap< Double,ItemStack> dropTable;
+        List<String> dropTableNames;
         List<CustomMobsFileManager.DropItem> dropTable;
+        List<List<CustomMobsFileManager.DropItem>> dropTableLists;
         double armor, speed, attackDamage, EMKSchance, regenPercent, knockbackResistance, eloPoints, eloMultiplier;
         String passengerMobName; // Nowe pole dla nazwy pasażera
         int hp, attackSpeed, defense, regenSeconds;
@@ -45,7 +47,7 @@ public class CustomMobs {
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<String> dropTableNames, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -73,9 +75,9 @@ public class CustomMobs {
                 this.boots = boots;
             }
             this.dropFileManager = dropFileManager;
-            this.dropTableName = dropTableName;
+            this.dropTableNames = dropTableNames;
             //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
-            this.dropTable = dropFileManager.loadCustomDropsv2(dropTableName);
+            this.dropTableLists = dropFileManager.loadCustomDropsv2(dropTableNames);
             this.armor = armor;
             this.hp = hp;
             this.attackSpeed = attackSpeed;
@@ -89,7 +91,7 @@ public class CustomMobs {
             //setupMob();
         }
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<String> dropTableNames, int defense, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -97,9 +99,9 @@ public class CustomMobs {
             this.entity = entity;
             this.entityType = entityType;
             this.dropFileManager = dropFileManager;
-            this.dropTableName = dropTableName;
+            this.dropTableNames = dropTableNames;
             //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
-            this.dropTable = dropFileManager.loadCustomDropsv2(dropTableName);
+            this.dropTableLists = dropFileManager.loadCustomDropsv2(dropTableNames);
             this.armor = armor;
             this.hp = hp;
             this.attackSpeed = attackSpeed;
@@ -112,7 +114,7 @@ public class CustomMobs {
             this.eloMultiplier = eloMultiplier;
             //setupMob();
         }
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, String dropTableName, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<String> dropTableNames, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.knockbackResistance = knockbackResistance;
@@ -121,9 +123,9 @@ public class CustomMobs {
             this.entity = entity;
             this.entityType = entityType;
             this.dropFileManager = dropFileManager;
-            this.dropTableName = dropTableName;
+            this.dropTableNames = dropTableNames;
             //this.dropTable = dropFileManager.loadCustomDrops(dropTableName);
-            this.dropTable = dropFileManager.loadCustomDropsv2(dropTableName);
+            this.dropTableLists = dropFileManager.loadCustomDropsv2(dropTableNames);
             this.passengerMobName = passengerMobName;
             this.armor = armor;
             this.hp = hp;
@@ -162,12 +164,12 @@ public class CustomMobs {
                         this.helmet.clone(), this.chestplate.clone(),
                         this.leggings.clone(), this.boots.clone(), this.weapon.clone(),
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableNames,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
                 newMob.spawnMob(spawnLocation);
             } else {
                 newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName, this.defense, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableNames, this.defense, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
                 newMob.spawnMob(spawnLocation);
             }
             return newMob;
@@ -177,7 +179,7 @@ public class CustomMobs {
             CustomMob newMob = null;
             newMob = new CustomMob(this.plugin, this.dropFileManager, this.mobName, this.entityType,
                         this.armor, this.hp, this.speed,
-                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableName,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
+                        this.attackDamage, this.attackSpeed, new HashMap<>(this.customMetadata), this.dropTableNames,  this.defense, this.passengerMobName, this.regenSeconds, this.regenPercent, this.knockbackResistance, this.eloPoints, this.eloMultiplier);
             newMob.spawnMob(spawnLocation);
 
             return newMob;
