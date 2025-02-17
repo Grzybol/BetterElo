@@ -37,7 +37,8 @@ public class CustomMobs {
         LivingEntity entity;
         ItemStack helmet, chestplate, leggings, boots, weapon;
         //HashMap< Double,ItemStack> dropTable;
-        List<String> dropTableNames;
+        //List<String> dropTableNames;
+        List<Map.Entry<String, Double>> dropTableNames;
         List<CustomMobsFileManager.DropItem> dropTable;
         List<List<CustomMobsFileManager.DropItem>> dropTableLists;
         double armor, speed, attackDamage, EMKSchance, regenPercent, knockbackResistance, eloPoints, eloMultiplier;
@@ -47,7 +48,7 @@ public class CustomMobs {
         JavaPlugin plugin;
         CustomMobsFileManager dropFileManager;
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<String> dropTableNames, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots, ItemStack weapon, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<Map.Entry<String, Double>> dropTableNames, int defense, String passengerMobName, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -91,7 +92,7 @@ public class CustomMobs {
             //setupMob();
         }
 
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<String> dropTableNames, int defense, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<Map.Entry<String, Double>> dropTableNames, int defense, int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.regenPercent=regenPercent;
@@ -114,7 +115,7 @@ public class CustomMobs {
             this.eloMultiplier = eloMultiplier;
             //setupMob();
         }
-        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<String> dropTableNames, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
+        CustomMob(JavaPlugin plugin, CustomMobsFileManager dropFileManager, String mobName, EntityType entityType, double armor, int hp, double speed, double attackDamage, int attackSpeed, Map<String, Object> customMetadata, List<Map.Entry<String, Double>> dropTableNames, int defense, String passengerMobName,int regenSeconds,double regenPercent, double knockbackResistance, double eloPoints, double eloMultiplier) {
             this.plugin = plugin;
             this.regenSeconds=regenSeconds;
             this.knockbackResistance = knockbackResistance;

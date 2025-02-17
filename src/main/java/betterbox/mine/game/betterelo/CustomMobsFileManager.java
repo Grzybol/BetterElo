@@ -105,7 +105,13 @@ public class CustomMobsFileManager {
             this.avgDmgBonus = avgDmgBonus;
         }
         public double getDropChance() {
-            return dropChance;
+            if (dropChance > 100) {
+                return 100;
+            } else if (dropChance < 0) {
+                return 0;
+            } else {
+                return dropChance;
+            }
         }
 
         public void setDropChance(double dropChance) {
@@ -382,6 +388,7 @@ public class CustomMobsFileManager {
 
             //String dropTableName = mobData.getString("dropTable");
             // Wczytywanie listy stringów dla dropTable
+            /*
             List<String> dropTableNames;
             if (mobData.contains("dropTable")) {
                 dropTableNames = mobData.getStringList("dropTable");
@@ -390,11 +397,33 @@ public class CustomMobsFileManager {
                 dropTableNames = new ArrayList<>();  // Jeżeli nie znajdzie listy, użyj pustej listy
                 pluginLogger.log(PluginLogger.LogLevel.WARNING, "No dropTable defined for " + mobData.getString("mobName"), transactionID);
             }
+             */
 
-            // Przykładowe użycie wczytanej listy...
-            for (String tableName : dropTableNames) {
-                // Możesz tutaj zaimplementować logikę obsługi różnych tabel z przedmiotami dropu
-                System.out.println("Drop table: " + tableName);
+            // Wczytywanie listy par dropTable
+            List<Map.Entry<String, Double>> dropTableNames;
+            if (mobData.contains("dropTable")) {
+                dropTableNames = new ArrayList<>();
+                List<String> dropTableEntries = mobData.getStringList("dropTable");
+                for (String entry : dropTableEntries) {
+                    String[] parts = entry.split(" ");
+                    if (parts.length == 2) {
+                        try {
+                            dropTableNames.add(new AbstractMap.SimpleEntry<>(parts[0], Double.parseDouble(parts[1])));
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded dropTableNames:" + dropTableNames + ", mobName: " + mobName, transactionID);
+                        } catch (NumberFormatException e) {
+                            pluginLogger.log(PluginLogger.LogLevel.ERROR, "CustomMobsFileManager.loadCustomMob Invalid multiplier for dropTable " + parts[0] + " in mob " + mobName+". Exception "+e.getMessage(), transactionID);
+                            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob dropTable entry " + entry + " in mob " + mobName+" has no multiplier set, setting 1.0", transactionID);
+                            dropTableNames.add(new AbstractMap.SimpleEntry<>(parts[0], 1.0));
+                        }
+                    } else {
+                        dropTableNames.add(new AbstractMap.SimpleEntry<>(parts[0], 1.0));
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob dropTable entry " + entry + " in mob " + mobName+" has no multiplier set, setting 1.0", transactionID);
+                    }
+                }
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob loaded dropTableNames:" + dropTableNames + ", mobName: " + mobName, transactionID);
+            } else {
+                dropTableNames = new ArrayList<>();  // Jeżeli nie znajdzie listy, użyj pustej listy
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "No dropTable defined for " + mobData.getString("mobName"), transactionID);
             }
 
             pluginLogger.log(PluginLogger.LogLevel.DEBUG, "CustomMobsFileManager.loadCustomMob armor:" + armor + ", hp: " + hp + ", speed: " + speed + ", attackDamage: " + attackDamage + ", type: " + entityTypeString+", dropTablename: "+dropTableNames+", passengerMobName: "+passengerMobName+", regenSeconds: "+regenSeconds+", regenPercent: "+regenPercent+", knockbackResistance: "+knockbackResistance+", eloPoints: "+eloPoints+", eloMultiplier: "+eloMultiplier,transactionID);
@@ -587,7 +616,7 @@ public class CustomMobsFileManager {
         pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops drops: " + drops,transactionID);
         return drops;
     }
-    public List<List<DropItem>> loadCustomDropsv2(List<String> dropTableNames) {
+    public List<List<DropItem>> loadCustomDropsv2_oldv2(List<String> dropTableNames) {
         String transactionID = UUID.randomUUID().toString();
         pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops called, dropTableNames: " + dropTableNames, transactionID);
 
@@ -608,6 +637,77 @@ public class CustomMobsFileManager {
             dropTableConfig.getKeys(false).forEach(key -> {
                 String itemPath = dropTableConfig.getString(key + ".itemPath");
                 double dropChance = dropTableConfig.getDouble(key + ".dropChance");
+                int maxDamage = dropTableConfig.getInt(key + ".maxDamage");
+                boolean avgDmgBonus = dropTableConfig.getBoolean(key + ".avgDmgBonus");
+
+                pluginLogger.log(PluginLogger.LogLevel.DROP,
+                        "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath +
+                                ", dropChance: " + dropChance +
+                                ", avgDmgBonus: " + avgDmgBonus,
+                        transactionID
+                );
+
+                File itemFile = new File(plugin.getDataFolder(), itemPath);
+                if (itemFile.exists()) {
+                    try {
+                        FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
+                        ItemStack itemStack = itemConfig.getItemStack("item");
+
+                        if (itemStack != null) {
+                            DropItem dropItem = (maxDamage > 0)
+                                    ? new DropItem(dropChance, itemStack, avgDmgBonus, maxDamage)
+                                    : new DropItem(dropChance, itemStack, avgDmgBonus);
+
+                            drops.add(dropItem);
+
+                            pluginLogger.log(PluginLogger.LogLevel.DROP,
+                                    "CustomMobsFileManager.loadCustomDrops item: " + itemStack,
+                                    transactionID
+                            );
+                        }
+                    } catch (Exception e) {
+                        pluginLogger.log(PluginLogger.LogLevel.ERROR,
+                                "Nie można wczytać przedmiotu z pliku: " + itemPath + ". Błąd: " + e.getMessage(),
+                                transactionID
+                        );
+                    }
+                }
+            });
+
+            pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops loaded drops for " + dropTableName + ": " + drops, transactionID);
+            allDrops.add(drops);
+        }
+
+        return allDrops;
+    }
+    public List<List<DropItem>> loadCustomDropsv2(List<Map.Entry<String, Double>> dropTableEntries) {
+        String transactionID = UUID.randomUUID().toString();
+        pluginLogger.log(PluginLogger.LogLevel.DROP, "CustomMobsFileManager.loadCustomDrops called, dropTableEntries: " + dropTableEntries, transactionID);
+
+        List<List<DropItem>> allDrops = new ArrayList<>();
+
+        for (Map.Entry<String, Double> entry : dropTableEntries) {
+            String dropTableName = entry.getKey();
+            double multiplier = entry.getValue();
+            List<DropItem> drops = new ArrayList<>();
+            File dropTableFile = new File(plugin.getDataFolder() + File.separator + "customDropTables", dropTableName + ".yml");
+
+            if (!dropTableFile.exists()) {
+                pluginLogger.log(PluginLogger.LogLevel.ERROR, "loadCustomDrops dropTable " + dropTableName + " does not exist!", transactionID);
+                allDrops.add(drops); // Add an empty list for missing drop tables
+                continue;
+            }
+
+            YamlConfiguration dropTableConfig = YamlConfiguration.loadConfiguration(dropTableFile);
+
+            dropTableConfig.getKeys(false).forEach(key -> {
+                String itemPath = dropTableConfig.getString(key + ".itemPath");
+                double dropChance = dropTableConfig.getDouble(key + ".dropChance") * multiplier;
+                pluginLogger.log(PluginLogger.LogLevel.DROP,
+                        "CustomMobsFileManager.loadCustomDrops itemPath: " + itemPath +
+                                ", dropChance: " + dropChance+", multiplier: "+multiplier,
+                        transactionID
+                );
                 int maxDamage = dropTableConfig.getInt(key + ".maxDamage");
                 boolean avgDmgBonus = dropTableConfig.getBoolean(key + ".avgDmgBonus");
 
@@ -710,6 +810,7 @@ public class CustomMobsFileManager {
                 dropTableConfig.set("Item" + index + ".dropChance", 0.00); // Tutaj można ustawić faktyczną szansę na drop
                 String itemNameString = item.getType().toString();
                 dropTableConfig.set("Item" + index + ".itemName", itemNameString); // Tutaj można ustawić faktyczną szansę na drop
+                dropTableConfig.set("Item" + index + ".quantity", item.getAmount()); // Tutaj można ustawić faktyczną szansę na drop
                 dropTableConfig.set("Item" + index + ".avgDmgBonus", false); // Tutaj można ustawić faktyczną szansę na drop
                 if (meta != null && meta.hasDisplayName()) {
                     String itemDisplayName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
