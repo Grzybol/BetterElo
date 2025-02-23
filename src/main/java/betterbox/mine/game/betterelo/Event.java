@@ -128,7 +128,10 @@ public class  Event implements Listener {
         } else {
             pluginLogger.log(PluginLogger.LogLevel.DEBUG,"Event: onPlayerJoin: "+playerName+" Already in monthly database.", transactionID,playerName,playerUUID);
         }
-        Utils.enableMoneyPickup(player);
+        if(player.hasPermission("betterelo.autobank")){
+            Utils.enableMoneyPickup(player);
+        }
+
 
     }
 
@@ -768,7 +771,7 @@ public class  Event implements Listener {
 
 
     }
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onItemPickup(EntityPickupItemEvent event) {
         String transactionID = UUID.randomUUID().toString();
         if (event.getEntity() instanceof Player) {
@@ -1200,7 +1203,7 @@ public class  Event implements Listener {
                                     if (lore == null) {
                                         lore = new ArrayList<>();
                                     }
-                                    lore.add(lang.averageDamageLore + AvgDmgBonus + "%");
+                                    //lore.add(lang.averageDamageLore + AvgDmgBonus + "%");
                                     meta.setLore(lore);
                                     pluginLogger.log(PluginLogger.LogLevel.DROP, "Event.onMobDeath item: " + item, transactionID);
                                     item.setItemMeta(meta);

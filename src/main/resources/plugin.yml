@@ -113,6 +113,9 @@ permissions:
   betterelo.autobank:
     description: Grants access to /be autobank
     default: op
+  betterelo.rerollgui:
+    description: Grants access to /be reroll
+    default: op
 
 
 

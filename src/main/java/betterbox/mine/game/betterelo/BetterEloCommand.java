@@ -832,6 +832,11 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
 
     public void handleRerollCommand(CommandSender sender) {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterEloCommand.handleRerollCommand called, sender: " + sender);
+        if (!sender.hasPermission("betterelo.rerollgui") || !sender.isOp()) {
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterEloCommand: Player " + sender.getName() + " was denied access to command /be reroll which is fucked and should be fixed");
+            noPermission(sender);
+            return;
+        }
         if (sender instanceof Player) {
             Player player = (Player) sender;
             guiManager.openReRollGui(player);
