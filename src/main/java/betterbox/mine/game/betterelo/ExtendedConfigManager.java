@@ -26,6 +26,7 @@ public class ExtendedConfigManager {
     public int fireworkCooldown = 1500;
     public int zephyrCooldown = 1500;
     public int flamethrowerCooldown = 1500;
+    public int chatNotifierCooldown = 1500;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
@@ -202,6 +203,23 @@ public class ExtendedConfigManager {
             pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: Zephyr_cooldown section not found in config! Creating new section..");
             plugin.getConfig().createSection("Zephyr_cooldown");
             plugin.getConfig().set("Zephyr_cooldown", 1500);
+            plugin.saveConfig();
+        }
+        chatNotifierCooldown = plugin.getConfig().getInt("ChatNotifier_cooldown");
+        if (plugin.getConfig().contains("ChatNotifier_cooldown")){
+            if (plugin.getConfig().isInt("ChatNotifier_cooldown")){
+                chatNotifierCooldown = plugin.getConfig().getInt("ChatNotifier_cooldown");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: ChatNotifier_cooldown incorrect! Restoring default");
+                plugin.getConfig().set("ChatNotifier_cooldown", 1500);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: ChatNotifier_cooldown section not found in config! Creating new section..");
+            plugin.getConfig().createSection("ChatNotifier_cooldown");
+            plugin.getConfig().set("ChatNotifier_cooldown", 1500);
             plugin.saveConfig();
         }
 

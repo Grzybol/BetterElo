@@ -18,6 +18,7 @@ public class Lang {
     public String mobDamageLore = "§6§lMob Damage ";
     public String averageDamageLore = "§6§lAverage Damage +";
     public String enchantItemName = (ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "Enchant Item");
+    public List<String> chatNotifierMessagesList = List.of(" Remember to use /be claim to claim your rewards!", " Use /shop  to get our Item-Shop link", " Use /discord  to get our Discord link");
     public List<String> enchantItemLore = List.of(ChatColor.GRAY + "Removes the current Average Damage bonus", ChatColor.GRAY + " from the item and adds a new one.");
     public String mobDefenseLore = "§6§lMob Defense ";
     public String pointsLostMessage = "You have lost";
@@ -36,6 +37,7 @@ public class Lang {
     public String eventTranslation = "Event";
     public String rankingRewardMessage = " rewarded for reaching";
     public String rewardForLore = "Reward for ";
+    public String prefix = ChatColor.GOLD + "" + ChatColor.BOLD + "[BetterElo]";
 
     public Lang(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
@@ -100,6 +102,8 @@ public class Lang {
         config.set("eventTranslation", eventTranslation);
         config.set("rankingRewardMessage", rankingRewardMessage);
         config.set("rewardForLore", rewardForLore);
+        config.set("chatNotifierMessagesList", chatNotifierMessagesList);
+        config.set("prefix", prefix);
     }
 
     private void validateAndLoadConfig(FileConfiguration config, File langFile, String transactionID) {
@@ -266,6 +270,19 @@ public class Lang {
             rewardForLore = config.getString("rewardForLore");
         }
 
+        if (!config.contains("chatNotifierMessagesList")) {
+            config.set("chatNotifierMessagesList", chatNotifierMessagesList);
+            saveRequired = true;
+        } else {
+            chatNotifierMessagesList = config.getStringList("chatNotifierMessagesList");
+        }
+
+        if (!config.contains("prefix")) {
+            config.set("prefix", prefix);
+            saveRequired = true;
+        } else {
+            prefix = config.getString("prefix");
+        }
         if (saveRequired) {
             try {
                 config.save(langFile);

@@ -40,6 +40,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -1360,7 +1361,18 @@ public class  Event implements Listener {
         }else if (damagerEntity.hasMetadata("CustomMob") && victimEntity instanceof Player) {
             int customArmorBonus =betterElo.getMobDefenseAttribute(Utils.getPlayerEquippedItems((Player) victimEntity));
             pluginLogger.log(PluginLogger.LogLevel.CUSTOM_MOBS, "Event.EntityDamageEvent getFinalDamage: "+event.getFinalDamage()+", customArmorBonus: "+customArmorBonus,transactionID);
-            event.setDamage(event.getFinalDamage()*(1-(0.004*customArmorBonus)));
+            Player player = (Player) event.getEntity();
+            // Sprawdzenie, czy gracz ma efekt odporności
+            if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+                // Pobierz poziom efektu
+                int level = player.getPotionEffect(PotionEffectType.DAMAGE_RESISTANCE).getAmplifier();
+                // Zmniejsz obrażenia na podstawie poziomu efektu
+
+                event.setDamage(event.getDamage() * (1 - (0.004 * customArmorBonus)) *(1 - (0.05 * (level + 1))));
+            }else {
+                event.setDamage(event.getFinalDamage() * (1 - (0.004 * customArmorBonus)));
+            }
+
 
         }
 

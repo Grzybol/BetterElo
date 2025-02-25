@@ -192,7 +192,7 @@ public final class BetterElo extends JavaPlugin {
         }
         event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager,utils,econ,lang,mobNameUtil);
         getServer().getPluginManager().registerEvents(event, this);
-        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager,lang));
+        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager,lang,utils));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);
@@ -215,8 +215,8 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: web ranking server started");
 
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: starting ChatNotifier every 30min");
-        // Tworzenie nowego zadania i ustalanie interwału (30 minut = 30 * 60 * 20 ticks)
-        new ChatNotifier(this).runTaskTimer(this, 0, 36000);
+        // Tworzenie nowego zadania i ustalanie interwału (30 minut = 30 * 60 * 20 ticks= 36000)
+        new ChatNotifier(this,lang,utils).runTaskTimer(this, 0, configManager.chatNotifierCooldown);
         // Uzyskaj dostęp do loggera pluginu
         java.util.logging.Logger logger = this.getLogger();
 
@@ -261,7 +261,6 @@ public final class BetterElo extends JavaPlugin {
         econ = rsp.getProvider();
         return econ != null;
     }
-
     public static Economy getEconomy() {
         return econ;
     }

@@ -6,7 +6,7 @@
 
     <groupId>betterbox.mine.game</groupId>
     <artifactId>BetterElo</artifactId>
-    <version>4.9.67-SNAPSHOT</version>
+    <version>4.9.69-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>
         Elo system with custom mobs and drops for Minecraft server.

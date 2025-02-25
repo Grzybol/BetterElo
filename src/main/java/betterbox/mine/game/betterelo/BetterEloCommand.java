@@ -43,8 +43,9 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
     private CustomMobs customMobs;
     private BukkitTask eventHoloTask;
     private final Lang lang;
+    private final Utils utils;
 
-    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager, Event event, PlayerKillDatabase PKDB, CustomMobs customMobs, CustomMobsFileManager customMobsFileManager, Lang lang) {
+    public BetterEloCommand(JavaPlugin plugin, DataManager dataManager, GuiManager guiManager, PluginLogger pluginLogger, BetterElo betterElo, ExtendedConfigManager configManager, Event event, PlayerKillDatabase PKDB, CustomMobs customMobs, CustomMobsFileManager customMobsFileManager, Lang lang, Utils utils) {
         this.dataManager = dataManager;
         this.plugin = plugin;
         this.customMobs = customMobs;
@@ -56,6 +57,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
         this.customMobsFileManager = customMobsFileManager;
         this.PKDB = PKDB;
         this.lang = lang;
+        this.utils = utils;
 
 
     }
@@ -96,6 +98,7 @@ public class BetterEloCommand implements CommandExecutor, TabCompleter {
                             Player player = (Player) sender;
                             if (sender.isOp()) {
                                 lang.loadLangFile();
+                                utils.updateLanguageStringsInConfig();
                             } else {
                                 noPermission(sender);
                             }
