@@ -1,8 +1,13 @@
 package betterbox.mine.game.betterelo;
 
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import com.sk89q.worldguard.WorldGuard;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import com.sk89q.worldguard.protection.flags.Flags;
 import me.clip.placeholderapi.libs.kyori.adventure.platform.facet.Facet;
+import net.milkbowl.vault.economy.Economy;
 import org.betterbox.elasticBuffer.ElasticBuffer;
 import org.betterbox.elasticBuffer.ElasticBufferAPI;
 import org.bstats.bukkit.Metrics;
@@ -22,6 +27,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -66,13 +72,17 @@ public final class BetterElo extends JavaPlugin {
     private BetterEloCommand betterEloCommand;
     private ExtendedConfigManager configManager;
     public Map<String, Boolean> rewardStates = new HashMap<>();
+    private ProtocolManager protocolManager;
     public boolean useHolographicDisplays;
     //public static final Flag<StateFlag.State> NO_ELO_FLAG = new StateFlag("noElo", false);
     public static StateFlag IS_ELO_ALLOWED;
     private String folderPath;
-    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey;
+    public NamespacedKey mobDefenseKey,mobDamageKey,averageDamageKey,enchanteItemKey;
     private boolean isElasticEnabled=false;
     public Utils utils;
+    private static Economy econ = null;
+    public Lang lang;
+    private MobNameUtil mobNameUtil;
     @Override
     public void onLoad() {
         getLogger().info("Registering custom WorldGuard flags.");
@@ -85,6 +95,11 @@ public final class BetterElo extends JavaPlugin {
         } catch (Exception e) {
             getLogger().info("NoElo flag registration exception: " + e);
         }
+        try {
+            protocolManager = ProtocolLibrary.getProtocolManager();
+        } catch (Exception e) {
+            getLogger().severe("Error while getting ProtocolManager: " + e.getMessage());
+        }
     }
 
     @Override
@@ -94,6 +109,7 @@ public final class BetterElo extends JavaPlugin {
         this.mobDefenseKey = new NamespacedKey(this, "mob_defense");
         this.mobDamageKey = new NamespacedKey(this, "mob_damage");
         this.averageDamageKey = new NamespacedKey(this, "average_damage");
+        this.enchanteItemKey = new NamespacedKey(this, "enchant_item");
         instance = this;
         createPluginFolders();
         createExampleDropTablesFiles();
@@ -105,13 +121,27 @@ public final class BetterElo extends JavaPlugin {
         folderPath = getDataFolder().getAbsolutePath();
         pluginLogger = new PluginLogger(folderPath, defaultLogLevels,this,this);
         loadElasticBuffer();
-        Utils utils = new Utils(this,pluginLogger);
+        configManager = new ExtendedConfigManager(this, pluginLogger);
+        lang = new Lang(this, pluginLogger);
+        utils = new Utils(this,pluginLogger,configManager,this,lang);
+        try {
+            protocolManager = ProtocolLibrary.getProtocolManager();
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG,"protocolManager: "+protocolManager);
+        } catch (Exception e) {
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Error while getting ProtocolManager: " + e.getMessage());
+        }
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG,"protocolManager: "+protocolManager);
+        if (protocolManager == null) {
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"❌ ProtocolLib is NOT loaded! Check if it's installed.");
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.INFO,"✅ ProtocolLib is loaded!");
+        }
+        mobNameUtil = new MobNameUtil(this,pluginLogger,protocolManager);
         pluginLogger.log(PluginLogger.LogLevel.INFO,"BetterElo: onEnable: Starting BetterElo plugin");
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin created by "+this.getDescription().getAuthors());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"Plugin version "+this.getDescription().getVersion());
         pluginLogger.log(PluginLogger.LogLevel.INFO,"https://github.com/Grzybol/BetterElo");
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Loading config.yml");
-        configManager = new ExtendedConfigManager(this, pluginLogger);
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Zaladowano loggera.");
         PKDB = new PlayerKillDatabase(pluginLogger);
         // Przekazujemy pluginLogger do innych klas
@@ -155,9 +185,14 @@ public final class BetterElo extends JavaPlugin {
         betterRanksCheaters = new BetterRanksCheaters(this,pluginLogger);
         CheaterCheckScheduler cheaterCheckScheduler = new CheaterCheckScheduler(this, betterRanksCheaters, getServer().getScheduler(), pluginLogger);
         // Rejestracja listenera eventów
-        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager,utils);
+        if (!setupEconomy()) {
+            getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        event = new Event(dataManager, pluginLogger,this,betterRanksCheaters,configManager,this,customMobs,fileRewardManager,guiManager,customMobsFileManager,utils,econ,lang,mobNameUtil);
         getServer().getPluginManager().registerEvents(event, this);
-        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager));
+        getCommand("be").setExecutor(new BetterEloCommand(this, dataManager, guiManager, pluginLogger, this, configManager,event,PKDB, customMobs, customMobsFileManager,lang,utils));
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: Plugin BetterElo został włączony pomyślnie.");
         // Inicjalizacja RewardManagera (kod z konstruktora RewardManager)
         rewardStates.put("daily", true);
@@ -180,8 +215,8 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: web ranking server started");
 
         pluginLogger.log(PluginLogger.LogLevel.DEBUG,"BetterElo: onEnable: starting ChatNotifier every 30min");
-        // Tworzenie nowego zadania i ustalanie interwału (30 minut = 30 * 60 * 20 ticks)
-        new ChatNotifier(this).runTaskTimer(this, 0, 36000);
+        // Tworzenie nowego zadania i ustalanie interwału (30 minut = 30 * 60 * 20 ticks= 36000)
+        new ChatNotifier(this,lang,utils).runTaskTimer(this, 0, configManager.chatNotifierCooldown);
         // Uzyskaj dostęp do loggera pluginu
         java.util.logging.Logger logger = this.getLogger();
 
@@ -212,7 +247,22 @@ public final class BetterElo extends JavaPlugin {
         ElasticBufferAPI api = new ElasticBufferAPI(elasticBuffer);
         api.log("Test log sent using ElasticBufferAPI from BetterElo","INFO","BetterElo",null);
         //api.log
+        loadAndKillCustomMobsFromCache();
 
+    }
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+        econ = rsp.getProvider();
+        return econ != null;
+    }
+    public static Economy getEconomy() {
+        return econ;
     }
     public void createPluginFolders() {
         // Lista folderów do utworzenia
@@ -348,13 +398,14 @@ public final class BetterElo extends JavaPlugin {
         //customMobs.stopSpawnerScheduler();
     }
     public void saveCustomMobsToCache() {
+        String transactionID =  UUID.randomUUID().toString();
         List<String> mobNames = new ArrayList<>();
         for (World world : Bukkit.getWorlds()) {
             for (Entity entity : world.getEntities()) {
                 if (entity.hasMetadata("CustomMob")) {
                     String customName = entity.getName();
                     if (!customName.isEmpty()) {
-                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache saving entity "+customName);
+                        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache saving entity "+customName,transactionID);
                         mobNames.add(customName);
                     }
                 }
@@ -364,28 +415,29 @@ public final class BetterElo extends JavaPlugin {
         File cacheFile = new File(getDataFolder(), "customMobsCache.yml");
         YamlConfiguration cacheConfig = YamlConfiguration.loadConfiguration(cacheFile);
         cacheConfig.set("customMobNames", mobNames);
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache data to save: " + mobNames);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache data to save: " + mobNames,transactionID);
 
         try {
             cacheConfig.save(cacheFile);
         } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.saveCustomMobsToCache IOException: " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.saveCustomMobsToCache IOException: " + e.getMessage(),transactionID);
         }
     }
     public void loadAndKillCustomMobsFromCache() {
+        String transactionID =  UUID.randomUUID().toString();
         File cacheFile = new File(getDataFolder(), "customMobsCache.yml");
         YamlConfiguration cacheConfig = YamlConfiguration.loadConfiguration(cacheFile);
         List<String> mobNames = cacheConfig.getStringList("customMobNames");
         int killedMobsCount = 0;
 
         if (mobNames == null || mobNames.isEmpty()) {
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache cache is empty!");
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache cache is empty!",transactionID);
             return;
         } // Jeśli nie ma danych, zakończ metodę
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache mobs from cache: "+mobNames);
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache mobs from cache: "+mobNames,transactionID);
         for (World world : Bukkit.getWorlds()) {
             for (Entity entity : world.getEntities()) {
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache checking entity "+entity.getName());
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.saveCustomMobsToCache checking entity "+entity.getName(),transactionID);
                 //entity.getName();
                 if (mobNames.contains(entity.getName())) {
                     entity.remove();
@@ -395,14 +447,14 @@ public final class BetterElo extends JavaPlugin {
             }
         }
 
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.loadAndKillCustomMobsFromCache killed " + killedMobsCount + " mobs");
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.loadAndKillCustomMobsFromCache killed " + killedMobsCount + " mobs",transactionID);
 
         // Opcjonalnie: wyczyść plik cache po wczytaniu
         cacheConfig.set("customMobNames", new ArrayList<String>());
         try {
             cacheConfig.save(cacheFile);
         } catch (IOException e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.loadAndKillCustomMobsFromCache IOException: " + e.getMessage());
+            pluginLogger.log(PluginLogger.LogLevel.ERROR, "BetterElo.loadAndKillCustomMobsFromCache IOException: " + e.getMessage(),transactionID);
         }
     }
 
@@ -597,7 +649,7 @@ public final class BetterElo extends JavaPlugin {
                     break;
             }
             if (playerName != null) {
-                String foramttedMessage =  ChatColor.GOLD +""+ ChatColor.BOLD + "[BetterElo]" + ChatColor.AQUA + " Rewarding player "+ChatColor.GOLD+ ChatColor.BOLD +playerName+ChatColor.AQUA +" in "+ChatColor.GOLD+ChatColor.BOLD+rewardType+" ranking for reaching "+ ChatColor.GOLD+ChatColor.BOLD+"TOP"+i;
+                String foramttedMessage =  ChatColor.GREEN + ""+ChatColor.BOLD +lang.dailyTranslation+" ranking: "+playerName+ChatColor.GREEN +lang.rankingRewardMessage+"TOP"+i;
                 Bukkit.getServer().broadcastMessage(foramttedMessage);
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
                 if (offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
@@ -626,7 +678,7 @@ public final class BetterElo extends JavaPlugin {
                                 if (lore == null) {
                                     lore = new ArrayList<>();
                                 }
-                                lore.add(ChatColor.GRAY + "Reward for "+ChatColor.GOLD+ChatColor.BOLD + player.getName());
+                                lore.add(ChatColor.GRAY + lang.rewardForLore+ChatColor.GOLD+ChatColor.BOLD + player.getName());
                                 itemMeta.setLore(lore);
                                 rewardItem.setItemMeta(itemMeta);
                             }
@@ -767,16 +819,13 @@ public final class BetterElo extends JavaPlugin {
         pluginLogger.log(PluginLogger.LogLevel.INFO, "BetterElo.killAllCustomMobs killed "+killedMobCount+" custom mobs.");
     }
     public void removeAndKillAllCustomMobs() {
+        String transactionID =  UUID.randomUUID().toString();
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.removeAndKillAllCustomMobs calleed.   customMobsMap: "+customMobsMap,transactionID);
         for (CustomMobs.CustomMob customMob : customMobsMap.values()) {
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.removeAndKillAllCustomMobs calleed.   customMob: "+customMob+", MobName: "+customMob.mobName,transactionID);
             // Sprawdzanie, czy encja jest nadal żywa przed próbą jej zabicia
             if (customMob.entity != null && !customMob.entity.isDead()) {
-                customMob.entity.remove(); // Usuwa encję z świata
-
-            }
-        }
-        for (CustomMobs.CustomMob customMob : customMobsMap.values()) {
-            // Sprawdzanie, czy encja jest nadal żywa przed próbą jej zabicia
-            if (customMob.entity != null && !customMob.entity.isDead()) {
+                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.removeAndKillAllCustomMobs calleed.   entity: "+customMob.entity+", customMob: "+customMob+", MobName: "+customMob.mobName,transactionID);
                 customMob.entity.remove(); // Usuwa encję z świata
 
             }
@@ -874,6 +923,12 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(lang.mobDefenseLore+value);
+            meta.setLore(lore);
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDefenseKey, PersistentDataType.INTEGER, value);
             item.setItemMeta(meta);
@@ -889,6 +944,27 @@ public final class BetterElo extends JavaPlugin {
                 item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
             }
             ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(lang.mobDamageLore+value);
+            meta.setLore(lore);
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute value "+value+" was added to the item "+item,transactionID);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addMobDamageAttribute null item!"+item,transactionID);
+        }
+    }
+    public void addMobDamageAttributeNoLore(ItemStack item, String value,String transactionID){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addMobDamageAttribute called with value: "+value,transactionID);
+        if (item != null) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             dataContainer.set(mobDamageKey, PersistentDataType.STRING, value);
             item.setItemMeta(meta);
@@ -898,6 +974,27 @@ public final class BetterElo extends JavaPlugin {
         }
     }
     public void addAverageDamageAttribute(ItemStack item, int value){
+        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
+        if (item != null) {
+            if(!item.hasItemMeta()){
+                item.setItemMeta(Bukkit.getItemFactory().getItemMeta(item.getType()));
+            }
+            ItemMeta meta = item.getItemMeta();
+            List<String> lore = meta.getLore();
+            if (lore == null) {
+                lore = new ArrayList<>();
+            }
+            lore.add(lang.averageDamageLore+value+"%");
+            meta.setLore(lore);
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            dataContainer.set(averageDamageKey, PersistentDataType.INTEGER, value);
+            item.setItemMeta(meta);
+            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute value "+value+" was added to the item "+item);
+        }else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "BetterElo.addAverageDamageAttribute null item!"+item);
+        }
+    }
+    public void addAverageDamageAttributeNoLore(ItemStack item, int value){
         pluginLogger.log(PluginLogger.LogLevel.DEBUG, "BetterElo.addAverageDamageAttribute called with value: "+value);
         if (item != null) {
             if(!item.hasItemMeta()){
@@ -943,6 +1040,7 @@ public final class BetterElo extends JavaPlugin {
         return totalDefense;
     }
 
+
     public int getAverageDamageAttribute(List<ItemStack> wornItems, String transactionID) {
         int totalDamage = 0;
 
@@ -978,6 +1076,16 @@ public final class BetterElo extends JavaPlugin {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
             if (dataContainer.has(mobDamageKey, PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean isEnchantItem(ItemStack item) {
+        if (item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+            if (dataContainer.has(enchanteItemKey, PersistentDataType.INTEGER)) {
                 return true;
             }
         }

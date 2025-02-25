@@ -1,5 +1,6 @@
 package betterbox.mine.game.betterelo;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,10 +21,12 @@ public class ExtendedConfigManager {
     Set<PluginLogger.LogLevel> enabledLogLevels;
 
     public Double blockBase = 0.1;
+
     public Double antywebCost = 0.1;
     public int fireworkCooldown = 1500;
     public int zephyrCooldown = 1500;
     public int flamethrowerCooldown = 1500;
+    public int chatNotifierCooldown = 1500;
 
     public ExtendedConfigManager(JavaPlugin plugin, PluginLogger pluginLogger) {
         this.plugin = plugin;
@@ -202,7 +205,23 @@ public class ExtendedConfigManager {
             plugin.getConfig().set("Zephyr_cooldown", 1500);
             plugin.saveConfig();
         }
-
+        chatNotifierCooldown = plugin.getConfig().getInt("ChatNotifier_cooldown");
+        if (plugin.getConfig().contains("ChatNotifier_cooldown")){
+            if (plugin.getConfig().isInt("ChatNotifier_cooldown")){
+                chatNotifierCooldown = plugin.getConfig().getInt("ChatNotifier_cooldown");
+            }
+            else {
+                pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: ChatNotifier_cooldown incorrect! Restoring default");
+                plugin.getConfig().set("ChatNotifier_cooldown", 1500);
+                plugin.saveConfig();
+            }
+        }
+        else{
+            pluginLogger.log(PluginLogger.LogLevel.WARNING, "ConfigManager: ReloadConfig: ChatNotifier_cooldown section not found in config! Creating new section..");
+            plugin.getConfig().createSection("ChatNotifier_cooldown");
+            plugin.getConfig().set("ChatNotifier_cooldown", 1500);
+            plugin.saveConfig();
+        }
 
 
 
@@ -243,6 +262,8 @@ public class ExtendedConfigManager {
             // Możesz tutaj przypisać wczytaną listę do zmiennej klasy, jeśli potrzebujesz
             this.eventItemsPlaceholder = eventItemsWithUsername;
         }
+
+
 
 
 

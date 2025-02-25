@@ -90,7 +90,7 @@ public class GuiManager{
 
          */
 
-        List<CustomMobsFileManager.DropItem> drops = mobsFileManager.loadCustomDropsv2(dropTableName); // Wczytaj przedmioty z tabeli dropów
+        List<CustomMobsFileManager.DropItem> drops = mobsFileManager.loadCustomDropsv2_old(dropTableName); // Wczytaj przedmioty z tabeli dropów
 
         // Umieść przedmioty w oknie GUI
         drops.stream().map(CustomMobsFileManager.DropItem::getItemStack).forEach(inv::addItem);

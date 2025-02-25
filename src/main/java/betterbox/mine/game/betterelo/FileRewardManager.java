@@ -1,5 +1,7 @@
 package betterbox.mine.game.betterelo;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -142,72 +144,7 @@ public class FileRewardManager {
             pluginLogger.log(PluginLogger.LogLevel.ERROR, "FileRewardManager: saveRewards: Nie udało się zapisać nagród: " + e.getMessage());
         }
     }
-    public void saveCustomDrops(String fileName, List<ItemStack> rewards) {
-        pluginLogger.log(PluginLogger.LogLevel.DEBUG, "FileRewardManager.saveCustomDrops called, fileName: "+fileName);
-        File customDropsFolder = new File(plugin.getDataFolder() + File.separator + "customDrops");
-        if (!customDropsFolder.exists()) {
-            pluginLogger.log(PluginLogger.LogLevel.INFO, "customDropsFolder does not exist, creating a new one");
-            customDropsFolder.mkdirs();
-        }
 
-        File customDropTablesFolder = new File(plugin.getDataFolder() + File.separator + "customDropTables");
-        if (!customDropTablesFolder.exists()) {
-            pluginLogger.log(PluginLogger.LogLevel.INFO, "customDropTablesFolder does not exist, creating a new one");
-            customDropTablesFolder.mkdirs();
-        }
-
-        File dropTableFile = new File(customDropTablesFolder, fileName + ".yml");
-        pluginLogger.log(PluginLogger.LogLevel.INFO, "Droptable will be saved to "+fileName+".yml");
-        FileConfiguration dropTableConfig = new YamlConfiguration();
-
-        int index = 0;
-        for (ItemStack item : rewards) {
-            if (item == null) {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "ItemStack is null at index: " + index);
-                continue;
-            }
-            ;
-            String itemFileName = fileName + "_item" + index + ".yml";
-            pluginLogger.log(PluginLogger.LogLevel.INFO, "Droptable "+fileName+", itemFileName "+itemFileName+", index "+index+", saving item: "+item.getItemMeta().toString());
-
-            try {
-                File itemFile = new File(customDropsFolder, itemFileName);
-                itemFile.createNewFile();
-                FileConfiguration itemConfig = YamlConfiguration.loadConfiguration(itemFile);
-                itemConfig.set("item", item);
-                itemConfig.save(itemFile);
-
-                // Dodaj wpis do pliku tabeli dropów
-                String itemPath = "customDrops/" + itemFileName;
-                dropTableConfig.set("Item" + index + ".itemPath", itemPath);
-                dropTableConfig.set("Item" + index + ".dropChance", 0.00); // Tutaj można ustawić faktyczną szansę na drop
-                String itemNameString = item.getType().toString();
-                dropTableConfig.set("Item" + index + ".itemName", itemNameString); // Tutaj można ustawić faktyczną szansę na drop
-                dropTableConfig.set("Item" + index + ".avgDmgBonus", false); // Tutaj można ustawić faktyczną szansę na drop
-                if(item.getItemMeta().hasLore()) {
-                    String itemDisplayName = item.getItemMeta().displayName().toString();
-                    dropTableConfig.set("Item" + index + ".displayName", itemDisplayName); // Tutaj można ustawić faktyczną szansę na drop
-                    if(item.getItemMeta().hasLore()) {
-                        dropTableConfig.set("Item" + index + ".description", item.getItemMeta().lore().get(1)); // Tutaj można ustawić faktyczną szansę na drop
-                    }
-                }
-
-
-                index++;
-                pluginLogger.log(PluginLogger.LogLevel.DEBUG, "dropTableConfig with index "+index+" saved");
-
-            } catch (Exception e) {
-                pluginLogger.log(PluginLogger.LogLevel.ERROR, "Cannot save the item : "+index +", error: "+ e.getMessage());
-            }
-        }
-
-        try {
-            dropTableConfig.save(dropTableFile);
-            pluginLogger.log(PluginLogger.LogLevel.DEBUG, "dropTableConfig saved ");
-        } catch (Exception e) {
-            pluginLogger.log(PluginLogger.LogLevel.ERROR, "Nie można zapisać tabeli dropów: " + e.getMessage());
-        }
-    }
 
 
 
